@@ -19,7 +19,12 @@ export default {
         { icon: 'star', title: 'Share', text: 'your “I’ll be there” flyer' },
       ],
       tiersTitle: 'Our tickets',
+      quota: 'Quota: {n} tickets',
+      remaining: 'Only {n} seats left',
+      soldOut: 'Sold out',
+      soldOutNote: 'This ticket is sold out. Choose another one or contact the secretariat.',
       perPerson: 'per person',
+      // Keys of the free option (disabled) — kept for a future reactivation
       free: 'Free',
       choose: 'Choose this ticket',
       chooseFree: 'Book for free',
@@ -30,16 +35,16 @@ export default {
         title: 'Compare tickets',
         feature: 'Included',
         rows: [
-          { label: 'Live stream (plenaries, pitch, Awards)', values: [true, true, true, true] },
-          { label: 'Access to the Hilton on 27 & 28 April', values: [false, true, true, true] },
-          { label: 'Opening ceremony and plenary conferences', values: [false, true, true, true] },
-          { label: 'National 100% AI Expo & AI Career Fair', values: [false, true, true, true] },
-          { label: 'Forums (Women in AI, Young AI Leaders) & Startup Pitch', values: [false, true, true, true] },
-          { label: 'One masterclass with certificate', values: [false, true, true, true] },
-          { label: 'Networking lunches', values: [false, false, false, true] },
-          { label: 'B2B / B2G meetings via the app', values: [false, false, true, true] },
-          { label: 'Premium attendee kit', values: [false, false, false, true] },
-          { label: 'Personalised “I’ll be there” flyer', values: [true, true, true, true] },
+          { label: 'Live stream (plenaries, pitch, Awards)', values: [true, true, true] },
+          { label: 'Access to the Hilton on 27 & 28 April', values: [true, true, true] },
+          { label: 'Opening ceremony and plenary conferences', values: [true, true, true] },
+          { label: 'National 100% AI Expo & AI Career Fair', values: [true, true, true] },
+          { label: 'Forums (Women in AI, Young AI Leaders) & Startup Pitch', values: [true, true, true] },
+          { label: 'One masterclass with certificate', values: [true, true, true] },
+          { label: 'Networking lunches', values: [false, false, true] },
+          { label: 'B2B / B2G meetings via the app', values: [false, true, true] },
+          { label: 'Premium attendee kit', values: [false, false, true] },
+          { label: 'Personalised “I’ll be there” flyer', values: [true, true, true] },
         ],
       },
       groups: {
@@ -65,11 +70,14 @@ export default {
 
     // ----------------------------------------------------------------------- Tickets
     tiers: {
+      /* ── OPTION GRATUITE DÉSACTIVÉE ──────────────────────────────────────
+         Réactiver en même temps que le tarif « en-ligne » de src/data/config.js.
       'en-ligne': {
-        name: 'Online',
-        tagline: 'Follow the highlights live, wherever you are.',
-        features: ['Plenaries streamed live', 'Startup Pitch Competition', 'Awards ceremony replay', '“I’ll be there” flyer'],
+      name: 'Online',
+      tagline: 'Follow the highlights live, wherever you are.',
+      features: ['Plenaries streamed live', 'Startup Pitch Competition', 'Awards ceremony replay', '“I’ll be there” flyer'],
       },
+      */
       etudiant: {
         name: 'Student',
         tagline: 'For students and young researchers.',
@@ -196,7 +204,7 @@ export default {
         lead: 'Create your personalised JCIA 2027 visual in seconds and share it on WhatsApp, LinkedIn, Facebook, Instagram or X.',
       },
       lockedTitle: 'For attendees only',
-      lockedText: 'The flyer generator unlocks as soon as your ticket is confirmed (Mobile Money payment approved or free ticket booked).',
+      lockedText: 'The flyer generator is reserved for paid tickets: it unlocks as soon as your Mobile Money payment is approved.',
       lockedCta: 'Book my ticket',
       photo: 'Your photo',
       upload: 'Choose a photo',

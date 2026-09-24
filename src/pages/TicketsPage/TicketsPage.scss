@@ -92,7 +92,47 @@
     border-color: var(--tier);
   }
 
-  // Billet mis en avant : contour orange + légère élévation
+  // Tarif complet : carte en retrait, plus de clic possible
+  &.is-sold-out {
+    opacity: 0.72;
+    filter: grayscale(0.35);
+
+    &:hover {
+      transform: none;
+      box-shadow: none;
+      border-color: $border;
+    }
+  }
+
+  &__quota {
+    display: flex;
+    align-items: center;
+    gap: $space-2;
+    margin-bottom: $space-4;
+    font-size: 0.8rem;
+    font-weight: $fw-semibold;
+    color: $text-muted;
+
+    .icon {
+      flex-shrink: 0;
+      color: var(--tier);
+    }
+
+    // Presque complet : on alerte sans dramatiser
+    &.is-low {
+      color: $rust;
+
+      .icon {
+        color: $rust;
+      }
+
+      :root[data-theme='dark'] & {
+        color: #ffb38a;
+      }
+    }
+  }
+
+  // Billet mis en avant (mention « le plus choisi » désactivée) : styles conservés
   &--featured {
     border-color: $orange;
     box-shadow: $shadow-glow-orange;
@@ -108,6 +148,7 @@
 
   &__ribbon {
     position: absolute;
+    z-index: 1;
     top: -14px;
     left: 50%;
     padding: 0.3rem 0.9rem;
@@ -121,6 +162,12 @@
     border-radius: $radius-pill;
     transform: translateX(-50%);
     box-shadow: $shadow-md;
+
+    // Complet : ruban gris, sans appel à l'action
+    &--out {
+      color: $white;
+      background: $ink-muted-raw;
+    }
   }
 
   &__head {
@@ -288,6 +335,14 @@
 
   td {
     text-align: center;
+  }
+
+  &__quota {
+    display: block;
+    margin-top: 2px;
+    font-size: 0.68rem !important;
+    font-weight: $fw-medium;
+    color: $text-muted;
   }
 
   &__tier {

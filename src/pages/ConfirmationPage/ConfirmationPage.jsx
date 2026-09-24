@@ -10,7 +10,7 @@ import { CONFIG } from '@/data/config'
 import { formatXAF } from '@/utils/money'
 import { formatCmPhone } from '@/utils/phone'
 import { buildEventIcsHref } from '@/utils/calendar'
-import { getOrder, isConfirmed } from '@/services/orders'
+import { canGenerateFlyer, getOrder, isConfirmed } from '@/services/orders'
 import useDocumentMeta from '@/hooks/useDocumentMeta'
 import logoWhite from '@/assets/images/brand/logo-jcia-white-sm.webp'
 import './ConfirmationPage.scss'
@@ -140,6 +140,7 @@ export default function ConfirmationPage() {
                 </ul>
               </div>
               <div className="e-ticket__stub">
+                <PatternBg variant="ndop-royal" color="#19203a" opacity={0.09} scale={0.45} />
                 {codes[i] ? (
                   <img src={codes[i]} alt={`QR code — ${order.id}`} width="140" height="140" className="e-ticket__qr" />
                 ) : (
@@ -193,17 +194,19 @@ export default function ConfirmationPage() {
             </div>
           </Reveal>
 
-          {/* Accès au générateur de flyer */}
-          <Reveal className="flyer-cta" delay={120}>
-            <span className="flyer-cta__badge" aria-hidden="true">
-              <Icon name="image" size={26} />
-            </span>
-            <h2>{c.flyerTitle}</h2>
-            <p>{c.flyerText}</p>
-            <Button as={Link} to={`${routes.flyer}?order=${order.id}`} size="lg" icon="arrow-right">
-              {c.flyerCta}
-            </Button>
-          </Reveal>
+          {/* Accès au générateur de flyer — billets payants uniquement */}
+          {canGenerateFlyer(order) && (
+            <Reveal className="flyer-cta" delay={120}>
+              <span className="flyer-cta__badge" aria-hidden="true">
+                <Icon name="image" size={26} />
+              </span>
+              <h2>{c.flyerTitle}</h2>
+              <p>{c.flyerText}</p>
+              <Button as={Link} to={`${routes.flyer}?order=${order.id}`} size="lg" icon="arrow-right">
+                {c.flyerCta}
+              </Button>
+            </Reveal>
+          )}
 
           <p className="confirmation__another">
             <Link to={routes.tickets}>

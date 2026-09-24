@@ -5,6 +5,8 @@ import { useI18n } from '@/i18n/context'
 import { useConsent } from '@/consent/context'
 import { CONFIG } from '@/data/config'
 import { formatXAF } from '@/utils/money'
+import { formatSeats, isLowStock, isSoldOut, remainingSeats } from '@/utils/tickets'
+import { fill } from '@/i18n/format'
 import './Registration.scss'
 
 /**
@@ -56,18 +58,30 @@ function TicketsTeaser() {
       <ul className="tickets-teaser__list">
         {tiers.map((tier) => {
           const tt = t.tickets.tiers[tier.id]
+          const out = isSoldOut(tier)
+          const low = !out && isLowStock(tier)
           return (
-            <li key={tier.id} className={`tickets-teaser__tier tickets-teaser__tier--${tier.color}`}>
-              <Link to={`${routes.checkout}/${tier.id}`}>
+            <li
+              key={tier.id}
+              className={`tickets-teaser__tier tickets-teaser__tier--${tier.color} ${out ? 'is-sold-out' : ''}`}
+            >
+              <Link to={out ? routes.tickets : `${routes.checkout}/${tier.id}`}>
                 <span className="tickets-teaser__icon" aria-hidden="true">
                   <Icon name={tier.icon} size={22} />
                 </span>
                 <span className="tickets-teaser__text">
                   <strong>
                     {tt.name}
-                    {tier.featured && <em>{t.tickets.page.featured}</em>}
+                    {/* Mention « le plus choisi » retirée à la demande de l'organisateur :
+                        {tier.featured && <em>{t.tickets.page.featured}</em>} */}
                   </strong>
-                  <small>{tt.tagline}</small>
+                  <small>
+                    {out
+                      ? t.tickets.page.soldOut
+                      : low
+                        ? fill(t.tickets.page.remaining, { n: formatSeats(remainingSeats(tier), locale) })
+                        : tt.tagline}
+                  </small>
                 </span>
                 <span className="tickets-teaser__price">{tier.price === 0 ? r.from : formatXAF(tier.price, locale)}</span>
                 <Icon name="chevron-right" size={20} className="tickets-teaser__chevron" />
@@ -98,7 +112,7 @@ export default function Registration() {
 
   return (
     <section className="section registration" id="inscription" aria-labelledby="registration-title">
-      <PatternBg variant="ndop" color="currentColor" opacity={0.04} />
+      <PatternBg variant="ndop-royal" color="currentColor" opacity={0.05} />
 
       <div className="container registration__grid">
         <div className="registration__info">

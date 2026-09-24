@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, useLocation } from 'react-router'
 import { Button, Icon, LangSwitch, SectionLink, ThemeToggle } from '@/components/ui'
 import { useI18n } from '@/i18n/context'
@@ -32,6 +32,7 @@ export default function Header() {
     pathname === '/' ? activeSection === link.section : pathname.startsWith(routes[link.route])
   const [menuOpen, setMenuOpen] = useState(false)
   const scrolled = scrollY > 40
+  const barRef = useRef(null)
 
   // Ferme le menu lors d'un changement de page (ajustement d'état pendant le rendu)
   const [prevPath, setPrevPath] = useState(pathname)
@@ -40,16 +41,43 @@ export default function Header() {
     setMenuOpen(false)
   }
 
-  // Verrouille le défilement de la page quand le menu est ouvert ; Échap pour fermer
+  // Verrouille le défilement de la page quand le menu est ouvert ; Échap pour fermer.
+  // La classe `menu-open` sur <html> permet d'effacer les barres flottantes des
+  // pages (barre de commande, bandeau cookies) qui masqueraient le bas du menu.
   useEffect(() => {
+    const root = document.documentElement
     document.body.style.overflow = menuOpen ? 'hidden' : ''
+    root.classList.toggle('menu-open', menuOpen)
     const onKey = (e) => e.key === 'Escape' && setMenuOpen(false)
     window.addEventListener('keydown', onKey)
     return () => {
       window.removeEventListener('keydown', onKey)
       document.body.style.overflow = ''
+      root.classList.remove('menu-open')
     }
   }, [menuOpen])
+
+  // Hauteur réelle occupée par l'en-tête : le panneau démarre juste en dessous,
+  // que le bandeau d'annonce soit déplié, en train de se replier ou masqué.
+  useEffect(() => {
+    const bar = barRef.current
+    if (!bar) return
+    const sync = () => {
+      const bottom = Math.max(0, Math.round(bar.getBoundingClientRect().bottom))
+      document.documentElement.style.setProperty('--menu-top', `${bottom}px`)
+    }
+    sync()
+    const raf = requestAnimationFrame(sync)
+    const timer = setTimeout(sync, 400) // après le repli animé du bandeau
+    window.addEventListener('resize', sync)
+    window.addEventListener('orientationchange', sync)
+    return () => {
+      cancelAnimationFrame(raf)
+      clearTimeout(timer)
+      window.removeEventListener('resize', sync)
+      window.removeEventListener('orientationchange', sync)
+    }
+  }, [menuOpen, scrolled])
 
   const closeMenu = () => setMenuOpen(false)
 
@@ -66,7 +94,7 @@ export default function Header() {
         </p>
       </div>
 
-      <div className="header__bar container">
+      <div className="header__bar container" ref={barRef}>
         <SectionLink id="top" className="header__logo" aria-label={t.a11y.home} onClick={closeMenu}>
           {/* Deux logos superposés : fondu enchaîné selon l'état de l'en-tête et le thème */}
           <img src={logoWhite} alt="" className="header__logo-img header__logo-img--white" width="150" height="62" />

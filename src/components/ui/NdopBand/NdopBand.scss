@@ -1,0 +1,27 @@
+@use '@/styles/abstracts' as *;
+
+// Bande tissée Ndop : fond indigo, motifs écrus. Mêmes couleurs dans les deux
+// thèmes (c'est un textile, pas une surface d'interface) : l'indigo reste lisible
+// sur le crème du thème clair comme sur le bleu nuit du thème sombre.
+.ndop-band {
+  --ndop-ground: #{$navy-800};
+  --ndop-motif: #{$sand-200-raw};
+
+  position: relative;
+  z-index: $z-base;
+  display: block;
+  width: 100%;
+  overflow: hidden;
+  line-height: 0;
+
+  :root[data-theme='dark'] & {
+    --ndop-ground: #{$navy-900};
+    --ndop-motif: #{$sand-300};
+  }
+
+  svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+}

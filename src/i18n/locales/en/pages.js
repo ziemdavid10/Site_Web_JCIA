@@ -451,7 +451,9 @@ export default {
         { cat: 'general', q: 'Do the masterclasses include a certificate?', a: 'Yes. The four masterclasses on 28 April include hands-on exercises and a certificate of attendance.' },
         { top: true, cat: 'tickets', q: 'How do I book my seat?', a: 'Go to the Tickets page, choose your ticket and fill in your details. Payment is made with MTN Mobile Money or Orange Money.' },
         { top: true, cat: 'tickets', q: 'How does Mobile Money payment work?', a: 'Enter your MTN or Orange number: a payment request is sent to your phone. Approve it with your PIN. Your ticket is issued as soon as the payment is confirmed. We will never ask for your PIN.' },
+        /* Option gratuite désactivée (voir src/data/config.js) :
         { cat: 'tickets', q: 'Can I follow the event for free?', a: 'Yes: the free “Online” ticket gives access to the live stream of the plenaries, the Startup Pitch and the Awards ceremony.' },
+        */
         { cat: 'tickets', q: 'Are there conditions for the student rate?', a: 'Yes: it is reserved for students and a valid student card will be requested at the entrance.' },
         { cat: 'tickets', q: 'What is the “I’ll be there” flyer?', a: 'Once your ticket is confirmed, you can generate a personalised visual with your photo, your name and the event details to share on social media. Your photo is processed only in your browser.' },
         { cat: 'tickets', q: 'Can I buy several tickets?', a: 'Yes, up to 10 Standard or Professional tickets per order. For groups and institutions, contact the secretariat.' },

@@ -1,5 +1,5 @@
 import { Link } from 'react-router'
-import { Frise, Icon, PatternBg, ThemeImg } from '@/components/ui'
+import { Icon, NdopBand, PatternBg, ThemeImg } from '@/components/ui'
 import { useI18n } from '@/i18n/context'
 import { useConsent } from '@/consent/context'
 import { CONFIG } from '@/data/config'
@@ -20,8 +20,8 @@ export default function Footer() {
 
   return (
     <footer className="footer">
-      <Frise height={22} />
-      <PatternBg variant="ndop" color="currentColor" opacity={0.035} />
+      <NdopBand height={56} />
+      <PatternBg variant="ndop-royal" color="currentColor" opacity={0.045} />
 
       <div className="footer__inner container">
         {/* Identité */}

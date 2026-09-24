@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useId, useRef, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router'
 import { Button, Frise, Icon, PatternBg } from '@/components/ui'
 import OperatorBadge from '@/components/tickets/OperatorBadge'
@@ -8,6 +8,7 @@ import { rich } from '@/i18n/rich'
 import { fill } from '@/i18n/format'
 import { CONFIG } from '@/data/config'
 import { formatXAF } from '@/utils/money'
+import { formatSeats, isSoldOut, maxQuantity } from '@/utils/tickets'
 import { detectOperator, formatCmPhone, isValidCmPhone, normalizePhone } from '@/utils/phone'
 import { newOrderId, saveOrder } from '@/services/orders'
 import { cleanText, isValidEmail, isValidPersonName } from '@/security/sanitize'
@@ -21,6 +22,16 @@ const MAX = { name: 80, email: 254, phone: 20, org: 120 }
 // Après 3 paiements échoués, pause de 60 s avant un nouvel essai (anti-abus)
 const MAX_FAILURES = 3
 const COOLDOWN_MS = 60_000
+
+/**
+ * Secondes restantes avant la fin de la pause anti-abus (0 si elle est terminée).
+ * Défini hors du composant : l'horloge est lue au moment du clic, jamais pendant
+ * le rendu (règle « composants purs » de React).
+ */
+const cooldownLeft = (until) => Math.max(0, Math.ceil((until - Date.now()) / 1000))
+
+/** Instant (timestamp) de fin de la pause anti-abus, à partir de maintenant. */
+const cooldownEnd = () => Date.now() + COOLDOWN_MS
 
 /** Copie d'un objet sans l'une de ses clés (efface une erreur de validation). */
 const omit = (obj, key) => {
@@ -103,7 +114,8 @@ export default function CheckoutPage() {
   }, [])
 
   // --- Valeurs dérivées -----------------------------------------------------------------
-  const qty = tier ? Math.min(quantity, tier.maxQty) : 1
+  const maxQty = tier ? maxQuantity(tier) : 1 // plafond par commande ET stock restant
+  const qty = tier ? Math.min(quantity, maxQty) : 1
   const isFree = tier?.price === 0
   const isStudent = tier?.id === 'etudiant'
   const total = tier ? tier.price * qty : 0
@@ -119,7 +131,11 @@ export default function CheckoutPage() {
     if (errors[key]) setErrors((errs) => omit(errs, key))
   }
 
-  const changeTier = (id) => navigate(`${routes.checkout}/${id}`, { replace: true })
+  const changeTier = (id) => {
+    const next = tickets.tiers.find((x) => x.id === id)
+    if (next) setQuantity((q) => Math.min(q, maxQuantity(next)))
+    navigate(`${routes.checkout}/${id}`, { replace: true })
+  }
 
   // --- Validation -------------------------------------------------------------------------
   const validate = () => {
@@ -140,55 +156,57 @@ export default function CheckoutPage() {
   }
 
   // --- Paiement -----------------------------------------------------------------------------
-  const runPayment = useCallback(
-    async (order) => {
-      setPay({ order, status: 'running', step: 'initiating' })
-      let result
-      try {
-        result = await processPayment(
-          {
-            orderId: order.id,
-            amount: order.total,
-            currency: order.currency,
-            operator: order.payment.operator,
-            phone: order.payment.phone,
-            customer: order.customer,
-            description: `JCIA 2027 — ${order.tierId} × ${order.quantity}`,
-          },
-          (step) => alive.current && setPay((p) => (p ? { ...p, step } : p)),
-        )
-      } catch {
-        result = { status: 'FAILED', reason: 'network' }
-      }
-      if (!alive.current) return
+  const runPayment = async (order) => {
+    setPay({ order, status: 'running', step: 'initiating' })
+    let result
+    try {
+      result = await processPayment(
+        {
+          orderId: order.id,
+          amount: order.total,
+          currency: order.currency,
+          operator: order.payment.operator,
+          phone: order.payment.phone,
+          customer: order.customer,
+          description: `JCIA 2027 — ${order.tierId} × ${order.quantity}`,
+        },
+        (step) => alive.current && setPay((p) => (p ? { ...p, step } : p)),
+      )
+    } catch {
+      result = { status: 'FAILED', reason: 'network' }
+    }
+    if (!alive.current) return
 
-      submitting.current = false
-      if (result.status === 'SUCCESSFUL') {
+    submitting.current = false
+    if (result.status === 'SUCCESSFUL') {
+      failures.current = 0
+      const paid = saveOrder({
+        ...order,
+        payment: { ...order.payment, status: 'paid', transactionId: result.transactionId, paidAt: new Date().toISOString(), mode: result.mode },
+      })
+      navigate(`${routes.confirmation}/${paid.id}`)
+    } else {
+      saveOrder({ ...order, payment: { ...order.payment, status: 'failed', reason: result.reason } })
+      setPay((p) => ({ ...p, status: 'failed' }))
+      failures.current += 1
+      if (failures.current >= MAX_FAILURES) {
         failures.current = 0
-        const paid = saveOrder({
-          ...order,
-          payment: { ...order.payment, status: 'paid', transactionId: result.transactionId, paidAt: new Date().toISOString(), mode: result.mode },
-        })
-        navigate(`${routes.confirmation}/${paid.id}`)
-      } else {
-        saveOrder({ ...order, payment: { ...order.payment, status: 'failed', reason: result.reason } })
-        setPay((p) => ({ ...p, status: 'failed' }))
-        failures.current += 1
-        if (failures.current >= MAX_FAILURES) {
-          failures.current = 0
-          setLockedUntil(Date.now() + COOLDOWN_MS)
-        }
+        setLockedUntil(cooldownEnd())
       }
-    },
-    [navigate, routes.confirmation],
-  )
+    }
+  }
 
   const onSubmit = (e) => {
     e.preventDefault()
     if (submitting.current || pay?.status === 'running') return
     if (honeypot) return // robot détecté : on ne fait rien
-    if (Date.now() < lockedUntil) {
-      setErrors({ summary: fill(c.errors.tooMany, { s: Math.ceil((lockedUntil - Date.now()) / 1000) }) })
+    const wait = cooldownLeft(lockedUntil)
+    if (wait > 0) {
+      setErrors({ summary: fill(c.errors.tooMany, { s: wait }) })
+      return
+    }
+    if (isSoldOut(tier)) {
+      setErrors({ summary: t.tickets.page.soldOutNote })
       return
     }
     const errs = validate()
@@ -333,15 +351,28 @@ export default function CheckoutPage() {
             <div className="co-tiers" role="radiogroup" aria-label={c.ticketTitle}>
               {tickets.tiers.map((x) => {
                 const checked = x.id === tier.id
+                const out = isSoldOut(x)
                 return (
-                  <label key={x.id} className={`co-tier co-tier--${x.color} ${checked ? 'is-checked' : ''}`}>
-                    <input type="radio" name="tier" value={x.id} checked={checked} onChange={() => changeTier(x.id)} />
+                  <label
+                    key={x.id}
+                    className={`co-tier co-tier--${x.color} ${checked ? 'is-checked' : ''} ${out ? 'is-sold-out' : ''}`}
+                  >
+                    <input
+                      type="radio"
+                      name="tier"
+                      value={x.id}
+                      checked={checked}
+                      disabled={out}
+                      onChange={() => changeTier(x.id)}
+                    />
                     <span className="co-tier__radio" aria-hidden="true" />
                     <span className="co-tier__body">
                       <strong>{t.tickets.tiers[x.id].name}</strong>
                       <small>{t.tickets.tiers[x.id].tagline}</small>
                     </span>
-                    <span className="co-tier__price">{x.price === 0 ? t.tickets.page.free : formatXAF(x.price, locale)}</span>
+                    <span className="co-tier__price">
+                      {out ? t.tickets.page.soldOut : formatXAF(x.price, locale)}
+                    </span>
                   </label>
                 )
               })}
@@ -368,13 +399,17 @@ export default function CheckoutPage() {
                 <button
                   type="button"
                   aria-label={c.increase}
-                  disabled={qty >= tier.maxQty}
-                  onClick={() => setQuantity(Math.min(tier.maxQty, qty + 1))}
+                  disabled={qty >= maxQty}
+                  onClick={() => setQuantity(Math.min(maxQty, qty + 1))}
                 >
                   <Icon name="plus" size={18} />
                 </button>
               </div>
-              {qty >= tier.maxQty && tier.maxQty > 1 && <small>{c.maxReached}</small>}
+              {qty >= maxQty && maxQty > 1 && <small>{c.maxReached}</small>}
+              <small className="co-qty__stock">
+                <Icon name="ticket" size={14} />
+                {fill(t.tickets.page.quota, { n: formatSeats(tier.quota, locale) })}
+              </small>
             </div>
           </fieldset>
 
@@ -654,9 +689,10 @@ export default function CheckoutPage() {
           demo={pay.order.payment.mode === 'demo'}
           onRetry={() => {
             // Trop d'échecs : on referme et on affiche le délai d'attente
-            if (Date.now() < lockedUntil) {
+            const left = cooldownLeft(lockedUntil)
+            if (left > 0) {
               setPay(null)
-              setErrors({ summary: fill(c.errors.tooMany, { s: Math.ceil((lockedUntil - Date.now()) / 1000) }) })
+              setErrors({ summary: fill(c.errors.tooMany, { s: left }) })
               return
             }
             runPayment({ ...pay.order, payment: { ...pay.order.payment, status: 'pending' } })

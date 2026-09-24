@@ -1,4 +1,4 @@
-import { SectionHeader } from '@/components/ui'
+import { PatternBg, SectionHeader } from '@/components/ui'
 
 /**
  * <PageSection /> — section d'une page détaillée, avec en-tête homogène.
@@ -25,6 +25,10 @@ export default function PageSection({
       className={`page-section page-section--${tone} ${className}`.trim()}
       aria-labelledby={title ? titleId : undefined}
     >
+      {/* Texture Ndop en filigrane sur les fonds sable et « scène » */}
+      {(tone === 'sand' || tone === 'stage') && (
+        <PatternBg variant="ndop-royal" color="currentColor" opacity={tone === 'stage' ? 0.05 : 0.035} fade={tone === 'sand' ? 'edges' : undefined} />
+      )}
       <div className={`container ${width === 'narrow' ? 'page-section__narrow' : ''}`}>
         {title && <SectionHeader id={titleId} eyebrow={eyebrow} title={title} lead={lead} align={align} dark={tone === 'stage'} />}
         {children}

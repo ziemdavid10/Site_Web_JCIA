@@ -13,7 +13,7 @@ export default function About() {
 
   return (
     <section className="section about" id="apropos" aria-labelledby="about-title">
-      <PatternBg variant="ndop" color="currentColor" opacity={0.03} fade="bottom" />
+      <PatternBg variant="ndop-royal" color="currentColor" opacity={0.04} fade="bottom" />
 
       <div className="container about__grid">
         <div>

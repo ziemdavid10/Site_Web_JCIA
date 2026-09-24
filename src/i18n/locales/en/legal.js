@@ -190,7 +190,8 @@ export default {
           {
             list: [
               'Tickets are sold in CFA francs (XAF), all taxes included, and paid with MTN Mobile Money or Orange Money. The order is confirmed as soon as the operator approves the payment; the e-ticket is then issued.',
-              'The “Online” ticket is free. The “Student” ticket requires a valid student card at the entrance.',
+              // Free option disabled: 'The “Online” ticket is free.' — see src/data/config.js
+              'The “Student” ticket requires a valid student card at the entrance.',
               'Unless the event is cancelled by the organiser, tickets are neither exchanged nor refunded; they may be transferred to another person upon written request to the secretariat.',
               'The “I’ll be there” flyer generator is reserved for holders of a confirmed ticket; users guarantee they hold the rights to the photo used.',
               'As places are limited, the organiser reserves the right to close registrations or decline a request, in particular if the information provided is inaccurate.',

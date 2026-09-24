@@ -181,6 +181,12 @@
     position: relative;
     z-index: 1;
   }
+
+  // Texture Ndop en filigrane, côté droit du bandeau
+  &__ndop {
+    left: auto;
+    width: min(46%, 620px);
+  }
 }
 
 // --- Fil d'Ariane --------------------------------------------------------------------
@@ -307,6 +313,12 @@
 .page-section {
   position: relative;
   padding-block: $space-8;
+
+  // Le contenu passe toujours au-dessus de la texture
+  > .container {
+    position: relative;
+    z-index: 1;
+  }
 
   @include mq('lg') {
     padding-block: $space-9;

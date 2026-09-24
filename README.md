@@ -40,6 +40,7 @@ npm run figma:export # régénérer la maquette Figma (site lancé avec npm run 
 | **Intervenants** : catégories cliquables → cartes (photo, thème, propos, créneau) → fiche détaillée ; recherche et lien partageable sur /intervenants | `src/components/speakers/`, `src/data/speakers.js` |
 | **Logos des partenaires et médias** : logo officiel (si fourni) + nom, sinon monogramme | `src/components/ui/PartnerLogo/`, `src/data/partners.js`, `public/images/partners/` |
 | **Sécurité** : CSP stricte et en-têtes HTTP générés au build, validations, anti-robots, fichiers vérifiés — voir `SECURITY.md` | `security/`, `src/security/` |
+| **Motifs Ndop** : lisière tissée (`NdopBand`) sous les bandeaux et en haut du pied de page, textures `ndop-royal` en filigrane, trame et lisière sur le flyer | `src/components/ui/NdopBand/`, `src/components/ui/PatternBg/` |
 | **Maquette Figma éditable + prototype** : plugin qui reconstruit tous les écrans, le design system et les liens | `figma-plugin/`, `scripts/figma-export.mjs` |
 | **Recherche dans la FAQ** : plein texte (insensible aux accents) + filtres par catégorie | `src/pages/FaqPage/` |
 | **Responsive** : téléphone, tablette, laptop, desktop, grand écran (≥ 1536), écran large (≥ 1920) et 2K/4K (≥ 2400) | `src/styles/abstracts/_variables.scss` |
@@ -51,7 +52,7 @@ npm run figma:export # régénérer la maquette Figma (site lancé avec npm run 
 | `/` | Accueil (toutes les sections, en résumé) |
 | `/a-propos` · `/programme` · `/intervenants` · `/salon` · `/awards` · `/catalogue` · `/partenaires` · `/faq` | Pages détaillées |
 | `/billetterie` | Choix du tarif |
-| `/billetterie/commande/:tarif` | Commande et paiement (`en-ligne`, `etudiant`, `standard`, `professionnel`) |
+| `/billetterie/commande/:tarif` | Commande et paiement (`etudiant`, `standard`, `professionnel`) |
 | `/billetterie/confirmation/:commande` | Billets électroniques |
 | `/mon-flyer` | Générateur du flyer « J'y serai » |
 | `/confidentialite` | Politique de confidentialité |
@@ -173,6 +174,22 @@ Voir **`figma-plugin/README.md`** : import du plugin dans Figma Desktop, pages c
 
 **Commandes** (`src/services/orders.js`) : en démonstration, elles sont gardées sur l'appareil (`localStorage`, clé `jcia-orders`). En production, la confirmation, les QR codes (jeton signé) et l'accès au générateur de flyer doivent être contrôlés par le serveur.
 
+### Quotas et disponibilité
+
+Chaque tarif porte un **quota** dans `CONFIG.tickets.tiers` (`quota`, `sold`, `maxQty`) :
+
+| Tarif | Prix | Quota | Maximum par commande |
+| --- | --- | --- | --- |
+| Étudiant | 5 000 FCFA | 1 500 | 5 |
+| Standard | 15 000 FCFA | 3 000 | 10 |
+| Professionnel | 50 000 FCFA | 500 | 10 |
+
+`src/utils/tickets.js` en déduit les places restantes (`remainingSeats`), le plafond réel d'une commande (`maxQuantity` = le plus petit de `maxQty` et du stock), l'alerte « Plus que N places » (`isLowStock`, ≤ 15 %) et l'état « Complet » (`isSoldOut` — carte grisée, bouton désactivé, tarif non sélectionnable dans la commande). **Le navigateur ne fait jamais foi sur les stocks** : en production, `sold` vient du serveur (`GET /tickets/availability`) et la disponibilité est revérifiée avant chaque paiement.
+
+### Option « En ligne » (gratuite) — désactivée
+
+Le tarif gratuit est retiré de la vente : le flyer « J'y serai » est réservé aux billets payants (`canGenerateFlyer` = paiement `paid`). Tout le code correspondant est **conservé en commentaire** et la marche à suivre pour le réactiver est décrite en tête de `CONFIG.tickets` (`src/data/config.js`) : ligne du tarif, blocs des fichiers de langue (`tickets.js`, `pages.js`, `legal.js`) et colonne du tableau comparatif.
+
 ## Flyer « J'y serai »
 
 Dessiné en 1080 px dans le navigateur (`flyerRenderer.js`) : logo, « J'Y SERAI ! », photo ronde cerclée aux 4 couleurs de la marque, nom et titre, date, lieu, thème, hashtag et frise. Les positions de chaque format sont réglables dans l'objet `LAYOUTS`, les ambiances dans `FLYER_STYLES`.
@@ -205,7 +222,7 @@ Le dossier `dist/` est un site statique.
 - Faire **valider les pages légales** par le conseil juridique de l'IAC – CAIPI (rédigées sur la base de la Loi n° 2024/017 du 23 décembre 2024) et compléter la mention **[À compléter : hébergeur]** dans les conditions d'utilisation.
 - Remplacer les URL génériques des **réseaux sociaux** (`src/data/config.js`).
 - Remplacer les PDF de travail (BAT) de `public/documents/` par les versions définitives.
-- **Valider les tarifs** des billets (indicatifs) et les **préfixes opérateurs** (`CONFIG.payment.operators`).
+- **Valider les tarifs et les quotas** des billets (indicatifs) et les **préfixes opérateurs** (`CONFIG.payment.operators`).
 - **Brancher l'API de paiement** (`VITE_PAYMENT_API_URL`) et déplacer côté serveur la vérification des commandes et l'accès au flyer (voir `SECURITY.md`).
 - Remplacer les **intervenants d'exemple** et déposer les **logos officiels** des partenaires et médias.
 

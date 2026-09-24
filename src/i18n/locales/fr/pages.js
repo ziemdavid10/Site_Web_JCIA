@@ -452,7 +452,9 @@ export default {
         { cat: 'general', q: 'Les masterclasses donnent-elles lieu à une attestation ?', a: 'Oui. Les quatre masterclasses du 28 avril comprennent des exercices pratiques et une attestation de participation.' },
         { cat: 'tickets', top: true, q: 'Comment réserver ma place ?', a: 'Rendez-vous sur la page Billetterie, choisissez votre billet puis complétez vos informations. Le paiement s’effectue par MTN Mobile Money ou Orange Money.' },
         { cat: 'tickets', top: true, q: 'Comment fonctionne le paiement Mobile Money ?', a: 'Saisissez votre numéro MTN ou Orange : une demande de paiement est envoyée sur votre téléphone. Validez-la en saisissant votre code secret. Votre billet est émis dès la confirmation. Nous ne vous demanderons jamais votre code secret.' },
+        /* Option gratuite désactivée (voir src/data/config.js) :
         { cat: 'tickets', q: 'Puis-je suivre l’événement gratuitement ?', a: 'Oui : le billet « En ligne » est gratuit et donne accès à la retransmission des plénières, du Startup Pitch et de la cérémonie des Awards.' },
+        */
         { cat: 'tickets', q: 'Le tarif étudiant est-il soumis à conditions ?', a: 'Oui : il est réservé aux étudiants et une carte d’étudiant en cours de validité sera demandée à l’accueil.' },
         { cat: 'tickets', q: 'Qu’est-ce que le flyer « J’y serai » ?', a: 'Une fois votre billet confirmé, vous pouvez générer un visuel personnalisé avec votre photo, votre nom et les informations de l’événement, à partager sur vos réseaux. Votre photo est traitée uniquement dans votre navigateur.' },
         { cat: 'tickets', q: 'Puis-je acheter plusieurs billets ?', a: 'Oui, jusqu’à 10 billets Standard ou Professionnel par commande. Pour les groupes et institutions, contactez le secrétariat.' },

@@ -19,7 +19,7 @@ export default function CtaBand({ title, text, primary, secondary, secondaryTo }
     <section className="cta-band">
       <div className="container">
         <Reveal className="cta-band__card">
-          <PatternBg variant="ndop" color="#ffffff" opacity={0.07} />
+          <PatternBg variant="ndop-royal" color="#ffffff" opacity={0.08} />
           <img className="cta-band__mascot" src={mascot} alt="" width="120" height="158" loading="lazy" aria-hidden="true" />
           <div className="cta-band__text">
             <h2>{rich(title || c.title)}</h2>

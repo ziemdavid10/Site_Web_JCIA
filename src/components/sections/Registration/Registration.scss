@@ -188,6 +188,21 @@
         box-shadow: $shadow-md;
       }
     }
+
+    // Quota épuisé : le lien renvoie vers la billetterie, sans invitation à commander
+    &.is-sold-out a {
+      filter: grayscale(0.6);
+      opacity: 0.72;
+
+      &:hover,
+      &:focus-visible {
+        transform: none;
+      }
+    }
+
+    &.is-sold-out small {
+      font-weight: $fw-semibold;
+    }
   }
 
   &__icon {

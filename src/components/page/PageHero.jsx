@@ -1,5 +1,5 @@
 import { Link } from 'react-router'
-import { Frise, Icon, PatternBg, Reveal } from '@/components/ui'
+import { Icon, NdopBand, PatternBg, Reveal } from '@/components/ui'
 import { useI18n } from '@/i18n/context'
 import { rich } from '@/i18n/rich'
 
@@ -24,7 +24,8 @@ export default function PageHero({ eyebrow, title, lead, current, parents = [], 
 
   return (
     <header className={`page-hero ${art ? 'page-hero--art' : ''}`}>
-      <PatternBg variant="circuit" color="currentColor" opacity={0.06} fade="radial" />
+      <PatternBg variant="circuit" color="currentColor" opacity={0.05} fade="radial" />
+      <PatternBg variant="ndop-royal" color="currentColor" opacity={0.05} fade="edges" className="page-hero__ndop" />
       <span className="page-hero__glow page-hero__glow--a" aria-hidden="true" />
       <span className="page-hero__glow page-hero__glow--b" aria-hidden="true" />
 
@@ -82,7 +83,7 @@ export default function PageHero({ eyebrow, title, lead, current, parents = [], 
         )}
       </div>
 
-      <Frise height={16} className="page-hero__frise" />
+      <NdopBand height={46} className="page-hero__frise" />
     </header>
   )
 }

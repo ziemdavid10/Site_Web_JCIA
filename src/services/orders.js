@@ -96,9 +96,18 @@ export function isConfirmed(order) {
   return ['paid', 'free'].includes(order?.payment?.status)
 }
 
-/** Dernière commande confirmée (pour le générateur de flyer) */
+/**
+ * Le flyer « J'y serai » est réservé aux billets payants : une commande gratuite
+ * (statut 'free') donne accès à l'événement mais pas au générateur de flyer.
+ * Règle ré-appliquée côté serveur le jour où la billetterie sera en ligne.
+ */
+export function canGenerateFlyer(order) {
+  return order?.payment?.status === 'paid'
+}
+
+/** Dernière commande donnant droit au flyer (billet payant confirmé) */
 export function latestConfirmedOrder() {
-  return listOrders().find(isConfirmed) ?? null
+  return listOrders().find(canGenerateFlyer) ?? null
 }
 
 /** Identifiant lisible : JCIA27-7K3F9Q */

@@ -85,13 +85,36 @@ export const CONFIG = {
    *  featured  mis en avant (« le plus choisi »)
    *  onsite    donne accès au Hilton (false = streaming uniquement)
    */
+  /**
+   * Billetterie.
+   *
+   * Chaque tarif a :
+   *   price   prix unitaire en FCFA (à faire valider par le Comité d'Organisation) ;
+   *   quota   nombre de billets mis en vente pour ce tarif ;
+   *   sold    billets déjà vendus — 0 ici ; en production, cette valeur vient du
+   *           serveur de billetterie (GET /tickets/availability) : le navigateur
+   *           ne doit jamais faire foi sur les stocks ;
+   *   maxQty  nombre maximum de billets par commande.
+   *
+   * ─── OPTION « EN LIGNE » (GRATUITE) : DÉSACTIVÉE ─────────────────────────────
+   * À la demande de l'organisateur, le tarif gratuit est retiré de la vente :
+   * le flyer « J'y serai » est réservé aux billets payants. Le code reste en
+   * place, en commentaire, pour pouvoir le réactiver.
+   * Pour le remettre en service :
+   *   1. décommenter la ligne ci-dessous ;
+   *   2. décommenter les blocs « option gratuite » dans
+   *      src/i18n/locales/{fr,en}/tickets.js (tarif, comparatif) et pages.js (FAQ) ;
+   *   3. ajouter une colonne aux tableaux `compare.rows[].values` (1re position) ;
+   *   4. rétablir la ligne « billet En ligne gratuit » des conditions d'utilisation
+   *      (src/i18n/locales/{fr,en}/legal.js).
+   * // { id: 'en-ligne', price: 0, quota: 5000, sold: 0, maxQty: 1, color: 'teal', icon: 'play', onsite: false },
+   */
   tickets: {
     currency: 'XAF',
     tiers: [
-      { id: 'en-ligne', price: 0, maxQty: 1, color: 'teal', icon: 'play', onsite: false },
-      { id: 'etudiant', price: 5000, maxQty: 1, color: 'purple', icon: 'book', onsite: true },
-      { id: 'standard', price: 15000, maxQty: 10, color: 'orange', icon: 'ticket', onsite: true, featured: true },
-      { id: 'professionnel', price: 50000, maxQty: 10, color: 'rust', icon: 'star', onsite: true },
+      { id: 'etudiant', price: 5000, quota: 1500, sold: 0, maxQty: 5, color: 'purple', icon: 'book', onsite: true },
+      { id: 'standard', price: 15000, quota: 3000, sold: 0, maxQty: 10, color: 'orange', icon: 'ticket', onsite: true },
+      { id: 'professionnel', price: 50000, quota: 500, sold: 0, maxQty: 10, color: 'rust', icon: 'star', onsite: true },
     ],
   },
 

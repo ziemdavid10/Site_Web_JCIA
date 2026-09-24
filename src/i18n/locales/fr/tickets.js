@@ -19,7 +19,12 @@ export default {
         { icon: 'star', title: 'Partagez', text: 'votre flyer « J’y serai »' },
       ],
       tiersTitle: 'Nos billets',
+      quota: 'Quota : {n} billets',
+      remaining: 'Plus que {n} places',
+      soldOut: 'Complet',
+      soldOutNote: 'Ce tarif est complet. Choisissez un autre billet ou contactez le secrétariat.',
       perPerson: 'par personne',
+      // Clés de l'option gratuite (désactivée) — conservées pour une réactivation
       free: 'Gratuit',
       choose: 'Choisir ce billet',
       chooseFree: 'Réserver gratuitement',
@@ -30,16 +35,16 @@ export default {
         title: 'Comparer les billets',
         feature: 'Inclus',
         rows: [
-          { label: 'Retransmission en direct (plénières, pitch, Awards)', values: [true, true, true, true] },
-          { label: 'Accès au Hilton les 27 & 28 avril', values: [false, true, true, true] },
-          { label: 'Cérémonie d’ouverture et conférences plénières', values: [false, true, true, true] },
-          { label: 'Salon National 100 % IA & AI Career Fair', values: [false, true, true, true] },
-          { label: 'Forums (Women in AI, Young AI Leaders) & Startup Pitch', values: [false, true, true, true] },
-          { label: 'Une masterclass avec attestation', values: [false, true, true, true] },
-          { label: 'Déjeuners de réseautage', values: [false, false, false, true] },
-          { label: 'Rendez-vous B2B / B2G via l’application', values: [false, false, true, true] },
-          { label: 'Kit participant premium', values: [false, false, false, true] },
-          { label: 'Flyer personnalisé « J’y serai »', values: [true, true, true, true] },
+          { label: 'Retransmission en direct (plénières, pitch, Awards)', values: [true, true, true] },
+          { label: 'Accès au Hilton les 27 & 28 avril', values: [true, true, true] },
+          { label: 'Cérémonie d’ouverture et conférences plénières', values: [true, true, true] },
+          { label: 'Salon National 100 % IA & AI Career Fair', values: [true, true, true] },
+          { label: 'Forums (Women in AI, Young AI Leaders) & Startup Pitch', values: [true, true, true] },
+          { label: 'Une masterclass avec attestation', values: [true, true, true] },
+          { label: 'Déjeuners de réseautage', values: [false, false, true] },
+          { label: 'Rendez-vous B2B / B2G via l’application', values: [false, true, true] },
+          { label: 'Kit participant premium', values: [false, false, true] },
+          { label: 'Flyer personnalisé « J’y serai »', values: [true, true, true] },
         ],
       },
       groups: {
@@ -65,11 +70,14 @@ export default {
 
     // ----------------------------------------------------------------------- Billets
     tiers: {
+      /* ── OPTION GRATUITE DÉSACTIVÉE ──────────────────────────────────────
+         Réactiver en même temps que le tarif « en-ligne » de src/data/config.js.
       'en-ligne': {
-        name: 'En ligne',
-        tagline: 'Suivez les temps forts en direct, où que vous soyez.',
-        features: ['Plénières retransmises en direct', 'Startup Pitch Competition', 'Cérémonie des Awards en différé', 'Flyer « J’y serai »'],
+      name: 'En ligne',
+      tagline: 'Suivez les temps forts en direct, où que vous soyez.',
+      features: ['Plénières retransmises en direct', 'Startup Pitch Competition', 'Cérémonie des Awards en différé', 'Flyer « J’y serai »'],
       },
+      */
       etudiant: {
         name: 'Étudiant',
         tagline: 'Pour les étudiants et jeunes chercheurs.',
@@ -196,7 +204,7 @@ export default {
         lead: 'Créez en quelques secondes votre visuel personnalisé aux couleurs des JCIA 2027 et partagez-le sur WhatsApp, LinkedIn, Facebook, Instagram ou X.',
       },
       lockedTitle: 'Réservé aux participants',
-      lockedText: 'Le générateur de flyer se débloque dès que votre billet est confirmé (paiement Mobile Money validé ou billet gratuit réservé).',
+      lockedText: 'Le générateur de flyer est réservé aux billets payants : il se débloque dès que votre paiement Mobile Money est validé.',
       lockedCta: 'Réserver mon billet',
       photo: 'Votre photo',
       upload: 'Choisir une photo',

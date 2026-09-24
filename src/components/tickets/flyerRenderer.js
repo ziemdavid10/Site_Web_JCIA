@@ -198,13 +198,103 @@ function drawBackground(ctx, w, h, st, assets) {
     ctx.restore()
   }
 
-  // Trame discrète de losanges (motif des frises)
+  // Trame Ndop : losanges concentriques et noix de kola, en filigrane
   ctx.save()
-  ctx.globalAlpha = 0.05
-  for (let y = 40; y < h; y += 80) {
-    for (let x = (y / 80) % 2 ? 40 : 0; x < w; x += 80) diamond(ctx, x, y, 7, st.text)
+  ctx.globalAlpha = 0.055
+  ctx.strokeStyle = st.text
+  ctx.lineWidth = 2
+  for (let y = 50, row = 0; y < h; y += 100, row += 1) {
+    for (let x = row % 2 ? 50 : 0, col = 0; x < w + 50; x += 100, col += 1) {
+      if ((col + row) % 2) {
+        // Noix de kola : cercle et noyau
+        ctx.beginPath()
+        ctx.arc(x, y, 16, 0, Math.PI * 2)
+        ctx.stroke()
+        ctx.beginPath()
+        ctx.arc(x, y, 4.5, 0, Math.PI * 2)
+        ctx.fillStyle = st.text
+        ctx.fill()
+      } else {
+        // Losange concentrique
+        ctx.beginPath()
+        ctx.moveTo(x, y - 18)
+        ctx.lineTo(x + 18, y)
+        ctx.lineTo(x, y + 18)
+        ctx.lineTo(x - 18, y)
+        ctx.closePath()
+        ctx.stroke()
+        diamond(ctx, x, y, 6, st.text)
+      }
+    }
   }
   ctx.restore()
+}
+
+/**
+ * Lisière tissée « Ndop » en haut du flyer : fond indigo, motifs écrus
+ * (losange concentrique, noix de kola, peigne, chevrons). Dessin original
+ * inspiré du répertoire traditionnel des Grassfields.
+ */
+function drawNdopBand(ctx, w, height) {
+  const ground = '#141c38'
+  const motif = '#f4ead9'
+  ctx.save()
+  ctx.fillStyle = ground
+  ctx.fillRect(0, 0, w, height)
+  const k = height / 56
+  ctx.scale(k, k)
+  const unit = 168
+  ctx.strokeStyle = motif
+  ctx.fillStyle = motif
+  ctx.lineWidth = 1.8
+  ctx.lineCap = 'round'
+  for (let x = 0; x < w / k + unit; x += unit) {
+    ctx.globalAlpha = 0.7
+    ctx.beginPath()
+    ctx.moveTo(x, 7)
+    ctx.lineTo(x + unit, 7)
+    ctx.moveTo(x, 49)
+    ctx.lineTo(x + unit, 49)
+    ctx.stroke()
+    ctx.globalAlpha = 1
+    // Losange concentrique
+    ctx.beginPath()
+    ctx.moveTo(x + 28, 13)
+    ctx.lineTo(x + 43, 28)
+    ctx.lineTo(x + 28, 43)
+    ctx.lineTo(x + 13, 28)
+    ctx.closePath()
+    ctx.stroke()
+    diamond(ctx, x + 28, 28, 7, motif)
+    // Noix de kola
+    ctx.beginPath()
+    ctx.arc(x + 72, 28, 12, 0, Math.PI * 2)
+    ctx.stroke()
+    ctx.beginPath()
+    ctx.arc(x + 72, 28, 4, 0, Math.PI * 2)
+    ctx.fill()
+    // Peigne
+    ctx.beginPath()
+    ctx.moveTo(x + 96, 17)
+    ctx.lineTo(x + 122, 17)
+    for (let i = 0; i < 4; i += 1) {
+      ctx.moveTo(x + 96 + i * 8, 17)
+      ctx.lineTo(x + 96 + i * 8, 39)
+    }
+    ctx.stroke()
+    // Chevrons
+    ctx.beginPath()
+    ctx.moveTo(x + 132, 39)
+    ctx.lineTo(x + 141, 29)
+    ctx.lineTo(x + 150, 39)
+    ctx.lineTo(x + 159, 29)
+    ctx.lineTo(x + 168, 39)
+    ctx.stroke()
+  }
+  ctx.restore()
+  // Filets de la charte
+  ctx.fillStyle = '#f6a343'
+  ctx.fillRect(0, height - Math.max(3, height * 0.07), w, Math.max(3, height * 0.07))
 }
 
 /** Frise de pied de page : triangles et losanges aux couleurs de la marque. */
@@ -314,6 +404,8 @@ export function drawFlyer(canvas, o) {
   ctx.textAlign = 'center'
   ctx.textBaseline = 'alphabetic'
   drawBackground(ctx, w, h, st, o.assets)
+  const bandH = Math.round(L.logo.y * 0.62) // lisière tissée en haut du visuel
+  drawNdopBand(ctx, w, bandH)
 
   // Logo
   const logo = st.logo === 'white' ? o.assets.logoWhite : o.assets.logoColor

@@ -14,7 +14,7 @@ import {
 } from '@/components/tickets/flyerRenderer'
 import { useI18n } from '@/i18n/context'
 import { CONFIG } from '@/data/config'
-import { getOrder, isConfirmed, latestConfirmedOrder } from '@/services/orders'
+import { canGenerateFlyer, getOrder, latestConfirmedOrder } from '@/services/orders'
 import useDocumentMeta from '@/hooks/useDocumentMeta'
 import { loadSafeImage } from '@/security/files'
 import { cleanText } from '@/security/sanitize'
@@ -386,7 +386,8 @@ export default function FlyerPage() {
   const [params] = useSearchParams()
   const orderParam = params.get('order')
   const order = useMemo(() => (orderParam ? getOrder(orderParam) : latestConfirmedOrder()), [orderParam])
-  const unlocked = isConfirmed(order)
+  // Le flyer est réservé aux billets payants (l'option gratuite n'y donne pas droit)
+  const unlocked = canGenerateFlyer(order)
   useDocumentMeta(`${f.title} | ${t.event.shortName}`, { noindex: true })
 
   return (

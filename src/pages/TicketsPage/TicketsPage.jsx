@@ -4,8 +4,10 @@ import { PageHero, PageSection } from '@/components/page'
 import OperatorBadge from '@/components/tickets/OperatorBadge'
 import { useI18n } from '@/i18n/context'
 import { rich } from '@/i18n/rich'
+import { fill } from '@/i18n/format'
 import { CONFIG } from '@/data/config'
 import { formatXAF } from '@/utils/money'
+import { formatSeats, isLowStock, isSoldOut, remainingSeats } from '@/utils/tickets'
 import useDocumentMeta from '@/hooks/useDocumentMeta'
 import './TicketsPage.scss'
 
@@ -57,9 +59,11 @@ export default function TicketsPage() {
                 as="li"
                 key={tier.id}
                 delay={i * 80}
-                className={`tier-card tier-card--${tier.color} ${tier.featured ? 'tier-card--featured' : ''}`}
+                className={`tier-card tier-card--${tier.color} ${isSoldOut(tier) ? 'is-sold-out' : ''}`}
               >
-                {tier.featured && <span className="tier-card__ribbon">{tp.featured}</span>}
+                {/* Mention « le plus choisi » retirée à la demande de l'organisateur :
+                    {tier.featured && <span className="tier-card__ribbon">{tp.featured}</span>} */}
+                {isSoldOut(tier) && <span className="tier-card__ribbon tier-card__ribbon--out">{tp.soldOut}</span>}
                 <div className="tier-card__head">
                   <span className="tier-card__icon" aria-hidden="true">
                     <Icon name={tier.icon} size={24} />
@@ -75,6 +79,13 @@ export default function TicketsPage() {
                   <strong>{price(tier)}</strong>
                   {tier.price > 0 && <span>{tp.perPerson}</span>}
                 </p>
+                {/* Quota : nombre de billets mis en vente (et alerte quand il reste peu de places) */}
+                <p className={`tier-card__quota ${isLowStock(tier) ? 'is-low' : ''}`}>
+                  <Icon name={isLowStock(tier) ? 'alert' : 'ticket'} size={15} />
+                  {isLowStock(tier)
+                    ? fill(tp.remaining, { n: formatSeats(remainingSeats(tier), locale) })
+                    : fill(tp.quota, { n: formatSeats(tier.quota, locale) })}
+                </p>
                 <ul className="tier-card__features">
                   {tt.features.map((f) => (
                     <li key={f}>
@@ -89,16 +100,22 @@ export default function TicketsPage() {
                     {tt.note}
                   </p>
                 )}
-                <Button
-                  as={Link}
-                  to={`${routes.checkout}/${tier.id}`}
-                  variant={tier.featured ? 'primary' : 'secondary'}
-                  icon="arrow-right"
-                  className="tier-card__cta"
-                  aria-label={`${tier.price === 0 ? tp.chooseFree : tp.choose} — ${tt.name}`}
-                >
-                  {tier.price === 0 ? tp.chooseFree : tp.choose}
-                </Button>
+                {isSoldOut(tier) ? (
+                  <Button variant="outline" iconLeft="info" className="tier-card__cta" disabled>
+                    {tp.soldOut}
+                  </Button>
+                ) : (
+                  <Button
+                    as={Link}
+                    to={`${routes.checkout}/${tier.id}`}
+                    variant="secondary"
+                    icon="arrow-right"
+                    className="tier-card__cta"
+                    aria-label={`${tp.choose} — ${tt.name}`}
+                  >
+                    {tp.choose}
+                  </Button>
+                )}
               </Reveal>
             )
           })}
@@ -116,6 +133,7 @@ export default function TicketsPage() {
                   <th scope="col" key={tier.id} className={`compare__tier compare__tier--${tier.color}`}>
                     <span>{t.tickets.tiers[tier.id].name}</span>
                     <small>{price(tier)}</small>
+                    <small className="compare__quota">{fill(tp.quota, { n: formatSeats(tier.quota, locale) })}</small>
                   </th>
                 ))}
               </tr>

@@ -1,5 +1,5 @@
 import { Link } from 'react-router'
-import { Button, Countdown, Frise, Icon, NeuralCanvas, PatternBg, ThemeImg } from '@/components/ui'
+import { Button, Countdown, Icon, NdopBand, NeuralCanvas, PatternBg, ThemeImg } from '@/components/ui'
 import { useI18n } from '@/i18n/context'
 import { rich } from '@/i18n/rich'
 import { CONFIG } from '@/data/config'
@@ -107,7 +107,7 @@ export default function Hero() {
         <span />
       </a>
 
-      <Frise className="hero__frise" height={26} />
+      <NdopBand className="hero__frise" height={56} />
     </section>
   )
 }

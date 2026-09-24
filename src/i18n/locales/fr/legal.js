@@ -196,7 +196,8 @@ export default {
           {
             list: [
               'Les billets sont vendus en francs CFA (XAF), toutes taxes comprises, et réglés par MTN Mobile Money ou Orange Money. La commande est confirmée dès la validation du paiement par l’opérateur ; le billet électronique est alors émis.',
-              'Le billet « En ligne » est gratuit. Le billet « Étudiant » est soumis à la présentation d’une carte d’étudiant valide à l’accueil.',
+              // Option gratuite désactivée : 'Le billet « En ligne » est gratuit.' — voir src/data/config.js
+              'Le billet « Étudiant » est soumis à la présentation d’une carte d’étudiant en cours de validité à l’accueil.',
               'Sauf annulation de l’événement par l’organisateur, les billets ne sont ni repris ni remboursés ; ils peuvent être transférés à un tiers sur demande écrite au secrétariat.',
               'Le générateur de flyer « J’y serai » est réservé aux détenteurs d’un billet confirmé ; l’utilisateur garantit disposer des droits sur la photo utilisée.',
               'Le nombre de places étant limité, l’organisateur se réserve le droit de clore les inscriptions ou de refuser une demande, notamment en cas d’informations inexactes.',

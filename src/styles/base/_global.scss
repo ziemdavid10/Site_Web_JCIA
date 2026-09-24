@@ -101,6 +101,19 @@ strong {
   }
 }
 
+// --- Menu mobile ouvert ------------------------------------------------------------
+// <html class="menu-open"> est posé par <Header /> pendant l'ouverture du menu
+// burger. Les barres flottantes des pages passeraient par-dessus le panneau
+// (elles sont volontairement au-dessus de l'en-tête) et masqueraient le bas du
+// menu : on les efface le temps de la navigation.
+:root.menu-open {
+  .co-bar,
+  .cookie-banner,
+  .back-to-top {
+    display: none !important;
+  }
+}
+
 // --- Utilitaires ------------------------------------------------------------------
 .container {
   @include container;
