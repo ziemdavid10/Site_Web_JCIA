@@ -1,0 +1,418 @@
+@use '@/styles/abstracts' as *;
+
+.confirmation {
+  background: $bg;
+
+  // --- Bandeau de succès ------------------------------------------------------
+  &__hero {
+    position: relative;
+    overflow: hidden;
+    color: $text;
+    text-align: center;
+    background:
+      radial-gradient(circle at 50% 0%, rgba($flag-green, 0.22), transparent 55%),
+      radial-gradient(circle at 90% 90%, rgba($orange, 0.18), transparent 45%),
+      $stage;
+  }
+
+  &__hero-inner {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: $space-4;
+    padding-top: calc(#{$header-height} + 56px);
+    padding-bottom: $space-7;
+
+    h1 {
+      font-size: clamp(1.8rem, 4.6vw, 3rem);
+
+      em {
+        font-style: normal;
+        color: $highlight;
+      }
+    }
+
+    > p {
+      max-width: 56ch;
+      color: fg(0.78);
+    }
+  }
+
+  &__check {
+    display: grid;
+    place-items: center;
+    width: 84px;
+    height: 84px;
+    color: $white;
+    background: $flag-green;
+    border-radius: 50%;
+    box-shadow: 0 0 0 12px rgba($flag-green, 0.18);
+    animation: confirm-pop 700ms $ease-out both;
+  }
+
+  &__demo {
+    display: inline-flex;
+    align-items: center;
+    gap: $space-2;
+    padding: 0.35rem 0.9rem;
+    font-size: 0.8rem !important;
+    font-weight: $fw-semibold;
+    color: $navy !important;
+    background: $flag-yellow;
+    border-radius: $radius-pill;
+  }
+
+  &__grid {
+    display: grid;
+    gap: $space-6;
+    padding-block: $space-7 $space-9;
+
+    @include mq('lg') {
+      grid-template-columns: minmax(0, 1.5fr) minmax(320px, 1fr);
+      align-items: start;
+      gap: $space-7;
+    }
+  }
+
+  &__side {
+    display: flex;
+    flex-direction: column;
+    gap: $space-5;
+
+    @include mq('lg') {
+      position: sticky;
+      top: calc(#{$header-height} + #{$space-4});
+    }
+  }
+
+  &__another {
+    text-align: center;
+
+    a {
+      display: inline-flex;
+      align-items: center;
+      gap: $space-2;
+      font-size: 0.9rem;
+      font-weight: $fw-semibold;
+      color: $accent-text;
+    }
+  }
+
+  // --- Commande introuvable ------------------------------------------------------
+  &__missing {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: $space-4;
+    max-width: 640px;
+    padding-top: calc(#{$header-height} + 96px);
+    padding-bottom: $space-9;
+    text-align: center;
+
+    p {
+      color: $text-soft;
+    }
+  }
+
+  &__missing-icon {
+    display: grid;
+    place-items: center;
+    width: 76px;
+    height: 76px;
+    color: $accent-text;
+    background: $surface-muted;
+    border-radius: 50%;
+  }
+
+  &__missing-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: $space-3;
+  }
+}
+
+// --- Billet électronique ------------------------------------------------------------
+.e-tickets {
+  display: grid;
+  gap: $space-5;
+}
+
+.e-ticket {
+  --tier: #{$orange};
+  position: relative;
+  display: grid;
+  overflow: hidden;
+  color: $white;
+  background: $navy;
+  border-radius: $radius-lg;
+  box-shadow: $shadow-lg;
+
+  @each $name, $color in $accent-colors {
+    &--#{$name} {
+      --tier: #{$color};
+    }
+  }
+
+  @include mq('sm') {
+    grid-template-columns: 1fr 200px;
+  }
+
+  &__main {
+    position: relative;
+    padding: $space-5;
+    background:
+      radial-gradient(circle at 0% 0%, color-mix(in srgb, var(--tier) 45%, transparent), transparent 60%),
+      linear-gradient(135deg, $navy-700, $navy);
+
+    // Liseré « tissé » sur le bord gauche
+    &::before {
+      content: '';
+      position: absolute;
+      inset: 0 auto 0 0;
+      width: 6px;
+      background: repeating-linear-gradient(180deg, $orange 0 18px, $teal 18px 36px, $rust 36px 54px, $purple 54px 72px);
+    }
+
+    @include mq('md') {
+      padding: $space-6;
+    }
+  }
+
+  &__logo {
+    width: 104px;
+    height: auto;
+    margin-bottom: $space-4;
+  }
+
+  &__tier {
+    display: flex;
+    align-items: center;
+    gap: $space-2;
+    font-size: 0.75rem;
+    font-weight: $fw-bold;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--tier);
+
+    span {
+      padding: 1px 8px;
+      font-size: 0.7rem;
+      color: $navy;
+      background: var(--tier);
+      border-radius: $radius-pill;
+    }
+  }
+
+  &__holder {
+    margin: $space-2 0 $space-4;
+    font-size: clamp(1.3rem, 3vw, 1.7rem);
+    font-weight: $fw-bold;
+    line-height: 1.2;
+    word-break: break-word;
+
+    small {
+      display: block;
+      font-size: 0.7rem;
+      font-weight: $fw-medium;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: rgba($white, 0.55);
+    }
+  }
+
+  &__meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: $space-2 $space-4;
+    font-size: 0.82rem;
+    color: rgba($white, 0.8);
+
+    li {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+  }
+
+  // Talon détachable : perforation + QR code
+  &__stub {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: $space-2;
+    padding: $space-5;
+    color: $navy;
+    text-align: center;
+    background: $white;
+
+    // Perforation (pointillés + encoches)
+    &::before {
+      content: '';
+      position: absolute;
+      inset: 0 0 auto;
+      border-top: 2px dashed rgba($navy, 0.25);
+
+      @include mq('sm') {
+        inset: 0 auto 0 0;
+        border-top: 0;
+        border-left: 2px dashed rgba($navy, 0.25);
+      }
+    }
+  }
+
+  &__qr {
+    width: 140px;
+    height: 140px;
+
+    &--loading {
+      display: block;
+      background: repeating-linear-gradient(45deg, rgba($navy, 0.06) 0 8px, transparent 8px 16px);
+      border-radius: $radius-sm;
+    }
+  }
+
+  &__id {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 0.85rem;
+    font-weight: $fw-bold;
+    letter-spacing: 0.06em;
+  }
+
+  &__scan {
+    font-size: 0.72rem;
+    line-height: 1.4;
+    color: $ink-muted-raw;
+  }
+}
+
+// --- Détails de la commande -----------------------------------------------------------
+.order-box {
+  padding: $space-5;
+  background: $surface;
+  border: 1px solid $border;
+  border-radius: $radius-lg;
+
+  dl {
+    display: grid;
+    gap: $space-3;
+  }
+
+  div {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: $space-1 $space-3;
+    font-size: 0.88rem;
+  }
+
+  dt {
+    color: $text-muted;
+  }
+
+  dd {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: $space-2;
+    font-weight: $fw-semibold;
+    text-align: right;
+  }
+
+  &__tx {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 0.78rem;
+    word-break: break-all;
+  }
+
+  &__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: $space-2;
+    margin-top: $space-5;
+    padding-top: $space-4;
+    border-top: 1px dashed $border-strong;
+
+    .btn {
+      flex: 1 1 auto;
+    }
+  }
+}
+
+// --- Appel au générateur de flyer --------------------------------------------------------
+.flyer-cta {
+  position: relative;
+  overflow: hidden;
+  padding: $space-6 $space-5;
+  color: $white;
+  background:
+    radial-gradient(circle at 100% 0%, rgba($orange, 0.5), transparent 50%),
+    radial-gradient(circle at 0% 100%, rgba($teal, 0.35), transparent 50%),
+    $navy;
+  border-radius: $radius-lg;
+
+  &__badge {
+    display: inline-grid;
+    place-items: center;
+    width: 56px;
+    height: 56px;
+    margin-bottom: $space-3;
+    color: $navy;
+    background: $orange;
+    border-radius: $radius-md;
+    transform: rotate(-6deg);
+  }
+
+  h2 {
+    font-size: 1.35rem;
+  }
+
+  p {
+    margin: $space-2 0 $space-5;
+    font-size: 0.9rem;
+    color: rgba($white, 0.78);
+  }
+
+  .btn {
+    width: 100%;
+  }
+}
+
+@keyframes confirm-pop {
+  0% {
+    opacity: 0;
+    transform: scale(0.4);
+  }
+  60% {
+    transform: scale(1.12);
+  }
+}
+
+// --- Impression : uniquement les billets ----------------------------------------------------
+@media print {
+  .header,
+  .footer,
+  .confirmation__hero,
+  .confirmation__side,
+  .back-to-top,
+  .cookie-banner {
+    display: none !important;
+  }
+
+  .confirmation__grid {
+    display: block;
+    padding: 0;
+  }
+
+  .e-ticket {
+    break-inside: avoid;
+    margin-bottom: 1cm;
+    box-shadow: none;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+}

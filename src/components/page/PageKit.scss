@@ -1,0 +1,825 @@
+@use '@/styles/abstracts' as *;
+
+// =============================================================================
+// KIT DES PAGES DÉTAILLÉES
+// -----------------------------------------------------------------------------
+// PageHero · Breadcrumb · Toc · PageSection · IconCards · Steps · CheckList ·
+// StatRow · DataTable · Callout · CtaBand
+// Toutes les couleurs passent par les variables de thème : rendu soigné en
+// thème clair comme en thème sombre.
+// =============================================================================
+
+// --- PageHero -----------------------------------------------------------------
+.page-hero {
+  position: relative;
+  overflow: hidden;
+  color: $text;
+  background: radial-gradient(ellipse at 75% 30%, $stage-mid, $stage 50%, $stage-deep);
+
+  &__glow {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(70px);
+    pointer-events: none;
+
+    &--a {
+      top: -120px;
+      right: -80px;
+      width: 420px;
+      height: 420px;
+      background: rgba($orange, 0.22);
+    }
+
+    &--b {
+      bottom: -160px;
+      left: -120px;
+      width: 380px;
+      height: 380px;
+      background: rgba($teal, 0.18);
+    }
+  }
+
+  &__inner {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    gap: $space-6;
+    padding-top: calc(#{$header-height} + 64px);
+    padding-bottom: $space-8;
+
+    @include mq('lg') {
+      padding-top: calc(#{$header-height} + 96px);
+      padding-bottom: $space-9;
+    }
+  }
+
+  &--art &__inner {
+    @include mq('lg') {
+      grid-template-columns: 1.4fr 0.8fr;
+      align-items: center;
+    }
+  }
+
+  &__content {
+    max-width: 820px;
+  }
+
+  &__eyebrow {
+    display: flex;
+    align-items: center;
+    gap: $space-3;
+    margin-bottom: $space-4;
+    font-size: 0.78rem;
+    font-weight: $fw-bold;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: $highlight;
+  }
+
+  &__diamonds {
+    display: inline-flex;
+    gap: 4px;
+
+    i {
+      width: 9px;
+      height: 9px;
+      transform: rotate(45deg);
+      border-radius: 1px;
+
+      &:nth-child(1) {
+        background: $orange;
+      }
+      &:nth-child(2) {
+        background: $teal;
+      }
+      &:nth-child(3) {
+        background: $rust;
+      }
+    }
+  }
+
+  &__title {
+    font-size: clamp(2.1rem, 5.6vw, 4rem);
+    font-weight: $fw-bold;
+    line-height: 1.08;
+    letter-spacing: -0.02em;
+
+    em {
+      font-style: normal;
+      @include gradient-text($orange, $rust);
+    }
+  }
+
+  &__lead {
+    max-width: 64ch;
+    margin-top: $space-5;
+    font-size: clamp(1rem, 1.4vw, 1.15rem);
+    line-height: 1.75;
+    color: fg(0.78);
+  }
+
+  &__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: $space-3;
+    margin-top: $space-6;
+
+    @include mq-down('sm') {
+      .btn {
+        width: 100%;
+      }
+    }
+  }
+
+  &__art {
+    display: none;
+
+    @include mq('lg') {
+      display: block;
+    }
+
+    img {
+      width: 100%;
+      max-width: 380px;
+      margin-inline: auto;
+      animation: float 7s ease-in-out infinite;
+    }
+  }
+
+  &__stats {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: $space-3;
+    margin-top: $space-3;
+
+    @include mq('md') {
+      grid-template-columns: repeat(4, 1fr);
+    }
+
+    li {
+      padding: $space-4 $space-5;
+      border-radius: $radius-md;
+      @include glass(0.05);
+    }
+
+    strong {
+      display: block;
+      font-size: clamp(1.5rem, 3vw, 2.2rem);
+      font-weight: $fw-black;
+      line-height: 1.1;
+      color: $highlight;
+    }
+
+    span {
+      font-size: 0.82rem;
+      color: fg(0.72);
+    }
+  }
+
+  &__frise {
+    position: relative;
+    z-index: 1;
+  }
+}
+
+// --- Fil d'Ariane --------------------------------------------------------------------
+.breadcrumb {
+  margin-bottom: $space-5;
+
+  ol {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: $space-1 $space-2;
+    font-size: 0.8rem;
+  }
+
+  li {
+    display: inline-flex;
+    align-items: center;
+    gap: $space-2;
+    color: fg(0.6);
+
+    .icon {
+      opacity: 0.6;
+    }
+  }
+
+  a {
+    color: fg(0.75);
+    text-decoration: underline;
+    text-decoration-color: fg(0.25);
+    text-underline-offset: 3px;
+
+    &:hover {
+      color: $highlight;
+    }
+  }
+
+  [aria-current='page'] span {
+    font-weight: $fw-semibold;
+    color: $text;
+  }
+}
+
+// --- Sommaire collant -------------------------------------------------------------------
+.toc {
+  position: sticky;
+  top: calc(#{$header-height} - 14px);
+  z-index: $z-header - 1;
+  background: $header-bg;
+  backdrop-filter: blur(14px) saturate(1.4);
+  border-bottom: 1px solid $border;
+
+  &__inner {
+    display: flex;
+    align-items: center;
+    gap: $space-4;
+  }
+
+  &__label {
+    display: none;
+    flex-shrink: 0;
+    font-size: 0.72rem;
+    font-weight: $fw-bold;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: $text-muted;
+
+    @include mq('lg') {
+      display: block;
+    }
+  }
+
+  ol {
+    display: flex;
+    gap: $space-2;
+    padding-block: $space-3;
+    overflow-x: auto;
+    scrollbar-width: none;
+    // Dégradé de bord : suggère le défilement horizontal sur mobile
+    mask-image: linear-gradient(90deg, #000 88%, transparent);
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
+
+    @include mq('xl') {
+      mask-image: none;
+    }
+  }
+
+  a {
+    display: block;
+    padding: 0.45rem 0.95rem;
+    font-size: 0.82rem;
+    font-weight: $fw-medium;
+    white-space: nowrap;
+    color: $text-soft;
+    border: 1px solid $border;
+    border-radius: $radius-pill;
+    transition:
+      color $duration-fast,
+      background $duration-fast,
+      border-color $duration-fast;
+
+    &:hover {
+      color: $text;
+      border-color: $border-strong;
+    }
+
+    &.is-active {
+      color: $navy;
+      background: $orange;
+      border-color: $orange;
+    }
+  }
+}
+
+// Les ancres ne passent pas sous l'en-tête + le sommaire
+.page-section[id],
+.page-anchor {
+  scroll-margin-top: calc(#{$header-height} + 60px);
+}
+
+// --- Section de page -------------------------------------------------------------------------
+.page-section {
+  position: relative;
+  padding-block: $space-8;
+
+  @include mq('lg') {
+    padding-block: $space-9;
+  }
+
+  &--sand {
+    background: $bg-alt;
+  }
+
+  &--white {
+    background: $bg-elevated;
+  }
+
+  &--stage {
+    color: $text;
+    background:
+      radial-gradient(circle at 90% 10%, rgba($orange, 0.16), transparent 40%),
+      radial-gradient(circle at 5% 95%, rgba($teal, 0.14), transparent 40%),
+      $stage;
+  }
+
+  &__narrow {
+    max-width: $container-narrow + 64px;
+  }
+
+  // Deux colonnes : texte + bloc, empilées sur mobile
+  &__split {
+    display: grid;
+    gap: $space-6;
+
+    @include mq('lg') {
+      grid-template-columns: 1fr 1fr;
+      gap: $space-8;
+      align-items: start;
+    }
+  }
+
+  // Sous-titre à l'intérieur d'une section
+  &__subtitle {
+    margin: $space-7 0 $space-5;
+    font-size: clamp(1.2rem, 2vw, 1.5rem);
+
+    &:first-child {
+      margin-top: 0;
+    }
+  }
+
+  // Paragraphe courant
+  &__text {
+    max-width: 68ch;
+    font-size: 1.02rem;
+    line-height: 1.8;
+    color: $text-soft;
+
+    + .page-section__text {
+      margin-top: $space-4;
+    }
+  }
+
+  // Bloc espacé du précédent
+  &__block {
+    margin-top: $space-6;
+  }
+
+  &__note {
+    margin-top: $space-6;
+    font-size: 0.85rem;
+    font-style: italic;
+    color: $text-muted;
+  }
+}
+
+// --- Cartes à icône ---------------------------------------------------------------------------
+.icon-cards {
+  display: grid;
+  gap: $space-4;
+
+  @include mq('sm') {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  @include mq('lg') {
+    gap: $space-5;
+
+    &--cols-3 {
+      grid-template-columns: repeat(3, 1fr);
+    }
+
+    &--cols-4 {
+      grid-template-columns: repeat(4, 1fr);
+    }
+  }
+}
+
+.icon-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: $space-2;
+  padding: $space-5;
+  background: $surface;
+  border: 1px solid $border;
+  border-radius: $radius-lg;
+  transition:
+    transform $duration $ease-out,
+    box-shadow $duration,
+    border-color $duration;
+
+  &:hover {
+    transform: translateY(-4px);
+    border-color: rgba($orange, 0.45);
+    box-shadow: $shadow-md;
+  }
+
+  // Couleurs d'icône en rotation (orange, turquoise, latérite, violet)
+  --accent: #{$orange};
+  &:nth-child(4n + 2) {
+    --accent: #{$teal};
+  }
+  &:nth-child(4n + 3) {
+    --accent: #{$rust};
+  }
+  &:nth-child(4n + 4) {
+    --accent: #{$purple};
+  }
+
+  &__icon {
+    display: grid;
+    place-items: center;
+    width: 50px;
+    height: 50px;
+    margin-bottom: $space-2;
+    color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 14%, transparent);
+    border-radius: $radius-md;
+  }
+
+  &__when {
+    font-size: 0.72rem;
+    font-weight: $fw-bold;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: $accent-text;
+  }
+
+  h3 {
+    font-size: 1.08rem;
+    line-height: 1.3;
+  }
+
+  p {
+    font-size: 0.9rem;
+    line-height: 1.65;
+    color: $text-soft;
+  }
+}
+
+// Sur fond « scène »
+.page-section--stage .icon-card {
+  background: fg(0.05);
+  border-color: fg(0.1);
+
+  p {
+    color: fg(0.72);
+  }
+}
+
+// --- Étapes -------------------------------------------------------------------------------------
+.steps {
+  display: grid;
+  gap: $space-4;
+  counter-reset: steps;
+
+  @include mq('md') {
+    &--2,
+    &--4 {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    &--3 {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+
+  @include mq('xl') {
+    &--4 {
+      grid-template-columns: repeat(4, 1fr);
+    }
+  }
+
+  &__item {
+    position: relative;
+    display: flex;
+    gap: $space-4;
+    padding: $space-5;
+    background: $surface;
+    border: 1px solid $border;
+    border-radius: $radius-lg;
+
+    @include mq('md') {
+      flex-direction: column;
+    }
+
+    h3 {
+      margin-bottom: $space-1;
+      font-size: 1.02rem;
+    }
+
+    p {
+      font-size: 0.88rem;
+      line-height: 1.6;
+      color: $text-soft;
+    }
+  }
+
+  &__num {
+    flex-shrink: 0;
+    display: grid;
+    place-items: center;
+    width: 46px;
+    height: 46px;
+    font-size: 0.95rem;
+    font-weight: $fw-black;
+    color: $navy;
+    background: $orange;
+    // Losange : clin d'œil aux frises
+    clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
+  }
+}
+
+.page-section--stage .steps__item {
+  background: fg(0.05);
+  border-color: fg(0.1);
+
+  p {
+    color: fg(0.72);
+  }
+}
+
+// --- Liste à coches -------------------------------------------------------------------------------
+.check-list {
+  display: grid;
+  gap: $space-3;
+
+  @include mq('md') {
+    &--cols-2 {
+      grid-template-columns: repeat(2, 1fr);
+      column-gap: $space-6;
+    }
+  }
+
+  li {
+    display: flex;
+    gap: $space-3;
+    font-size: 0.95rem;
+    line-height: 1.6;
+    color: $text-soft;
+  }
+
+  .icon {
+    flex-shrink: 0;
+    margin-top: 3px;
+    padding: 2px;
+    border-radius: 50%;
+  }
+
+  &--check .icon {
+    color: $white;
+    background: $flag-green;
+  }
+
+  &--close .icon {
+    color: $white;
+    background: $flag-red;
+  }
+}
+
+.page-section--stage .check-list li {
+  color: fg(0.8);
+}
+
+// --- Chiffres clés ----------------------------------------------------------------------------------
+.stat-row {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: $space-3;
+
+  @include mq('md') {
+    grid-template-columns: repeat(4, 1fr);
+    gap: $space-4;
+  }
+
+  li {
+    padding: $space-5;
+    text-align: center;
+    background: $surface;
+    border: 1px solid $border;
+    border-radius: $radius-lg;
+  }
+
+  strong {
+    display: block;
+    font-size: clamp(1.6rem, 3.4vw, 2.4rem);
+    font-weight: $fw-black;
+    line-height: 1.1;
+    @include gradient-text($orange, $rust);
+  }
+
+  span {
+    font-size: 0.82rem;
+    color: $text-muted;
+  }
+}
+
+// --- Tableau de données ----------------------------------------------------------------------------------
+.data-table {
+  overflow: hidden;
+  background: $surface;
+  border: 1px solid $border;
+  border-radius: $radius-lg;
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.92rem;
+  }
+
+  caption {
+    padding: $space-4 $space-5;
+    font-weight: $fw-semibold;
+    text-align: left;
+  }
+
+  thead th {
+    padding: $space-4 $space-5;
+    font-size: 0.75rem;
+    font-weight: $fw-bold;
+    letter-spacing: 0.08em;
+    text-align: left;
+    text-transform: uppercase;
+    color: $text-muted;
+    background: $surface-muted;
+  }
+
+  tbody th,
+  td {
+    padding: $space-4 $space-5;
+    text-align: left;
+    vertical-align: top;
+    border-top: 1px solid $border;
+  }
+
+  tbody th {
+    font-weight: $fw-semibold;
+  }
+
+  td {
+    color: $text-soft;
+
+    &:last-child {
+      font-weight: $fw-semibold;
+      color: $accent-text;
+    }
+  }
+
+  // Mobile : chaque ligne devient une carte
+  @include mq-down('md') {
+    thead {
+      @include visually-hidden;
+    }
+
+    tr {
+      display: block;
+      padding: $space-4 $space-5;
+      border-top: 1px solid $border;
+
+      &:first-child {
+        border-top: 0;
+      }
+    }
+
+    tbody th,
+    td {
+      display: block;
+      padding: 2px 0;
+      border: 0;
+    }
+
+    tbody th {
+      margin-bottom: $space-2;
+      font-size: 1rem;
+    }
+
+    td::before {
+      content: attr(data-label) ' · ';
+      font-size: 0.72rem;
+      font-weight: $fw-bold;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: $text-muted;
+    }
+  }
+}
+
+// --- Encadré ---------------------------------------------------------------------------------------------
+.callout {
+  display: flex;
+  gap: $space-4;
+  padding: $space-4 $space-5;
+  font-size: 0.92rem;
+  line-height: 1.65;
+  color: $text-soft;
+  border-radius: $radius-md;
+  border-left: 4px solid var(--callout);
+  background: color-mix(in srgb, var(--callout) 10%, transparent);
+
+  --callout: #{$teal};
+
+  &--orange {
+    --callout: #{$orange};
+  }
+
+  &--rust {
+    --callout: #{$rust};
+  }
+
+  > .icon {
+    flex-shrink: 0;
+    color: var(--callout);
+  }
+
+  strong {
+    color: $text;
+  }
+}
+
+// --- Bandeau d'appel à l'action --------------------------------------------------------------------------
+// Carte bleu nuit dans les deux thèmes : point d'orgue de chaque page.
+.cta-band {
+  padding-block: $space-8;
+  background: $bg;
+
+  &__card {
+    position: relative;
+    overflow: hidden;
+    display: grid;
+    gap: $space-5;
+    padding: $space-6 $space-5;
+    color: $white;
+    background:
+      radial-gradient(circle at 100% 0%, rgba($orange, 0.35), transparent 45%),
+      radial-gradient(circle at 0% 100%, rgba($teal, 0.25), transparent 45%),
+      $navy;
+    border-radius: $radius-xl;
+    box-shadow: $shadow-lg;
+
+    @include mq('md') {
+      padding: $space-7;
+    }
+
+    @include mq('lg') {
+      grid-template-columns: auto 1fr auto;
+      align-items: center;
+      gap: $space-6;
+    }
+  }
+
+  &__mascot {
+    position: relative;
+    display: none;
+    width: 96px;
+    height: auto;
+    animation: float 5s ease-in-out infinite;
+
+    @include mq('lg') {
+      display: block;
+    }
+  }
+
+  &__text {
+    position: relative;
+
+    h2 {
+      font-size: clamp(1.5rem, 3vw, 2.2rem);
+
+      em {
+        font-style: normal;
+        color: $orange;
+      }
+    }
+
+    p {
+      margin-top: $space-2;
+      color: rgba($white, 0.75);
+    }
+  }
+
+  &__actions {
+    position: relative;
+    display: flex;
+    flex-wrap: wrap;
+    gap: $space-3;
+
+    @include mq-down('sm') {
+      .btn {
+        width: 100%;
+      }
+    }
+
+    .btn--ghost {
+      color: $white;
+      border-color: rgba($white, 0.35);
+      background: rgba($white, 0.05);
+    }
+  }
+}

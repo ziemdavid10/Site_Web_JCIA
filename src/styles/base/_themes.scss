@@ -1,0 +1,74 @@
+// =============================================================================
+// THÈMES CLAIR & SOMBRE
+// -----------------------------------------------------------------------------
+// Toutes les couleurs « de surface » passent par ces propriétés CSS.
+// Le thème est appliqué par l'attribut data-theme sur <html>
+// (voir src/theme/ThemeProvider.jsx et le script inline d'index.html).
+// Les sections volontairement sombres (hero, chiffres, awards…) gardent leur
+// identité bleu nuit dans les deux thèmes.
+// =============================================================================
+@use '../abstracts' as *;
+
+// --- Thème clair (par défaut) : sable & terre ---------------------------------------
+:root,
+[data-theme='light'] {
+  --c-bg: #{$sand-100-raw};
+  --c-bg-alt: #{$sand-200-raw};
+  --c-bg-elevated: #{$sand-50-raw};
+  --c-surface: #{$white};
+  --c-surface-muted: #{$sand-100-raw};
+  --c-text: #{$navy};
+  --c-text-soft: #{$ink-soft-raw};
+  --c-text-muted: #{$ink-muted-raw};
+  --c-border: #{rgba($navy, 0.08)};
+  --c-border-strong: #{rgba($navy, 0.18)};
+  --c-inverse-bg: #{$navy};
+  --c-inverse-text: #{$white};
+  --c-accent-text: #{$rust};
+  --c-teal-text: #{$teal-700};
+  --c-purple-text: #{$purple};
+  --c-header-bg: #{rgba($sand-50-raw, 0.94)};
+  --c-doodle-filter: none;
+  --c-fg-rgb: 25 32 58;
+  --c-stage: #f4e6d2;
+  --c-stage-mid: #f7ecdc;
+  --c-stage-deep: #efdcc3;
+  --c-highlight: #b9531a;
+  --c-canvas-link: 25, 32, 58;
+  --c-toghu-filter: invert(1) hue-rotate(180deg) saturate(1.4);
+  --c-toghu-blend: multiply;
+  --c-toghu-opacity: 0.09;
+  color-scheme: light;
+}
+
+// --- Thème sombre : nuit équatoriale ---------------------------------------------------
+[data-theme='dark'] {
+  --c-bg: #0e1326;
+  --c-bg-alt: #121a33;
+  --c-bg-elevated: #0b1020;
+  --c-surface: #182039;
+  --c-surface-muted: #1f2847;
+  --c-text: #eef0f8;
+  --c-text-soft: #b8bfd8;
+  --c-text-muted: #8d95b4;
+  --c-border: #{rgba($white, 0.08)};
+  --c-border-strong: #{rgba($white, 0.18)};
+  --c-inverse-bg: #{$sand-100-raw};
+  --c-inverse-text: #{$navy};
+  --c-accent-text: #f08b5e;
+  --c-teal-text: #52cfd3;
+  --c-purple-text: #a893e3;
+  --c-header-bg: #{rgba(#0e1326, 0.9)};
+  // Les croquis (djembé, jarre, soleil) passent en trait clair
+  --c-doodle-filter: invert(1) hue-rotate(180deg) brightness(1.3);
+  --c-fg-rgb: 255 255 255;
+  --c-stage: #{$navy};
+  --c-stage-mid: #{$navy-800};
+  --c-stage-deep: #{$navy-900};
+  --c-highlight: #{$orange};
+  --c-canvas-link: 255, 255, 255;
+  --c-toghu-filter: none;
+  --c-toghu-blend: screen;
+  --c-toghu-opacity: 0.1;
+  color-scheme: dark;
+}

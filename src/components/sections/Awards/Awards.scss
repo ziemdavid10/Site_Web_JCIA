@@ -1,0 +1,637 @@
+@use '@/styles/abstracts' as *;
+
+// =============================================================================
+// AWARDS — ambiance gala
+// =============================================================================
+.awards {
+  overflow: hidden;
+  color: $text;
+  background: $stage-deep;
+
+  // Texture broderie Toghu (image Freepik premium), très atténuée
+  &__texture {
+    position: absolute;
+    inset: 0;
+    background-size: 560px auto;
+    background-repeat: repeat;
+    // Thème sombre : broderie lumineuse (écran) ; thème clair : broderie en négatif (produit)
+    opacity: var(--c-toghu-opacity);
+    mix-blend-mode: var(--c-toghu-blend);
+    filter: var(--c-toghu-filter);
+    mask-image: linear-gradient(to bottom, #000, transparent 30%, transparent 70%, #000);
+    pointer-events: none;
+  }
+
+  // Masques traditionnels en marge
+  &__mask {
+    position: absolute;
+    height: auto;
+    pointer-events: none;
+    filter: drop-shadow(0 20px 30px rgba(0, 0, 0, 0.4));
+
+    &--green {
+      width: 150px;
+      top: 90px;
+      right: -30px;
+      transform: rotate(12deg);
+      opacity: 0.9;
+    }
+
+    &--yellow {
+      width: 130px;
+      bottom: 22%;
+      left: -40px;
+      transform: rotate(-14deg);
+      opacity: 0.75;
+    }
+
+    @include mq-down('lg') {
+      display: none;
+    }
+  }
+
+  &__inner {
+    position: relative;
+    z-index: 1;
+  }
+
+  &__subtitle {
+    margin-bottom: $space-6;
+    font-size: 1.5rem;
+    color: $text;
+  }
+
+  // --- Introduction ---------------------------------------------------------------
+  &__intro {
+    display: grid;
+    gap: $space-7;
+    align-items: center;
+
+    @include mq('lg') {
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: $space-8;
+    }
+
+    .section-header {
+      margin-bottom: $space-6;
+    }
+  }
+
+  &__egide {
+    margin-bottom: $space-6;
+
+    span {
+      display: block;
+      margin-bottom: $space-2;
+      font-size: 0.75rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: fg(0.55);
+    }
+
+    ul {
+      display: flex;
+      flex-wrap: wrap;
+      gap: $space-2;
+    }
+
+    li {
+      padding: 0.45rem 0.9rem;
+      font-size: 0.85rem;
+      font-weight: $fw-medium;
+      border-radius: $radius-pill;
+      border: 1px solid rgba($orange, 0.45);
+      background: rgba($orange, 0.08);
+    }
+  }
+
+  &__ctas {
+    display: flex;
+    flex-wrap: wrap;
+    gap: $space-3;
+  }
+}
+
+// --- Carte « date limite » ------------------------------------------------------------
+.deadline-card {
+  position: relative;
+  padding: $space-6;
+  border-radius: $radius-xl;
+  @include glass(0.06);
+  // Liseré tissé en haut de carte
+  @include woven-border(6px);
+  border-radius: 0 0 $radius-xl $radius-xl;
+
+  &__icon {
+    display: grid;
+    place-items: center;
+    width: 68px;
+    height: 68px;
+    margin-bottom: $space-4;
+    color: $navy;
+    border-radius: 50%;
+    @include gradient-sun(135deg);
+    box-shadow: $shadow-glow-orange;
+  }
+
+  &__title {
+    font-size: 1.2rem;
+    font-weight: $fw-bold;
+  }
+
+  &__dates {
+    margin: $space-2 0 $space-5;
+    font-size: 0.92rem;
+    color: fg(0.75);
+
+    strong {
+      color: $highlight;
+    }
+  }
+
+  &__facts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: $space-2 $space-5;
+    margin-top: $space-5;
+    padding-top: $space-4;
+    border-top: 1px solid fg(0.1);
+    font-size: 0.85rem;
+    color: fg(0.7);
+
+    strong {
+      display: block;
+      font-size: 1.4rem;
+      color: $text;
+    }
+  }
+
+  &__gala {
+    display: flex;
+    align-items: center;
+    gap: $space-2;
+    margin-top: $space-4;
+    font-size: 0.82rem;
+    color: $highlight;
+  }
+}
+
+// --- Catégories ---------------------------------------------------------------------------
+.award-cats {
+  margin-top: $space-9;
+
+  &__grid {
+    display: grid;
+    gap: $space-3;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+
+    @include mq('xl') {
+      grid-template-columns: repeat(5, 1fr);
+    }
+  }
+
+  &__note {
+    margin-top: $space-5;
+    font-size: 0.85rem;
+    font-style: italic;
+    color: fg(0.6);
+  }
+}
+
+.award-cat {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-height: 210px;
+  padding: $space-5;
+  border-radius: $radius-lg;
+  background: linear-gradient(160deg, fg(0.07), fg(0.02));
+  border: 1px solid fg(0.1);
+  overflow: hidden;
+  cursor: default;
+  transition:
+    transform $duration $ease-out,
+    border-color $duration,
+    background $duration;
+
+  &__num {
+    position: absolute;
+    top: $space-3;
+    right: $space-4;
+    font-size: 2.4rem;
+    font-weight: $fw-black;
+    color: fg(0.07);
+    transition: color $duration;
+  }
+
+  &__icon {
+    display: grid;
+    place-items: center;
+    width: 48px;
+    height: 48px;
+    margin-bottom: $space-4;
+    color: $highlight;
+    border-radius: 12px;
+    background: rgba($orange, 0.12);
+    transition:
+      background $duration,
+      color $duration;
+  }
+
+  &__title {
+    font-size: 0.98rem;
+    line-height: 1.35;
+  }
+
+  // Le champ couvert apparaît au survol sur grand écran
+  &__scope {
+    margin-top: $space-2;
+    font-size: 0.8rem;
+    line-height: 1.5;
+    color: fg(0.7);
+
+    // Masqué seulement sur les appareils avec survol (souris) et grand écran
+    @media (hover: hover) and (min-width: 1024px) {
+      max-height: 0;
+      opacity: 0;
+      overflow: hidden;
+      transition:
+        max-height $duration-slow $ease-out,
+        opacity $duration;
+    }
+  }
+
+  &:hover,
+  &:focus-visible {
+    transform: translateY(-4px);
+    border-color: rgba($orange, 0.6);
+    background: linear-gradient(160deg, rgba($orange, 0.16), rgba($rust, 0.08));
+
+    .award-cat__num {
+      color: rgba($orange, 0.35);
+    }
+
+    .award-cat__icon {
+      color: $navy;
+      background: $orange;
+    }
+
+    .award-cat__scope {
+      max-height: 120px;
+      opacity: 1;
+    }
+  }
+
+  // Les prix « Femme » et « Jeune talent » ont un accent turquoise
+  &:nth-child(9),
+  &:nth-child(10) {
+    .award-cat__icon {
+      color: $teal;
+      background: rgba($teal, 0.14);
+    }
+  }
+}
+
+// --- Processus de sélection ---------------------------------------------------------------
+.selection {
+  display: grid;
+  gap: $space-7;
+  margin-top: $space-9;
+
+  @include mq('lg') {
+    grid-template-columns: 1fr 1fr;
+    gap: $space-8;
+  }
+
+  &__steps {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: $space-5;
+
+    // Ligne verticale reliant les étapes
+    &::before {
+      content: '';
+      position: absolute;
+      left: 23px;
+      top: 10px;
+      bottom: 10px;
+      width: 2px;
+      background: linear-gradient($orange, $teal);
+      opacity: 0.4;
+    }
+
+    li {
+      position: relative;
+      display: flex;
+      gap: $space-4;
+    }
+
+    h4 {
+      font-size: 1.05rem;
+    }
+
+    p {
+      margin-top: 2px;
+      font-size: 0.9rem;
+      color: fg(0.72);
+    }
+  }
+
+  &__step-num {
+    flex-shrink: 0;
+    display: grid;
+    place-items: center;
+    width: 48px;
+    height: 48px;
+    font-weight: $fw-bold;
+    color: $navy;
+    background: $orange;
+    border-radius: 50%;
+    border: 4px solid $stage-deep;
+  }
+
+  &__scoring {
+    padding: $space-6;
+    border-radius: $radius-xl;
+    @include glass(0.05);
+  }
+
+  &__criteria-title {
+    margin: $space-6 0 $space-4;
+    font-size: 1rem;
+  }
+}
+
+// Anneau 60 / 40
+.score-ring {
+  display: flex;
+  align-items: center;
+  gap: $space-5;
+
+  svg {
+    flex-shrink: 0;
+    width: 120px;
+    height: 120px;
+  }
+
+  // Animation : l'arc « jury » se dessine
+  &__jury {
+    stroke-dashoffset: var(--circ);
+    transition: stroke-dashoffset 1.4s $ease-out;
+  }
+
+  .is-animated &__jury {
+    stroke-dashoffset: 0;
+  }
+
+  &__legend {
+    display: flex;
+    flex-direction: column;
+    gap: $space-2;
+    font-size: 0.9rem;
+
+    i {
+      display: inline-block;
+      width: 12px;
+      height: 12px;
+      margin-right: $space-1;
+      border-radius: 3px;
+      transform: rotate(45deg);
+
+      &.is-orange {
+        background: $orange;
+      }
+
+      &.is-teal {
+        background: $teal;
+      }
+    }
+
+    strong {
+      font-size: 1.1rem;
+      margin-right: $space-1;
+    }
+  }
+
+  &__jury-note {
+    font-size: 0.78rem;
+    color: fg(0.55);
+  }
+}
+
+// Barres de critères
+.criteria {
+  display: flex;
+  flex-direction: column;
+  gap: $space-3;
+
+  &__row {
+    display: flex;
+    justify-content: space-between;
+    gap: $space-3;
+    margin-bottom: 6px;
+    font-size: 0.85rem;
+
+    strong {
+      color: $highlight;
+    }
+  }
+
+  &__bar {
+    height: 8px;
+    border-radius: $radius-pill;
+    background: fg(0.08);
+    overflow: hidden;
+
+    span {
+      display: block;
+      height: 100%;
+      width: 0;
+      border-radius: inherit;
+      background: linear-gradient(90deg, $orange, $rust);
+      transition: width 1.1s $ease-out;
+      transition-delay: var(--d);
+    }
+  }
+
+  .is-animated & span {
+    width: var(--w);
+  }
+}
+
+// --- Éligibilité & avantages ------------------------------------------------------------
+.eligibility {
+  margin-top: $space-9;
+
+  &__cols {
+    display: grid;
+    gap: $space-4;
+
+    @include mq('md') {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+
+  &__col {
+    padding: $space-5;
+    border-radius: $radius-lg;
+    border: 1px solid fg(0.1);
+
+    h4 {
+      display: flex;
+      align-items: center;
+      gap: $space-2;
+      margin-bottom: $space-4;
+      font-size: 1rem;
+      color: $highlight;
+    }
+
+    li {
+      position: relative;
+      padding-left: $space-5;
+      font-size: 0.88rem;
+      color: fg(0.8);
+
+      &::before {
+        content: '';
+        position: absolute;
+        left: 2px;
+        top: 0.55em;
+        width: 7px;
+        height: 7px;
+        background: $teal;
+        transform: rotate(45deg);
+      }
+
+      & + li {
+        margin-top: $space-2;
+      }
+    }
+  }
+
+  &__note {
+    margin-top: $space-4;
+    padding: $space-4 $space-5;
+    font-size: 0.88rem;
+    border-radius: $radius-md;
+    background: rgba($orange, 0.1);
+    border-left: 4px solid $orange;
+    color: fg(0.85);
+  }
+}
+
+.benefits {
+  margin-top: $space-8;
+
+  ul {
+    display: grid;
+    gap: $space-3;
+
+    @include mq('md') {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    @include mq('lg') {
+      grid-template-columns: repeat(4, 1fr);
+    }
+  }
+
+  li {
+    display: flex;
+    gap: $space-3;
+    padding: $space-4;
+    font-size: 0.9rem;
+    font-weight: $fw-medium;
+    border-radius: $radius-md;
+    background: fg(0.05);
+
+    .icon {
+      flex-shrink: 0;
+      color: $navy;
+      background: $teal;
+      border-radius: 50%;
+      padding: 3px;
+      width: 22px;
+      height: 22px;
+    }
+  }
+}
+
+// --- Chronogramme ------------------------------------------------------------------------
+.awards-timeline {
+  margin-top: $space-9;
+
+  &__list {
+    display: grid;
+    gap: $space-4;
+
+    @include mq('md') {
+      grid-template-columns: repeat(4, 1fr);
+      row-gap: $space-7;
+    }
+  }
+
+  &__item {
+    position: relative;
+    padding: $space-5 0 0;
+    border-top: 2px solid fg(0.12);
+
+    time {
+      display: block;
+      font-weight: $fw-bold;
+      font-size: 0.95rem;
+    }
+
+    p {
+      margin-top: $space-1;
+      font-size: 0.85rem;
+      color: fg(0.7);
+    }
+
+    &.is-key {
+      border-top-color: $highlight;
+
+      time {
+        color: $highlight;
+      }
+    }
+
+    &.is-past {
+      opacity: 0.5;
+    }
+
+    &.is-next {
+      border-top-color: $teal;
+
+      .awards-timeline__dot {
+        background: $teal;
+        box-shadow: 0 0 0 6px rgba($teal, 0.25);
+      }
+    }
+  }
+
+  &__dot {
+    position: absolute;
+    top: -8px;
+    left: 0;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: $stage-deep;
+    border: 3px solid $orange;
+  }
+
+  &__badge {
+    display: inline-block;
+    margin-top: $space-2;
+    padding: 0.2rem 0.6rem;
+    font-size: 0.68rem;
+    font-weight: $fw-bold;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: $navy;
+    background: $teal;
+    border-radius: $radius-pill;
+  }
+}

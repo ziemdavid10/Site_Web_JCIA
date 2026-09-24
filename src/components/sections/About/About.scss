@@ -1,0 +1,227 @@
+@use '@/styles/abstracts' as *;
+
+.about {
+  overflow: hidden;
+
+  > .container {
+    position: relative;
+    z-index: 1;
+  }
+
+  &__grid {
+    display: grid;
+    gap: $space-7;
+    align-items: start;
+
+    @include mq('lg') {
+      grid-template-columns: 1fr 1fr;
+      gap: $space-8;
+    }
+  }
+
+  &__text {
+    font-size: 1.02rem;
+    line-height: 1.8;
+    color: $ink-soft;
+
+    strong {
+      color: $text;
+    }
+  }
+
+  &__subtitle {
+    margin: $space-9 0 $space-6;
+    font-size: 1.5rem;
+  }
+
+  &__challenges {
+    display: grid;
+    gap: $space-4;
+
+    @include mq('sm') {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+}
+
+// --- Carte « défi » -----------------------------------------------------------
+.challenge {
+  position: relative;
+  padding: $space-5;
+  background: $surface;
+  border-radius: $radius-lg;
+  box-shadow: $shadow-md;
+  overflow: hidden;
+  transition:
+    transform $duration $ease-out,
+    box-shadow $duration $ease-out;
+
+  // Bande de couleur en haut de carte
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0 0 auto;
+    height: 5px;
+    background: var(--accent);
+  }
+
+  &:hover {
+    transform: translateY(-6px);
+    box-shadow: $shadow-lg;
+  }
+
+  @each $name, $color in $accent-colors {
+    &--#{$name} {
+      --accent: #{$color};
+    }
+  }
+
+  &__num {
+    position: absolute;
+    top: $space-3;
+    right: $space-4;
+    font-size: 2.6rem;
+    font-weight: $fw-black;
+    color: var(--accent);
+    opacity: 0.18;
+  }
+
+  &__label {
+    font-size: 0.75rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: $ink-muted;
+  }
+
+  &__title {
+    margin: $space-1 0 $space-3;
+    font-size: 1.25rem;
+  }
+
+  &__answer {
+    font-size: 0.92rem;
+    color: $ink-soft;
+    line-height: 1.55;
+  }
+}
+
+// --- Frise des éditions ---------------------------------------------------------
+.editions {
+  position: relative;
+  display: grid;
+  gap: $space-5;
+
+  @include mq('md') {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  // Ligne de circuit reliant les éditions (desktop)
+  &::before {
+    content: '';
+    position: absolute;
+    top: 38px;
+    left: 5%;
+    right: 5%;
+    height: 2px;
+    background: repeating-linear-gradient(90deg, var(--c-border-strong) 0 8px, transparent 8px 14px);
+    display: none;
+
+    @include mq('md') {
+      display: block;
+    }
+  }
+}
+
+.edition {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  padding: $space-5;
+  background: $surface;
+  border: 1px solid $border;
+  border-radius: $radius-lg;
+
+  &__year {
+    display: inline-grid;
+    place-items: center;
+    align-self: flex-start;
+    width: 76px;
+    height: 44px;
+    margin-bottom: $space-4;
+    font-weight: $fw-bold;
+    color: $white;
+    background: $navy;
+    border-radius: $radius-pill;
+    position: relative;
+    z-index: 1;
+  }
+
+  h4 {
+    font-size: 1.1rem;
+  }
+
+  &__place {
+    margin: $space-1 0 $space-4;
+    font-size: 0.85rem;
+    color: $accent-text;
+    font-weight: $fw-medium;
+  }
+
+  li {
+    position: relative;
+    padding-left: $space-5;
+    font-size: 0.9rem;
+    color: $ink-soft;
+
+    // Puce en forme de losange
+    &::before {
+      content: '';
+      position: absolute;
+      left: 2px;
+      top: 0.6em;
+      width: 7px;
+      height: 7px;
+      background: $teal;
+      transform: rotate(45deg);
+    }
+
+    & + li {
+      margin-top: $space-2;
+    }
+  }
+
+  // Édition 2027 mise en avant
+  &--current {
+    color: $white;
+    background: $navy;
+    border-color: transparent;
+    box-shadow: $shadow-lg;
+
+    .edition__year {
+      color: $navy;
+      background: $orange;
+      box-shadow: $shadow-glow-orange;
+    }
+
+    .edition__place {
+      color: $orange;
+    }
+
+    li {
+      color: rgba($white, 0.8);
+
+      &::before {
+        background: $orange;
+      }
+    }
+  }
+
+  &__mascot {
+    position: absolute;
+    right: $space-4;
+    top: -38px;
+    width: 64px;
+    height: auto;
+    animation: float 5s ease-in-out infinite;
+  }
+}

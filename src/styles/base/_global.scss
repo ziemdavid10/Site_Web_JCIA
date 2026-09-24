@@ -1,0 +1,142 @@
+// =============================================================================
+// STYLES GLOBAUX — typographie, variables CSS, utilitaires
+// =============================================================================
+@use '../abstracts' as *;
+
+html {
+  scroll-behavior: smooth;
+  // Décale les ancres pour ne pas passer sous l'en-tête fixe
+  scroll-padding-top: calc(#{$header-height} + 12px);
+
+  @include reduced-motion {
+    scroll-behavior: auto;
+  }
+
+  // Mise à l'échelle douce de la typographie sur les écrans larges
+  @include mq('wide') {
+    font-size: 106.25%; // 17px
+  }
+
+  @media (min-width: 2400px) {
+    font-size: 118.75%; // 19px — écrans 2K / 4K
+  }
+}
+
+body {
+  font-family: $font-sans;
+  font-size: 1rem;
+  font-weight: $fw-regular;
+  color: $text;
+  background-color: $bg;
+  overflow-x: hidden;
+  transition:
+    background-color $duration,
+    color $duration;
+}
+
+// Transition douce de toutes les couleurs lors du changement de thème
+// (classe ajoutée brièvement par le ThemeProvider)
+.theme-transition,
+.theme-transition *,
+.theme-transition *::before,
+.theme-transition *::after {
+  transition:
+    background-color 400ms ease,
+    border-color 400ms ease,
+    color 400ms ease,
+    fill 400ms ease !important;
+}
+
+// Liens dans les textes courants (pages légales, mentions de consentement…)
+.inline-link,
+.prose a {
+  color: $accent-text;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+
+  &:hover {
+    text-decoration-thickness: 2px;
+  }
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-weight: $fw-bold;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  color: inherit;
+}
+
+strong {
+  font-weight: $fw-semibold;
+}
+
+::selection {
+  background: $orange;
+  color: $navy;
+}
+
+:focus-visible {
+  @include focus-ring;
+}
+
+// Lien d'évitement (accessibilité clavier)
+.skip-link {
+  position: fixed;
+  top: -100px;
+  left: $space-4;
+  z-index: $z-modal;
+  padding: $space-3 $space-5;
+  background: $orange;
+  color: $navy;
+  font-weight: $fw-bold;
+  border-radius: $radius-pill;
+  transition: top $duration $ease-out;
+
+  &:focus {
+    top: $space-4;
+  }
+}
+
+// --- Utilitaires ------------------------------------------------------------------
+.container {
+  @include container;
+}
+
+.container--narrow {
+  @include container($container-narrow, $grow: false);
+}
+
+.visually-hidden {
+  @include visually-hidden;
+}
+
+.text-gradient {
+  @include gradient-text;
+}
+
+// Sections : espacement vertical homogène
+.section {
+  position: relative;
+  padding-block: $space-9;
+
+  @include mq('lg') {
+    padding-block: $space-10;
+  }
+
+  &--dark {
+    background: $stage;
+    color: $text;
+  }
+
+  &--sand {
+    background: $sand-200;
+  }
+
+  &--white {
+    background: $sand-50;
+  }
+}

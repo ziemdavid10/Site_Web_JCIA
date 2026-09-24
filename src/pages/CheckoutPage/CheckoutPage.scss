@@ -1,0 +1,813 @@
+@use '@/styles/abstracts' as *;
+
+// =============================================================================
+// COMMANDE (parcours inspiré de Reckot)
+// =============================================================================
+.checkout {
+  background: $bg;
+
+  // --- En-tête : carte de l'événement -------------------------------------------
+  &__hero {
+    position: relative;
+    overflow: hidden;
+    color: $text;
+    background:
+      radial-gradient(circle at 85% 20%, rgba($orange, 0.2), transparent 45%),
+      radial-gradient(circle at 10% 90%, rgba($teal, 0.16), transparent 45%),
+      $stage;
+  }
+
+  &__hero-inner {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    gap: $space-5;
+    padding-top: calc(#{$header-height} + 72px);
+    padding-bottom: $space-6;
+
+    @include mq('lg') {
+      grid-template-columns: 1fr auto;
+      align-items: end;
+      padding-top: calc(#{$header-height} + 72px);
+    }
+  }
+
+  &__back {
+    grid-column: 1 / -1;
+    display: inline-flex;
+    align-items: center;
+    gap: $space-2;
+    justify-self: start;
+    font-size: 0.88rem;
+    font-weight: $fw-semibold;
+    color: fg(0.8);
+
+    &:hover {
+      color: $highlight;
+    }
+  }
+
+  &__grid {
+    display: grid;
+    gap: $space-6;
+    padding-top: $space-6;
+    padding-bottom: calc(#{$space-9} + 40px); // place pour la barre fixe mobile
+
+    @include mq('lg') {
+      grid-template-columns: minmax(0, 1fr) 360px;
+      gap: $space-7;
+      padding-block: $space-7 $space-9;
+    }
+
+    @include mq('xxl') {
+      grid-template-columns: minmax(0, 1fr) 400px;
+    }
+  }
+
+  &__form {
+    display: flex;
+    flex-direction: column;
+    gap: $space-5;
+    min-width: 0;
+  }
+
+  // Billet inconnu
+  &__unknown {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: $space-4;
+    padding-top: calc(#{$header-height} + 96px);
+    padding-bottom: $space-9;
+    text-align: center;
+
+    > .icon {
+      color: $accent-text;
+    }
+  }
+}
+
+.event-card {
+  display: flex;
+  align-items: center;
+  gap: $space-4;
+
+  &__logo {
+    flex-shrink: 0;
+    display: grid;
+    place-items: center;
+    width: 84px;
+    height: 84px;
+    padding: $space-2;
+    background: $white;
+    border-radius: $radius-lg;
+    box-shadow: $shadow-md;
+
+    @include mq('md') {
+      width: 104px;
+      height: 104px;
+    }
+
+    img {
+      width: 100%;
+      height: auto;
+    }
+  }
+
+  &__title {
+    font-size: clamp(1.2rem, 2.8vw, 1.9rem);
+    line-height: 1.2;
+  }
+
+  &__meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: $space-1 $space-4;
+    margin-top: $space-2;
+    font-size: 0.85rem;
+    color: fg(0.75);
+
+    li {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .icon {
+      color: $highlight;
+    }
+  }
+}
+
+// --- Indicateur d'étapes ---------------------------------------------------------------
+.co-stepper {
+  display: flex;
+  gap: $space-2;
+
+  li {
+    display: flex;
+    align-items: center;
+    gap: $space-2;
+    padding: 0.4rem 0.8rem 0.4rem 0.4rem;
+    font-size: 0.8rem;
+    font-weight: $fw-semibold;
+    color: fg(0.6);
+    border-radius: $radius-pill;
+    @include glass(0.04);
+
+    span {
+      display: grid;
+      place-items: center;
+      width: 24px;
+      height: 24px;
+      font-size: 0.72rem;
+      border-radius: 50%;
+      border: 1.5px solid fg(0.3);
+    }
+
+    &.is-active {
+      color: $text;
+
+      span {
+        color: $navy;
+        border-color: $orange;
+        background: $orange;
+      }
+    }
+
+    &.is-done span {
+      color: $white;
+      border-color: $flag-green;
+      background: $flag-green;
+    }
+  }
+}
+
+// --- Messages ---------------------------------------------------------------------------------
+.co-demo,
+.co-summary-error {
+  display: flex;
+  gap: $space-3;
+  padding: $space-3 $space-4;
+  font-size: 0.85rem;
+  line-height: 1.55;
+  border-radius: $radius-md;
+
+  .icon {
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+}
+
+.co-demo {
+  color: $text-soft;
+  background: rgba($flag-yellow, 0.16);
+  border: 1px solid rgba($flag-yellow, 0.5);
+}
+
+.co-summary-error {
+  font-weight: $fw-semibold;
+  color: $flag-red;
+  background: rgba($flag-red, 0.08);
+  border: 1px solid rgba($flag-red, 0.3);
+}
+
+// --- Blocs du formulaire --------------------------------------------------------------------------
+.co-block {
+  min-width: 0;
+  margin: 0;
+  padding: $space-5 $space-4;
+  background: $surface;
+  border: 1px solid $border;
+  border-radius: $radius-lg;
+
+  @include mq('md') {
+    padding: $space-6;
+  }
+
+  &__title {
+    display: flex;
+    align-items: center;
+    gap: $space-3;
+    float: left; // le legend se comporte alors comme un titre classique
+    width: 100%;
+    margin-bottom: $space-5;
+    font-size: 1.15rem;
+    font-weight: $fw-bold;
+
+    span {
+      display: grid;
+      place-items: center;
+      width: 32px;
+      height: 32px;
+      font-size: 0.85rem;
+      color: $inverse-text;
+      background: $inverse-bg;
+      border-radius: 50%;
+    }
+
+    + * {
+      clear: both;
+    }
+  }
+}
+
+// Choix du billet (radios « cartes »)
+.co-tiers {
+  display: grid;
+  gap: $space-2;
+
+  @include mq('md') {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.co-tier {
+  --tier: #{$orange};
+  position: relative;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: $space-3;
+  padding: $space-3 $space-4;
+  border: 1.5px solid $border-strong;
+  border-radius: $radius-md;
+  cursor: pointer;
+  transition:
+    border-color $duration-fast,
+    background $duration-fast;
+
+  @each $name, $color in $accent-colors {
+    &--#{$name} {
+      --tier: #{$color};
+    }
+  }
+
+  input {
+    @include visually-hidden;
+  }
+
+  &:hover {
+    border-color: var(--tier);
+  }
+
+  &:focus-within {
+    @include focus-ring($teal);
+  }
+
+  &.is-checked {
+    border-color: var(--tier);
+    background: color-mix(in srgb, var(--tier) 10%, transparent);
+  }
+
+  &__radio {
+    flex-shrink: 0;
+    width: 20px;
+    height: 20px;
+    border: 2px solid $border-strong;
+    border-radius: 50%;
+    transition: border $duration-fast;
+
+    .is-checked & {
+      border: 6px solid var(--tier);
+    }
+  }
+
+  &__body {
+    flex: 1;
+    min-width: 0;
+
+    strong {
+      display: block;
+      font-size: 0.95rem;
+    }
+
+    small {
+      display: block;
+      overflow: hidden;
+      font-size: 0.75rem;
+      color: $text-muted;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+  }
+
+  &__price {
+    font-size: 0.88rem;
+    font-weight: $fw-bold;
+    white-space: nowrap;
+  }
+}
+
+.co-note {
+  display: flex;
+  align-items: center;
+  gap: $space-2;
+  margin-top: $space-3;
+  font-size: 0.82rem;
+  color: $text-soft;
+}
+
+// Quantité
+.co-qty {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: $space-3 $space-4;
+  margin-top: $space-5;
+  padding-top: $space-5;
+  border-top: 1px dashed $border-strong;
+
+  > span {
+    font-weight: $fw-semibold;
+  }
+
+  small {
+    width: 100%;
+    font-size: 0.78rem;
+    color: $text-muted;
+  }
+
+  &__stepper {
+    display: inline-flex;
+    align-items: center;
+    border: 1.5px solid $border-strong;
+    border-radius: $radius-pill;
+
+    button {
+      display: grid;
+      place-items: center;
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      transition: background $duration-fast;
+
+      &:hover:not(:disabled) {
+        background: $surface-muted;
+      }
+
+      &:disabled {
+        opacity: 0.35;
+        cursor: not-allowed;
+      }
+    }
+
+    output {
+      min-width: 36px;
+      font-size: 1.1rem;
+      font-weight: $fw-bold;
+      text-align: center;
+    }
+  }
+}
+
+// Champs
+.co-row {
+  display: grid;
+  gap: $space-4;
+
+  & + & {
+    margin-top: $space-4;
+  }
+
+  @include mq('md') {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.co-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+
+  label {
+    font-size: 0.82rem;
+    font-weight: $fw-semibold;
+  }
+
+  input {
+    width: 100%;
+    min-height: 48px; // cible tactile confortable
+    padding: 0.75rem 1rem;
+    font-size: 1rem; // ≥ 16px : pas de zoom automatique sur iOS
+    background: $bg-elevated;
+    border: 1.5px solid $border-strong;
+    border-radius: $radius-sm;
+    transition:
+      border-color $duration-fast,
+      box-shadow $duration-fast;
+
+    &:hover {
+      border-color: $text-muted;
+    }
+
+    &:focus {
+      outline: none;
+      border-color: $teal;
+      box-shadow: 0 0 0 4px rgba($teal, 0.18);
+    }
+  }
+
+  &.has-error input {
+    border-color: $flag-red;
+  }
+
+  &__hint {
+    font-size: 0.75rem;
+    color: $text-muted;
+  }
+
+  &__error {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 4px;
+    font-size: 0.78rem;
+    font-weight: $fw-medium;
+    color: $flag-red;
+
+    :root[data-theme='dark'] & {
+      color: #ff6b7f;
+    }
+  }
+}
+
+// Préfixe +237
+.co-phone {
+  display: flex;
+  align-items: stretch;
+
+  span {
+    display: grid;
+    place-items: center;
+    padding: 0 $space-3;
+    font-size: 0.9rem;
+    font-weight: $fw-semibold;
+    color: $text-soft;
+    background: $surface-muted;
+    border: 1.5px solid $border-strong;
+    border-right: 0;
+    border-radius: $radius-sm 0 0 $radius-sm;
+  }
+
+  input {
+    border-radius: 0 $radius-sm $radius-sm 0;
+  }
+}
+
+// Autres participants
+.co-attendees {
+  margin-top: $space-5;
+  padding-top: $space-5;
+  border-top: 1px dashed $border-strong;
+
+  &__title {
+    font-weight: $fw-semibold;
+  }
+
+  &__hint {
+    margin-bottom: $space-4;
+    font-size: 0.8rem;
+    color: $text-muted;
+  }
+}
+
+// Opérateurs
+.co-label {
+  margin-bottom: $space-3;
+  font-size: 0.82rem;
+  font-weight: $fw-semibold;
+}
+
+.co-operators {
+  display: grid;
+  gap: $space-3;
+
+  @include mq('sm') {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.co-operator {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: $space-3;
+  min-height: 64px;
+  padding: $space-3 $space-4;
+  border: 1.5px solid $border-strong;
+  border-radius: $radius-md;
+  cursor: pointer;
+  transition:
+    border-color $duration-fast,
+    box-shadow $duration-fast;
+
+  input {
+    @include visually-hidden;
+  }
+
+  .operator-badge {
+    border: 0;
+    background: transparent;
+    font-size: 0.9rem;
+  }
+
+  &:hover {
+    border-color: var(--op-bg);
+  }
+
+  &:focus-within {
+    @include focus-ring($teal);
+  }
+
+  &.is-checked {
+    border-color: var(--op-bg);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--op-bg) 30%, transparent);
+  }
+
+  &__check {
+    padding: 3px;
+    color: $white;
+    background: $flag-green;
+    border-radius: 50%;
+    opacity: 0;
+    transform: scale(0.6);
+    transition:
+      opacity $duration-fast,
+      transform $duration-fast;
+
+    .is-checked & {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  .has-error & {
+    border-color: $flag-red;
+  }
+}
+
+.co-check {
+  display: flex;
+  align-items: flex-start;
+  gap: $space-3;
+  margin-top: $space-4;
+  font-size: 0.88rem;
+  cursor: pointer;
+
+  input {
+    flex-shrink: 0;
+    width: 20px;
+    height: 20px;
+    margin-top: 1px;
+    accent-color: $orange;
+  }
+
+  a {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  &--terms {
+    margin-top: $space-5;
+    padding-top: $space-5;
+    color: $text-soft;
+    border-top: 1px dashed $border-strong;
+  }
+
+  &.has-error {
+    color: $flag-red;
+  }
+}
+
+.co-detect {
+  display: flex;
+  align-items: center;
+  gap: $space-2;
+  margin-top: $space-3;
+  font-size: 0.82rem;
+  font-weight: $fw-semibold;
+  color: $flag-green;
+
+  :root[data-theme='dark'] & {
+    color: #4cd384;
+  }
+
+  &--warn {
+    color: $rust !important;
+  }
+}
+
+.co-secure {
+  display: flex;
+  align-items: center;
+  gap: $space-2;
+  margin-top: $space-4;
+  font-size: 0.78rem;
+  color: $text-muted;
+}
+
+.co-free {
+  display: flex;
+  align-items: center;
+  gap: $space-2;
+  padding: $space-3 $space-4;
+  font-size: 0.9rem;
+  font-weight: $fw-semibold;
+  color: $teal-text;
+  background: rgba($teal, 0.1);
+  border-radius: $radius-md;
+}
+
+// --- Récapitulatif -----------------------------------------------------------------------------------
+.co-summary {
+  align-self: start;
+  padding: $space-5;
+  background: $surface;
+  border: 1px solid $border;
+  border-radius: $radius-lg;
+  box-shadow: $shadow-md;
+  @include woven-border(6px);
+  border-radius: 0 0 $radius-lg $radius-lg;
+
+  @include mq('lg') {
+    position: sticky;
+    top: calc(#{$header-height} + #{$space-4});
+    padding: $space-6;
+  }
+
+  h2 {
+    margin-bottom: $space-4;
+    font-size: 1.15rem;
+  }
+
+  &__ticket {
+    --tier: #{$orange};
+    display: flex;
+    align-items: center;
+    gap: $space-3;
+    padding: $space-3;
+    background: $surface-muted;
+    border-radius: $radius-md;
+
+    @each $name, $color in $accent-colors {
+      &--#{$name} {
+        --tier: #{$color};
+      }
+    }
+
+    > .icon {
+      color: var(--tier);
+    }
+
+    strong,
+    small {
+      display: block;
+    }
+
+    small {
+      color: $text-muted;
+    }
+  }
+
+  dl {
+    display: grid;
+    gap: $space-2;
+    margin: $space-4 0;
+
+    div {
+      display: flex;
+      justify-content: space-between;
+      gap: $space-3;
+      font-size: 0.9rem;
+    }
+
+    dt {
+      color: $text-soft;
+    }
+
+    dd {
+      font-weight: $fw-semibold;
+      white-space: nowrap;
+    }
+  }
+
+  &__total {
+    margin-top: $space-2;
+    padding-top: $space-3;
+    border-top: 1px dashed $border-strong;
+
+    dt,
+    dd {
+      font-size: 1.15rem;
+      font-weight: $fw-black !important;
+      color: $text !important;
+    }
+  }
+
+  &__submit {
+    width: 100%;
+  }
+
+  &__ops {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: $space-2;
+    margin-top: $space-4;
+  }
+
+  // Sur mobile, la barre fixe porte l'action : le bouton du récapitulatif est masqué
+  @include mq-down('lg') {
+    &__submit {
+      display: none;
+    }
+  }
+}
+
+// --- Barre d'action fixe (mobile / tablette) ---------------------------------------------------
+.co-bar {
+  position: fixed;
+  inset: auto 0 0;
+  z-index: $z-overlay - 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: $space-4;
+  padding: $space-3 $space-4;
+  padding-bottom: calc(#{$space-3} + env(safe-area-inset-bottom));
+  background: $header-bg;
+  backdrop-filter: blur(14px) saturate(1.4);
+  border-top: 1px solid $border;
+  box-shadow: 0 -10px 30px -12px rgba($navy, 0.25);
+
+  @include mq('lg') {
+    display: none;
+  }
+
+  small {
+    display: block;
+    font-size: 0.72rem;
+    color: $text-muted;
+  }
+
+  strong {
+    font-size: 1.15rem;
+    white-space: nowrap;
+  }
+
+  .btn {
+    flex-shrink: 0;
+  }
+}
+
+// Pot de miel anti-robots : hors écran (et non display:none, que certains robots détectent)
+.co-hp {
+  position: absolute;
+  left: -10000px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}

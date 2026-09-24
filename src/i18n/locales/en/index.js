@@ -1,0 +1,13 @@
+/**
+ * Language: ENGLISH
+ * Same structure as the French locale (src/i18n/locales/fr/index.js).
+ */
+import common from './common'
+import home from './home'
+import pages from './pages'
+import tickets from './tickets'
+import speakers from './speakers'
+import legal from './legal'
+import errors from './errors'
+
+export default { ...common, ...home, ...pages, ...tickets, ...speakers, legal, errors }

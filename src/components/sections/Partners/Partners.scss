@@ -1,0 +1,171 @@
+@use '@/styles/abstracts' as *;
+
+.partners {
+  &__institutional {
+    display: grid;
+    gap: $space-3;
+
+    @include mq('sm') {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    @include mq('lg') {
+      grid-template-columns: repeat(4, 1fr);
+    }
+
+    li {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: $space-2;
+      min-height: 120px;
+      padding: $space-5;
+      text-align: center;
+      border-radius: $radius-lg;
+      background: $sand-100;
+      border: 1px solid $border;
+      transition:
+        transform $duration $ease-out,
+        box-shadow $duration;
+
+      &:hover {
+        transform: translateY(-4px);
+        box-shadow: $shadow-md;
+      }
+    }
+
+    strong {
+      font-size: 0.98rem;
+      line-height: 1.35;
+    }
+  }
+
+  &__role {
+    font-size: 0.7rem;
+    font-weight: $fw-bold;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: $accent-text;
+  }
+
+  // --- Bandeaux défilants -------------------------------------------------------------
+  &__marquees {
+    margin-block: $space-8;
+  }
+
+  &__marquee-label {
+    margin-bottom: $space-3;
+    font-size: 0.75rem;
+    font-weight: $fw-semibold;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: $ink-muted;
+    text-align: center;
+
+    &:not(:first-child) {
+      margin-top: $space-6;
+    }
+  }
+
+  &__marquee {
+    padding-block: $space-4;
+    border-block: 1px solid $border;
+
+    // Logo + nom : séparateur losange plus discret
+    .marquee__item::after {
+      margin-inline: $space-4;
+    }
+
+    &--media .marquee__item::after {
+      width: 6px;
+      height: 6px;
+      background: $teal;
+    }
+  }
+}
+
+// --- Bloc « Devenir partenaire » ---------------------------------------------------------
+.become-partner {
+  display: grid;
+  gap: $space-6;
+  padding: $space-6;
+  color: $white;
+  border-radius: $radius-xl;
+  background:
+    radial-gradient(circle at 0% 0%, rgba($orange, 0.25), transparent 45%),
+    radial-gradient(circle at 100% 100%, rgba($teal, 0.2), transparent 45%),
+    $navy;
+  box-shadow: $shadow-lg;
+
+  @include mq('md') {
+    padding: $space-7;
+  }
+
+  @include mq('lg') {
+    grid-template-columns: 0.9fr 1.1fr;
+    gap: $space-8;
+    padding: $space-8;
+  }
+
+  &__intro {
+    img {
+      width: 180px;
+      height: auto;
+      margin-bottom: $space-5;
+    }
+
+    h3 {
+      font-size: clamp(1.6rem, 3vw, 2.2rem);
+    }
+
+    p {
+      margin-top: $space-3;
+      color: rgba($white, 0.78);
+    }
+  }
+
+  &__ctas {
+    display: flex;
+    flex-wrap: wrap;
+    gap: $space-3;
+    margin-top: $space-6;
+  }
+
+  &__benefits {
+    display: grid;
+    gap: $space-4;
+
+    @include mq('sm') {
+      grid-template-columns: 1fr 1fr;
+    }
+
+    li {
+      display: flex;
+      gap: $space-3;
+    }
+
+    .icon {
+      flex-shrink: 0;
+      color: $orange;
+      margin-top: 2px;
+    }
+
+    h4 {
+      font-size: 0.98rem;
+    }
+
+    p {
+      margin-top: 2px;
+      font-size: 0.84rem;
+      color: rgba($white, 0.7);
+    }
+  }
+}
+
+// La carte « Devenir partenaire » reste bleu nuit dans les deux thèmes :
+// le bouton fantôme doit donc rester clair.
+.become-partner .btn--ghost {
+  color: $white;
+  border-color: rgba($white, 0.35);
+  background: rgba($white, 0.05);
+}

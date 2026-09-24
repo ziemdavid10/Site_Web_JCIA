@@ -1,0 +1,634 @@
+@use '@/styles/abstracts' as *;
+
+// =============================================================================
+// INTERVENANTS : catégories cliquables, cartes et fiche détaillée
+// =============================================================================
+
+// --- Catégories -------------------------------------------------------------------
+.speaker-cats {
+  position: relative; // repère des positions (défilement de la catégorie active)
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: $space-3;
+
+  @include mq('md') {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: $space-4;
+  }
+
+  .speakers-explorer--page & {
+    @include mq('xl') {
+      grid-template-columns: repeat(9, minmax(0, 1fr));
+      gap: $space-3;
+    }
+  }
+
+  > li {
+    display: flex;
+  }
+
+  // Page, téléphone : bandeau horizontal défilant (la liste reste visible sous le pouce)
+  .speakers-explorer--page & {
+    @include mq-down('md') {
+      display: flex;
+      gap: $space-2;
+      margin-inline: -$space-4;
+      padding: 4px $space-4 $space-2;
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      scrollbar-width: none;
+
+      &::-webkit-scrollbar {
+        display: none;
+      }
+
+      > li {
+        flex: 0 0 132px;
+        scroll-snap-align: start;
+      }
+
+      .speaker-cat {
+        padding: $space-4 $space-2 $space-3;
+      }
+
+      .speaker-cat__icon {
+        width: 48px;
+        height: 48px;
+      }
+
+      .speaker-cat__label {
+        font-size: 0.8rem;
+      }
+    }
+  }
+}
+
+.speaker-cat {
+  --cat: #{$orange};
+  position: relative;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  gap: $space-2;
+  padding: $space-5 $space-3 $space-4;
+  text-align: center;
+  background: $surface;
+  border: 1.5px solid $border;
+  border-radius: $radius-lg;
+  cursor: pointer;
+  transition:
+    transform $duration $ease-out,
+    border-color $duration,
+    background $duration,
+    box-shadow $duration;
+
+  @each $name, $color in $accent-colors {
+    &--#{$name} {
+      --cat: #{$color};
+    }
+  }
+
+  &--all {
+    --cat: #{$navy};
+
+    :root[data-theme='dark'] & {
+      --cat: #{$white};
+    }
+  }
+
+  &:hover {
+    transform: translateY(-4px);
+    border-color: var(--cat);
+  }
+
+  &:focus-visible {
+    @include focus-ring($teal);
+  }
+
+  &.is-active {
+    border-color: var(--cat);
+    background: color-mix(in srgb, var(--cat) 12%, transparent);
+    box-shadow: $shadow-md;
+  }
+
+  &__icon {
+    display: grid;
+    place-items: center;
+    width: 64px;
+    height: 64px;
+    color: $white;
+    background: $navy;
+    border-radius: 50%;
+    outline: 3px dashed var(--cat);
+    outline-offset: 4px;
+    transition: transform $duration $ease-out;
+
+    // Thème sombre : pastille éclaircie pour rester visible sur la carte
+    :root[data-theme='dark'] & {
+      background: $navy-600;
+    }
+
+    .speaker-cat--all & {
+      color: $navy;
+      background: $orange;
+    }
+
+    .is-active & {
+      transform: scale(1.08) rotate(-6deg);
+      color: $navy;
+      background: var(--cat);
+      outline-style: solid;
+    }
+  }
+
+  &__label {
+    margin-top: $space-2;
+    font-size: 0.9rem;
+    font-weight: $fw-semibold;
+    line-height: 1.3;
+  }
+
+  &__count {
+    padding: 1px 9px;
+    font-size: 0.7rem;
+    font-weight: $fw-bold;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: $accent-text;
+    background: $surface-muted;
+    border-radius: $radius-pill;
+  }
+}
+
+// --- Barre d'outils de la page ---------------------------------------------------------
+.speakers-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: $space-3;
+  margin-top: $space-6;
+
+  &__count {
+    font-size: 0.88rem;
+    font-weight: $fw-semibold;
+    color: $text-muted;
+  }
+}
+
+.speakers-search {
+  display: flex;
+  flex: 1 1 280px;
+  max-width: 460px;
+  align-items: center;
+  gap: $space-3;
+  padding: 0 $space-4;
+  background: $surface;
+  border: 1.5px solid $border-strong;
+  border-radius: $radius-pill;
+
+  &:focus-within {
+    border-color: $teal;
+    box-shadow: 0 0 0 4px rgba($teal, 0.18);
+  }
+
+  .icon {
+    flex-shrink: 0;
+    color: $text-muted;
+  }
+
+  input {
+    width: 100%;
+    padding: 0.8rem 0;
+    font-size: 1rem;
+    background: transparent;
+    border: 0;
+    outline: none;
+  }
+}
+
+// --- Liste --------------------------------------------------------------------------------
+.speakers-list {
+  margin-top: $space-6;
+  scroll-margin-top: calc(#{$header-height} + 60px);
+
+  &__hint,
+  &__empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: $space-2;
+    padding: $space-6 $space-4;
+    text-align: center;
+    color: $text-muted;
+    border: 2px dashed $border;
+    border-radius: $radius-lg;
+  }
+
+  &__hint .icon {
+    color: $accent-text;
+    animation: speakers-bounce 1.6s ease-in-out infinite;
+  }
+
+  &__title {
+    margin-bottom: $space-5;
+    font-size: 1.3rem;
+
+    span {
+      font-size: 0.9rem;
+      font-weight: $fw-medium;
+      color: $text-muted;
+    }
+  }
+
+  &__note {
+    margin-top: $space-5;
+    font-size: 0.82rem;
+    color: $text-muted;
+    text-align: center;
+  }
+
+  &__more {
+    margin-top: $space-5;
+    text-align: center;
+
+    a {
+      display: inline-flex;
+      align-items: center;
+      gap: $space-2;
+      font-weight: $fw-semibold;
+      color: $accent-text;
+    }
+  }
+}
+
+.speakers-grid {
+  display: grid;
+  gap: $space-5;
+
+  @include mq('sm') {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  @include mq('lg') {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  @include mq('xxl') {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  > li {
+    display: flex;
+    animation: speakers-in 520ms $ease-out both;
+    animation-delay: calc(var(--i) * 70ms);
+  }
+}
+
+// --- Carte ------------------------------------------------------------------------------------
+.speaker-card {
+  --cat: #{$orange};
+  position: relative;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  overflow: hidden;
+  background: $surface;
+  border: 1px solid $border;
+  border-radius: $radius-lg;
+  transition:
+    transform $duration $ease-out,
+    box-shadow $duration,
+    border-color $duration;
+
+  @each $name, $color in $accent-colors {
+    &--#{$name} {
+      --cat: #{$color};
+    }
+  }
+
+  &:hover,
+  &:focus-within {
+    transform: translateY(-6px);
+    border-color: var(--cat);
+    box-shadow: $shadow-lg;
+
+    .speaker-avatar {
+      transform: scale(1.05);
+    }
+  }
+
+  &__photo {
+    position: relative;
+    aspect-ratio: 1 / 0.9;
+    overflow: hidden;
+    background: $navy;
+
+    // Liseré de couleur au bas de la photo
+    &::after {
+      content: '';
+      position: absolute;
+      inset: auto 0 0;
+      height: 5px;
+      background: var(--cat);
+    }
+  }
+
+  &__cat {
+    position: absolute;
+    top: $space-3;
+    left: $space-3;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 0.3rem 0.7rem;
+    font-size: 0.7rem;
+    font-weight: $fw-bold;
+    color: $navy;
+    background: rgba($white, 0.92);
+    border-radius: $radius-pill;
+    backdrop-filter: blur(6px);
+
+    &--static {
+      position: static;
+      align-self: flex-start;
+      margin-bottom: $space-3;
+      color: $text;
+      background: $surface-muted;
+    }
+  }
+
+  &__example {
+    position: absolute;
+    top: $space-3;
+    right: $space-3;
+    padding: 0.25rem 0.6rem;
+    font-size: 0.65rem;
+    font-weight: $fw-bold;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: $navy;
+    background: $flag-yellow;
+    border-radius: $radius-pill;
+
+    &--inline {
+      position: static;
+      margin-left: $space-2;
+    }
+  }
+
+  &__body {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    padding: $space-4 $space-5 $space-5;
+  }
+
+  &__name {
+    font-size: 1.12rem;
+    line-height: 1.3;
+  }
+
+  &__role {
+    margin-top: 2px;
+    font-size: 0.82rem;
+    color: $text-muted;
+
+    span {
+      font-weight: $fw-semibold;
+      color: $accent-text;
+    }
+  }
+
+  &__label {
+    margin-top: $space-4;
+    font-size: 0.68rem;
+    font-weight: $fw-bold;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: $text-muted;
+  }
+
+  &__talk {
+    margin-top: 2px;
+    font-size: 0.98rem;
+    font-weight: $fw-semibold;
+    line-height: 1.4;
+  }
+
+  &__abstract {
+    display: -webkit-box;
+    margin-top: $space-2;
+    overflow: hidden;
+    font-size: 0.86rem;
+    line-height: 1.6;
+    color: $text-soft;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+  }
+
+  &__session {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: $space-4;
+    padding-top: $space-3;
+    font-size: 0.75rem;
+    font-weight: $fw-semibold;
+    color: $text-soft;
+    border-top: 1px dashed $border-strong;
+
+    .icon {
+      flex-shrink: 0;
+      color: var(--cat);
+    }
+  }
+
+  &__open {
+    display: inline-flex;
+    align-items: center;
+    gap: $space-2;
+    margin-top: $space-4;
+    font-size: 0.85rem;
+    font-weight: $fw-bold;
+    color: $accent-text;
+
+    // Toute la carte devient cliquable
+    &::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+    }
+
+    &:focus-visible {
+      outline: none;
+
+      &::after {
+        border-radius: $radius-lg;
+        box-shadow: inset 0 0 0 3px $teal;
+      }
+    }
+  }
+}
+
+.speaker-avatar {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform $duration-slow $ease-out;
+}
+
+// --- Fiche détaillée (<dialog>) ------------------------------------------------------------------
+.speaker-dialog {
+  width: min(920px, calc(100% - 2rem));
+  max-height: calc(100dvh - 2rem);
+  margin: auto;
+  padding: 0;
+  color: $text;
+  background: $bg-elevated;
+  border: 0;
+  border-radius: $radius-xl;
+  box-shadow: $shadow-lg;
+  animation: speakers-in 320ms $ease-out both;
+
+  &::backdrop {
+    background: rgba($navy-900, 0.72);
+    backdrop-filter: blur(6px);
+  }
+
+  // Téléphone : feuille plein écran depuis le bas
+  @include mq-down('md') {
+    width: 100%;
+    max-width: none;
+    max-height: 94dvh;
+    margin: auto 0 0;
+    border-radius: $radius-xl $radius-xl 0 0;
+  }
+
+  &__box {
+    position: relative;
+    display: grid;
+
+    @include mq('md') {
+      grid-template-columns: 300px 1fr;
+    }
+  }
+
+  &__close {
+    position: absolute;
+    top: $space-3;
+    right: $space-3;
+    z-index: 2;
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    color: $navy;
+    background: rgba($white, 0.9);
+    border-radius: 50%;
+    box-shadow: $shadow-md;
+
+    &:focus-visible {
+      @include focus-ring($teal);
+    }
+  }
+
+  &__photo {
+    aspect-ratio: 16 / 10;
+    overflow: hidden;
+    background: $navy;
+
+    @include mq('md') {
+      aspect-ratio: auto;
+      min-height: 100%;
+    }
+  }
+
+  &__content {
+    padding: $space-5;
+
+    @include mq('md') {
+      padding: $space-7 $space-6 $space-6;
+    }
+
+    h2 {
+      font-size: clamp(1.4rem, 3vw, 1.9rem);
+      line-height: 1.2;
+    }
+
+    h3 {
+      margin: $space-5 0 $space-1;
+      font-size: 0.7rem;
+      font-weight: $fw-bold;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: $text-muted;
+    }
+
+    p {
+      font-size: 0.93rem;
+      line-height: 1.7;
+      color: $text-soft;
+    }
+  }
+
+  &__talk {
+    font-size: 1.1rem !important;
+    font-weight: $fw-semibold;
+    color: $text !important;
+  }
+
+  &__session {
+    display: flex;
+    gap: $space-2;
+    margin-top: $space-5;
+    padding: $space-3 $space-4;
+    background: $surface-muted;
+    border-radius: $radius-md;
+
+    .icon {
+      flex-shrink: 0;
+      margin-top: 4px;
+      color: var(--cat);
+    }
+  }
+
+  &__links {
+    display: flex;
+    gap: $space-2;
+    margin-top: $space-4;
+
+    a {
+      display: grid;
+      place-items: center;
+      width: 40px;
+      height: 40px;
+      border: 1px solid $border-strong;
+      border-radius: 50%;
+    }
+  }
+}
+
+@keyframes speakers-in {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+}
+
+@keyframes speakers-bounce {
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+@include reduced-motion {
+  .speakers-grid > li,
+  .speaker-dialog,
+  .speakers-list__hint .icon {
+    animation: none;
+  }
+}

@@ -1,0 +1,273 @@
+@use '@/styles/abstracts' as *;
+
+.pay-dialog {
+  position: fixed;
+  inset: 0;
+  z-index: $z-modal;
+  display: grid;
+  place-items: center;
+  padding: $space-4;
+  background: rgba($navy-900, 0.72);
+  backdrop-filter: blur(6px);
+  animation: pay-fade 240ms ease both;
+
+  // Téléphone : feuille ancrée en bas d'écran
+  @include mq-down('sm') {
+    align-items: end;
+    padding: 0;
+  }
+
+  &__box {
+    position: relative;
+    width: 100%;
+    max-width: 460px;
+    max-height: calc(100dvh - 2rem);
+    overflow-y: auto;
+    padding: $space-6 $space-5 $space-5;
+    color: $text;
+    background: $bg-elevated;
+    border-radius: $radius-xl;
+    box-shadow: $shadow-lg;
+    animation: pay-in 360ms $ease-out both;
+    @include woven-border(6px);
+    border-radius: 0 0 $radius-xl $radius-xl;
+
+    &:focus {
+      outline: none;
+    }
+
+    @include mq-down('sm') {
+      max-height: 92dvh;
+      border-radius: 0;
+      padding-bottom: calc(#{$space-5} + env(safe-area-inset-bottom));
+    }
+  }
+
+  &__demo {
+    display: inline-block;
+    margin-bottom: $space-4;
+    padding: 0.25rem 0.7rem;
+    font-size: 0.72rem;
+    font-weight: $fw-bold;
+    letter-spacing: 0.04em;
+    color: $navy;
+    background: $flag-yellow;
+    border-radius: $radius-pill;
+  }
+
+  &__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: $space-3;
+    padding-bottom: $space-4;
+    border-bottom: 1px dashed $border-strong;
+  }
+
+  &__amount {
+    font-size: 1.5rem;
+    font-weight: $fw-black;
+    white-space: nowrap;
+  }
+
+  &__title {
+    margin: $space-5 0 $space-4;
+    font-size: 1.25rem;
+  }
+
+  // --- Étapes -----------------------------------------------------------------
+  &__steps {
+    display: grid;
+    gap: $space-3;
+
+    li {
+      display: flex;
+      align-items: center;
+      gap: $space-3;
+      font-size: 0.92rem;
+      color: $text-muted;
+      transition: color $duration;
+
+      &.is-active {
+        font-weight: $fw-semibold;
+        color: $text;
+      }
+
+      &.is-done {
+        color: $text-soft;
+      }
+    }
+  }
+
+  &__dot {
+    flex-shrink: 0;
+    display: grid;
+    place-items: center;
+    width: 28px;
+    height: 28px;
+    font-size: 0.78rem;
+    font-weight: $fw-bold;
+    border: 2px solid $border-strong;
+    border-radius: 50%;
+
+    .is-active & {
+      color: $navy;
+      border-color: $orange;
+      background: $orange;
+      animation: pay-pulse 1.4s ease-in-out infinite;
+    }
+
+    .is-done & {
+      color: $white;
+      border-color: $flag-green;
+      background: $flag-green;
+    }
+  }
+
+  // --- Téléphone qui vibre pendant l'attente ----------------------------------------
+  &__phone {
+    display: flex;
+    gap: $space-4;
+    margin-top: $space-5;
+    padding: $space-4;
+    font-size: 0.88rem;
+    line-height: 1.6;
+    color: $text-soft;
+    background: $surface-muted;
+    border-radius: $radius-md;
+    opacity: 0.55;
+    transition: opacity $duration;
+
+    &.is-awaiting {
+      opacity: 1;
+    }
+
+    strong {
+      color: $text;
+    }
+  }
+
+  &__phone-icon {
+    position: relative;
+    flex-shrink: 0;
+    color: $accent-text;
+
+    .is-awaiting & {
+      animation: pay-buzz 1.2s ease-in-out infinite;
+    }
+
+    i {
+      position: absolute;
+      top: -2px;
+      right: -4px;
+      width: 10px;
+      height: 10px;
+      background: $flag-red;
+      border-radius: 50%;
+      opacity: 0;
+
+      .is-awaiting & {
+        opacity: 1;
+      }
+    }
+  }
+
+  &__ussd {
+    margin-top: $space-2;
+    font-size: 0.8rem;
+    color: $text-muted;
+  }
+
+  &__keep {
+    display: flex;
+    align-items: center;
+    gap: $space-2;
+    margin-top: $space-4;
+    font-size: 0.78rem;
+    color: $text-muted;
+  }
+
+  // --- Échec ------------------------------------------------------------------------------
+  &__failed {
+    padding-top: $space-5;
+    text-align: center;
+
+    h2 {
+      font-size: 1.3rem;
+    }
+
+    p {
+      margin: $space-2 0 $space-5;
+      font-size: 0.9rem;
+      color: $text-soft;
+    }
+  }
+
+  &__failed-icon {
+    display: inline-grid;
+    place-items: center;
+    width: 64px;
+    height: 64px;
+    margin-bottom: $space-3;
+    color: $flag-red;
+    background: rgba($flag-red, 0.12);
+    border-radius: 50%;
+  }
+
+  &__actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: $space-3;
+
+    @include mq-down('sm') {
+      .btn {
+        width: 100%;
+      }
+    }
+  }
+}
+
+@keyframes pay-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes pay-in {
+  from {
+    opacity: 0;
+    transform: translateY(24px) scale(0.98);
+  }
+}
+
+@keyframes pay-pulse {
+  50% {
+    box-shadow: 0 0 0 8px rgba($orange, 0.2);
+  }
+}
+
+@keyframes pay-buzz {
+  0%,
+  60%,
+  100% {
+    transform: rotate(0);
+  }
+  10%,
+  30%,
+  50% {
+    transform: rotate(-9deg);
+  }
+  20%,
+  40% {
+    transform: rotate(9deg);
+  }
+}
+
+@include reduced-motion {
+  .pay-dialog__phone-icon,
+  .pay-dialog__dot {
+    animation: none !important;
+  }
+}

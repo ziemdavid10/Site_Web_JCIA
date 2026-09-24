@@ -1,0 +1,163 @@
+// =============================================================================
+// DESIGN TOKENS — JCIA 2027
+// -----------------------------------------------------------------------------
+// Couleurs extraites de la charte graphique officielle (Logo JCIA 2027.pdf) :
+//   • Bleu nuit  #19203A  → le « JCIA », la mascotte, la rigueur technologique
+//   • Orange     #F6A343  → le point du « i », le soleil, l'énergie
+//   • Latérite   #CD6035  → la terre rouge du Cameroun
+//   • Turquoise  #2DB8BD  → le numérique, les circuits de la carte
+//   • Violet     #5D4696  → 4e couleur des « circuits » de la carte du logo
+// Accents drapeau (yeux de la mascotte) : vert / rouge / jaune du Cameroun.
+// =============================================================================
+
+// --- Palette de marque -------------------------------------------------------
+$navy: #19203a;
+$navy-900: #0e1326;
+$navy-800: #141a31;
+$navy-700: #232b4d;
+$navy-600: #333c63;
+
+$orange: #f6a343;
+$orange-600: #e58a22;
+$orange-100: #fdebd3;
+
+$rust: #cd6035;
+$rust-dark: #a4462a;
+$rust-100: #f8dfd4;
+
+$teal: #2db8bd;
+$teal-700: #1d8c90;
+$teal-100: #d5f1f2;
+
+$purple: #5d4696;
+$purple-100: #e4def2;
+
+// --- Couleurs du drapeau camerounais ------------------------------------------
+$flag-green: #0f8a3c;
+$flag-red: #c8102e;
+$flag-yellow: #fcd116;
+
+// --- Neutres « terre & sable » (valeurs brutes du thème clair) -------------------
+$sand-50-raw: #fdfaf5;
+$sand-100-raw: #fbf6ee;
+$sand-200-raw: #f4ead9;
+$sand-300: #e9d9bf;
+$ink: $navy;
+$ink-soft-raw: #4a5170;
+$ink-muted-raw: #6f7593;
+$white: #ffffff;
+
+// =============================================================================
+// COULEURS SÉMANTIQUES (THÈME CLAIR / SOMBRE)
+// -----------------------------------------------------------------------------
+// Ces variables pointent vers des propriétés CSS (--c-*) définies pour chaque
+// thème dans styles/base/_themes.scss. Elles basculent donc automatiquement
+// quand l'attribut data-theme de <html> change.
+// ⚠️ Ne pas les passer à rgba() : utiliser les valeurs brutes ci-dessus.
+// =============================================================================
+$bg: var(--c-bg); // fond de page
+$bg-alt: var(--c-bg-alt); // sections « sable »
+$bg-elevated: var(--c-bg-elevated); // sections « blanches »
+$surface: var(--c-surface); // cartes
+$surface-muted: var(--c-surface-muted); // blocs discrets à l'intérieur des cartes
+$text: var(--c-text);
+$text-soft: var(--c-text-soft);
+$text-muted: var(--c-text-muted);
+$border: var(--c-border);
+$border-strong: var(--c-border-strong);
+$inverse-bg: var(--c-inverse-bg); // bouton / élément contrasté
+$inverse-text: var(--c-inverse-text);
+$accent-text: var(--c-accent-text); // sur-titres (latérite)
+$teal-text: var(--c-teal-text);
+$purple-text: var(--c-purple-text);
+$header-bg: var(--c-header-bg);
+
+// Sections « scène » (hero, chiffres, Genève, awards, billetterie, pied de page…) :
+// bleu nuit en thème sombre, crème latérite en thème clair.
+$stage: var(--c-stage);
+$stage-mid: var(--c-stage-mid);
+$stage-deep: var(--c-stage-deep);
+$highlight: var(--c-highlight); // orange lisible sur la scène (orange vif / orange brûlé)
+
+// Alias historiques (utilisés par les composants) → désormais thémables
+$sand-50: $bg-elevated;
+$sand-100: $bg;
+$sand-200: $bg-alt;
+$ink-soft: $text-soft;
+$ink-muted: $text-muted;
+
+// --- Typographie ----------------------------------------------------------------
+$font-sans: 'Sora Variable', 'Sora', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+
+$fw-light: 300;
+$fw-regular: 400;
+$fw-medium: 500;
+$fw-semibold: 600;
+$fw-bold: 700;
+$fw-black: 800;
+
+// --- Espacements (échelle 4px) ----------------------------------------------------
+$space-1: 0.25rem;
+$space-2: 0.5rem;
+$space-3: 0.75rem;
+$space-4: 1rem;
+$space-5: 1.5rem;
+$space-6: 2rem;
+$space-7: 3rem;
+$space-8: 4rem;
+$space-9: 6rem;
+$space-10: 8rem;
+
+// --- Rayons, ombres, transitions ----------------------------------------------------
+$radius-sm: 8px;
+$radius-md: 14px;
+$radius-lg: 22px;
+$radius-xl: 32px;
+$radius-pill: 999px;
+
+$shadow-sm: 0 2px 8px rgba($navy, 0.06);
+$shadow-md: 0 10px 30px -10px rgba($navy, 0.18);
+$shadow-lg: 0 30px 60px -20px rgba($navy, 0.3);
+$shadow-glow-orange: 0 10px 40px -8px rgba($orange, 0.55);
+$shadow-glow-teal: 0 10px 40px -8px rgba($teal, 0.5);
+
+$ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+$ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+$duration-fast: 180ms;
+$duration: 320ms;
+$duration-slow: 700ms;
+
+// --- Layout -----------------------------------------------------------------------
+$container-max: 1240px;
+$container-max-xxl: 1400px; // grands écrans
+$container-max-wide: 1600px; // écrans larges (≥ 1920px)
+$container-narrow: 880px;
+$header-height: 78px;
+
+// --- Points de rupture (mobile first) ----------------------------------------------
+// Téléphone < 576 · grand téléphone / petite tablette ≥ 576 · tablette ≥ 768
+// laptop ≥ 1024 · desktop ≥ 1280 · grand desktop ≥ 1536 · écran large ≥ 1920
+$breakpoints: (
+  'sm': 576px,
+  'md': 768px,
+  'lg': 1024px,
+  'xl': 1280px,
+  'xxl': 1536px,
+  'wide': 1920px,
+);
+
+// --- Z-index ----------------------------------------------------------------------
+$z-base: 1;
+$z-decor: 0;
+$z-header: 100;
+$z-overlay: 200;
+$z-modal: 300;
+
+// --- Couleurs d'accent (modificateurs --orange, --teal…) -------------------------
+// Utilisées avec @each pour générer les variantes de cartes.
+$accent-colors: (
+  'orange': $orange,
+  'teal': $teal,
+  'rust': $rust,
+  'purple': $purple,
+);

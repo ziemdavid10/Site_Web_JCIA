@@ -1,0 +1,249 @@
+@use '@/styles/abstracts' as *;
+
+.legal {
+  // --- Bandeau sombre (l'en-tête transparent du site s'y superpose) ---------------------
+  &__hero {
+    position: relative;
+    overflow: hidden;
+    color: $text;
+    background:
+      radial-gradient(circle at 85% 20%, rgba($orange, 0.22), transparent 45%),
+      radial-gradient(circle at 10% 90%, rgba($teal, 0.18), transparent 45%),
+      $stage;
+  }
+
+  &__hero-inner {
+    position: relative;
+    z-index: 1;
+    padding-top: calc(#{$header-height} + 88px);
+    padding-bottom: $space-8;
+
+    > * {
+      max-width: 780px;
+    }
+  }
+
+  &__eyebrow {
+    margin-bottom: $space-3;
+    font-size: 0.78rem;
+    font-weight: $fw-bold;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: $highlight;
+  }
+
+  h1 {
+    font-size: clamp(2rem, 5vw, 3.4rem);
+  }
+
+  &__intro {
+    max-width: 62ch;
+    margin-top: $space-4;
+    font-size: 1.05rem;
+    line-height: 1.7;
+    color: fg(0.8);
+  }
+
+  &__updated {
+    display: inline-flex;
+    align-items: center;
+    gap: $space-2;
+    margin-top: $space-5;
+    padding: 0.4rem 0.9rem;
+    font-size: 0.8rem;
+    border-radius: $radius-pill;
+    @include glass(0.06);
+
+    .icon {
+      color: $highlight;
+    }
+  }
+
+  // --- Corps : sommaire + article ----------------------------------------------------
+  &__body {
+    display: grid;
+    gap: $space-6;
+    padding-block: $space-8 $space-9;
+
+    @include mq('lg') {
+      grid-template-columns: 260px minmax(0, 1fr);
+      gap: $space-8;
+    }
+
+    @include mq('xxl') {
+      grid-template-columns: 300px minmax(0, 820px);
+      justify-content: center;
+    }
+  }
+
+  &__toc {
+    align-self: start;
+    padding: $space-5;
+    border-radius: $radius-lg;
+    background: $surface;
+    border: 1px solid $border;
+
+    @include mq('lg') {
+      position: sticky;
+      top: calc(#{$header-height} + #{$space-5});
+      max-height: calc(100vh - #{$header-height} - #{$space-7});
+      overflow-y: auto;
+    }
+
+    > p {
+      margin-bottom: $space-3;
+      font-size: 0.72rem;
+      font-weight: $fw-bold;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: $accent-text;
+    }
+
+    ol {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    a {
+      display: block;
+      padding: 0.4rem 0.7rem;
+      font-size: 0.85rem;
+      line-height: 1.4;
+      color: $text-soft;
+      border-left: 2px solid transparent;
+      border-radius: 0 $radius-sm $radius-sm 0;
+      transition:
+        color $duration-fast,
+        background $duration-fast,
+        border-color $duration-fast;
+
+      &:hover {
+        color: $text;
+        background: $surface-muted;
+      }
+
+      &.is-active {
+        color: $text;
+        font-weight: $fw-semibold;
+        border-left-color: $orange;
+        background: $surface-muted;
+      }
+    }
+  }
+
+  // --- Contenu rédactionnel -------------------------------------------------------------
+  &__content {
+    min-width: 0;
+    font-size: 1rem;
+    line-height: 1.8;
+    color: $text-soft;
+  }
+
+  &__section {
+    padding-bottom: $space-6;
+    margin-bottom: $space-6;
+    border-bottom: 1px solid $border;
+    scroll-margin-top: calc(#{$header-height} + 20px);
+
+    &:last-of-type {
+      border-bottom: 0;
+    }
+
+    h2 {
+      margin-bottom: $space-4;
+      font-size: clamp(1.2rem, 2.2vw, 1.5rem);
+      color: $text;
+    }
+
+    p + p,
+    p + ul,
+    ul + p,
+    p + .legal__table,
+    .legal__table + p {
+      margin-top: $space-4;
+    }
+
+    strong {
+      color: $text;
+    }
+
+    ul li {
+      position: relative;
+      padding-left: $space-5;
+
+      &::before {
+        content: '';
+        position: absolute;
+        left: 2px;
+        top: 0.72em;
+        width: 7px;
+        height: 7px;
+        background: $teal;
+        transform: rotate(45deg);
+      }
+
+      & + li {
+        margin-top: $space-2;
+      }
+    }
+  }
+
+  // Tableaux : défilables sur mobile
+  &__table {
+    overflow-x: auto;
+    border-radius: $radius-md;
+    border: 1px solid $border;
+
+    &:focus-visible {
+      @include focus-ring($teal);
+    }
+
+    table {
+      width: 100%;
+      min-width: 520px;
+      font-size: 0.88rem;
+      line-height: 1.5;
+    }
+
+    th,
+    td {
+      padding: $space-3 $space-4;
+      text-align: left;
+      vertical-align: top;
+      border-bottom: 1px solid $border;
+    }
+
+    th {
+      font-size: 0.75rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: $text;
+      background: $surface-muted;
+    }
+
+    tr:last-child td {
+      border-bottom: 0;
+    }
+
+    td:first-child {
+      font-weight: $fw-semibold;
+      color: $text;
+    }
+  }
+
+  &__manage {
+    margin-top: $space-4;
+  }
+}
+
+@media print {
+  .legal__hero {
+    color: #000;
+    background: none;
+  }
+
+  .legal__toc {
+    display: none;
+  }
+}

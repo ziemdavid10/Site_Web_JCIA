@@ -1,0 +1,158 @@
+@use '@/styles/abstracts' as *;
+
+// Format commun des masterclasses (puces)
+.mc-format {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $space-2;
+  margin-bottom: $space-6;
+
+  li {
+    display: inline-flex;
+    align-items: center;
+    gap: $space-2;
+    padding: 0.45rem 0.9rem;
+    font-size: 0.82rem;
+    font-weight: $fw-semibold;
+    background: $surface-muted;
+    border-radius: $radius-pill;
+
+    .icon {
+      color: $flag-green;
+    }
+  }
+}
+
+.mc-details {
+  display: grid;
+  gap: $space-5;
+
+  @include mq('md') {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.mc-detail {
+  --mc: #{$orange};
+  display: flex;
+  flex-direction: column;
+  padding: $space-5;
+  background: $surface;
+  border: 1px solid $border;
+  border-top: 6px solid var(--mc);
+  border-radius: $radius-lg;
+
+  @include mq('lg') {
+    padding: $space-6;
+  }
+
+  @each $name, $color in $accent-colors {
+    &--#{$name} {
+      --mc: #{$color};
+    }
+  }
+
+  &__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: $space-3;
+    color: var(--mc);
+  }
+
+  &__num {
+    font-size: 2.4rem;
+    font-weight: $fw-black;
+    line-height: 1;
+  }
+
+  h3 {
+    font-size: 1.25rem;
+  }
+
+  &__text {
+    margin: $space-2 0 $space-4;
+    font-size: 0.92rem;
+    line-height: 1.65;
+    color: $text-soft;
+  }
+
+  &__label {
+    margin-bottom: $space-2;
+    font-size: 0.72rem;
+    font-weight: $fw-bold;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: $text-muted;
+  }
+
+  &__list {
+    display: grid;
+    gap: $space-2;
+    margin-bottom: $space-5;
+
+    li {
+      position: relative;
+      padding-left: $space-5;
+      font-size: 0.9rem;
+
+      // Petit losange à la couleur de la masterclass
+      &::before {
+        content: '';
+        position: absolute;
+        top: 0.5em;
+        left: 4px;
+        width: 8px;
+        height: 8px;
+        background: var(--mc);
+        transform: rotate(45deg);
+      }
+    }
+  }
+
+  &__audience {
+    display: flex;
+    gap: $space-2;
+    margin-top: auto;
+    padding: $space-3 $space-4;
+    font-size: 0.82rem;
+    line-height: 1.5;
+    color: $text-soft;
+    background: $surface-muted;
+    border-radius: $radius-sm;
+
+    .icon {
+      flex-shrink: 0;
+      margin-top: 2px;
+      color: var(--mc);
+    }
+  }
+}
+
+// Infos pratiques : cartes + carte OpenStreetMap
+.programme-practical {
+  display: grid;
+  gap: $space-5;
+
+  @include mq('lg') {
+    grid-template-columns: 1.2fr 1fr;
+    align-items: start;
+  }
+
+  &__map {
+    color: $text;
+
+    .registration__map {
+      margin-top: 0;
+      border-color: $border;
+    }
+
+    .registration__map-consent {
+      min-height: 280px;
+    }
+
+    iframe {
+      height: 320px;
+    }
+  }
+}

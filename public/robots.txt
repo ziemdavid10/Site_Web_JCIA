@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /erreur/
+Disallow: /errors/
+
+Sitemap: https://www.jcia.cm/sitemap.xml

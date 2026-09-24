@@ -1,0 +1,115 @@
+@use '@/styles/abstracts' as *;
+
+.cookie-banner {
+  position: fixed;
+  left: $space-3;
+  right: $space-3;
+  bottom: $space-3;
+  z-index: $z-overlay;
+  animation: cookie-in 600ms $ease-out both;
+  animation-delay: 800ms; // laisse la page apparaître d'abord
+
+  @include mq('md') {
+    left: $space-5;
+    right: auto;
+    bottom: $space-5;
+    max-width: 560px;
+  }
+
+  &__inner {
+    padding: $space-5;
+    color: $text;
+    background: $surface;
+    border: 1px solid $border;
+    border-radius: $radius-lg;
+    box-shadow: 0 24px 60px -12px rgba($navy, 0.45);
+    @include woven-border(5px);
+    border-radius: 0 0 $radius-lg $radius-lg;
+  }
+
+  h2 {
+    display: flex;
+    align-items: center;
+    gap: $space-3;
+    margin-bottom: $space-2;
+    font-size: 1.05rem;
+  }
+
+  &__icon {
+    display: inline-flex;
+    gap: 3px;
+
+    i {
+      width: 8px;
+      height: 8px;
+      transform: rotate(45deg);
+      background: $orange;
+
+      &:nth-child(2) {
+        background: $teal;
+      }
+
+      &:nth-child(3) {
+        background: $rust;
+      }
+    }
+  }
+
+  p {
+    font-size: 0.85rem;
+    line-height: 1.6;
+    color: $text-soft;
+  }
+
+  &__actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: $space-2;
+    margin-top: $space-4;
+
+    @include mq('sm') {
+      grid-template-columns: repeat(3, auto);
+      justify-content: end;
+    }
+  }
+
+  &__btn {
+    padding: 0.65rem 1rem;
+    font-size: 0.85rem;
+    font-weight: $fw-semibold;
+    color: $text;
+    border: 1.5px solid $border-strong;
+    border-radius: $radius-pill;
+    transition:
+      background $duration,
+      border-color $duration;
+
+    &:hover {
+      border-color: $text;
+    }
+
+    // « Tout accepter » pleine largeur sur téléphone
+    &--primary {
+      grid-column: 1 / -1;
+      color: $navy;
+      background: $orange;
+      border-color: $orange;
+
+      &:hover {
+        border-color: $orange-600;
+        background: $orange-600;
+      }
+
+      @include mq('sm') {
+        grid-column: auto;
+      }
+    }
+  }
+}
+
+@keyframes cookie-in {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+}

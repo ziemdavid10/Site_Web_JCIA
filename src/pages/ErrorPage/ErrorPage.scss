@@ -1,0 +1,165 @@
+@use '@/styles/abstracts' as *;
+
+.error-page {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  min-height: 100svh;
+  color: $text;
+  background: radial-gradient(ellipse at 30% 40%, $stage-mid, $stage 50%, $stage-deep);
+
+  &__glow {
+    position: absolute;
+    z-index: -1;
+    width: 520px;
+    height: 520px;
+    left: -140px;
+    top: 20%;
+    border-radius: 50%;
+    background: rgba($orange, 0.22);
+    filter: blur(100px);
+  }
+
+  &__inner {
+    position: relative;
+    z-index: 1;
+    flex: 1;
+    display: grid;
+    align-items: center;
+    gap: $space-6;
+    padding-top: calc(#{$header-height} + 80px);
+    padding-bottom: $space-8;
+
+    @include mq('lg') {
+      grid-template-columns: 0.9fr 1.1fr;
+      gap: $space-8;
+    }
+  }
+
+  // --- Visuel : code + mascotte ---------------------------------------------------------
+  &__visual {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  &__code {
+    display: flex;
+    align-items: center;
+    gap: 0.06em;
+    font-size: clamp(5.5rem, 22vw, 12rem);
+    font-weight: $fw-black;
+    line-height: 1;
+    letter-spacing: -0.04em;
+    @include gradient-text($text, fg(0.55));
+  }
+
+  // Le « 0 » devient le soleil orange du logo
+  &__sun {
+    display: inline-block;
+    width: 0.72em;
+    height: 0.72em;
+    margin-inline: 0.04em;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 35%, #ffc98a, $orange 55%, $rust);
+    box-shadow:
+      0 0 50px rgba($orange, 0.55),
+      0 0 120px rgba($orange, 0.25);
+    animation: float 5s ease-in-out infinite;
+  }
+
+  &__mascot {
+    width: clamp(90px, 16vw, 150px);
+    height: auto;
+    margin-top: -0.4rem;
+    filter: drop-shadow(0 20px 30px rgba(0, 0, 0, 0.4));
+    animation: error-tilt 4s ease-in-out infinite;
+  }
+
+  // --- Texte -------------------------------------------------------------------------------
+  &__eyebrow {
+    margin-bottom: $space-3;
+    font-size: 0.78rem;
+    font-weight: $fw-bold;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: $highlight;
+  }
+
+  h1 {
+    font-size: clamp(2rem, 5vw, 3.4rem);
+  }
+
+  &__text {
+    max-width: 48ch;
+    margin-top: $space-4;
+    font-size: 1.08rem;
+    line-height: 1.7;
+    color: fg(0.78);
+  }
+
+  &__ctas {
+    display: flex;
+    flex-wrap: wrap;
+    gap: $space-3;
+    margin-top: $space-6;
+
+    @include mq-down('sm') {
+      .btn {
+        width: 100%;
+      }
+    }
+  }
+
+  &__suggestions {
+    margin-top: $space-7;
+    padding-top: $space-5;
+    border-top: 1px solid fg(0.12);
+
+    p {
+      margin-bottom: $space-3;
+      font-size: 0.85rem;
+      color: fg(0.6);
+    }
+
+    ul {
+      display: flex;
+      flex-wrap: wrap;
+      gap: $space-2;
+    }
+
+    a {
+      display: inline-block;
+      padding: 0.45rem 0.9rem;
+      font-size: 0.85rem;
+      border-radius: $radius-pill;
+      border: 1px solid fg(0.2);
+      transition:
+        border-color $duration,
+        background $duration;
+
+      &:hover {
+        border-color: $teal;
+        background: rgba($teal, 0.12);
+      }
+    }
+  }
+
+  &__frise {
+    position: relative;
+    z-index: 1;
+  }
+}
+
+@keyframes error-tilt {
+  0%,
+  100% {
+    transform: rotate(-6deg) translateY(0);
+  }
+  50% {
+    transform: rotate(6deg) translateY(-8px);
+  }
+}

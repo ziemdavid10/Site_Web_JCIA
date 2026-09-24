@@ -1,0 +1,125 @@
+@use '@/styles/abstracts' as *;
+
+.geneva {
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 0% 100%, rgba($orange, 0.16), transparent 45%),
+    radial-gradient(circle at 100% 0%, rgba($teal, 0.16), transparent 45%),
+    $stage-mid;
+
+  &__grid {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    gap: $space-7;
+    align-items: center;
+
+    @include mq('lg') {
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: $space-9;
+    }
+  }
+
+  // --- Arc -------------------------------------------------------------------------
+  &__route {
+    position: relative;
+    max-width: 440px;
+
+    svg {
+      width: 100%;
+      height: auto;
+      overflow: visible;
+    }
+  }
+
+  // Tracé qui se dessine en boucle
+  &__arc {
+    stroke-dasharray: 460;
+    stroke-dashoffset: 460;
+    animation: draw-route 4s $ease-in-out infinite;
+  }
+
+  &__city {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    font-size: 0.75rem;
+    color: fg(0.65);
+
+    strong {
+      font-size: 1rem;
+      color: $text;
+    }
+
+    // Positions exprimées en % du viewBox (400×190) pour suivre les extrémités de l'arc
+    &--from {
+      left: 10%;
+      top: 84%;
+      transform: translate(-50%, 30px);
+      text-align: center;
+    }
+
+    &--to {
+      left: 90%;
+      top: 32%;
+      transform: translate(-50%, 30px);
+      text-align: center;
+    }
+  }
+
+  // --- Objectifs ------------------------------------------------------------------
+  &__goals {
+    display: flex;
+    flex-direction: column;
+    gap: $space-3;
+
+    li {
+      display: flex;
+      gap: $space-4;
+      padding: $space-4 $space-5;
+      border-radius: $radius-lg;
+      @include glass(0.04);
+      transition:
+        background $duration,
+        transform $duration $ease-out;
+
+      &:hover {
+        background: fg(0.08);
+        transform: translateX(6px);
+      }
+    }
+
+    h3 {
+      font-size: 1.05rem;
+      color: $highlight;
+    }
+
+    p {
+      margin-top: 2px;
+      font-size: 0.9rem;
+      color: fg(0.75);
+    }
+  }
+
+  &__goal-num {
+    flex-shrink: 0;
+    display: grid;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    font-weight: $fw-bold;
+    color: $navy;
+    background: $teal;
+    border-radius: 50%;
+  }
+}
+
+@keyframes draw-route {
+  0% {
+    stroke-dashoffset: 460;
+  }
+  55%,
+  100% {
+    stroke-dashoffset: 0;
+  }
+}

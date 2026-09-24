@@ -1,0 +1,21 @@
+/**
+ * Point d'entrée des composants d'interface réutilisables.
+ * @example import { Button, SectionHeader, Reveal } from '@/components/ui'
+ */
+export { default as Button } from './Button/Button'
+export { default as Countdown } from './Countdown/Countdown'
+export { default as Frise } from './Frise/Frise'
+export { default as Icon } from './Icon/Icon'
+export { default as LangSwitch } from './LangSwitch/LangSwitch'
+export { default as Loader } from './Loader/Loader'
+export { default as Marquee } from './Marquee/Marquee'
+export { default as NeuralCanvas } from './NeuralCanvas/NeuralCanvas'
+export { default as PatternBg } from './PatternBg/PatternBg'
+export { default as Reveal } from './Reveal/Reveal'
+export { default as SectionHeader } from './SectionHeader/SectionHeader'
+export { default as SectionLink } from './SectionLink/SectionLink'
+export { default as ThemeImg } from './ThemeImg/ThemeImg'
+export { default as ThemeToggle } from './ThemeToggle/ThemeToggle'
+export { default as Accordion, AccordionItem } from './Accordion/Accordion'
+export { default as MoreLink } from './MoreLink/MoreLink'
+export { default as PartnerLogo } from './PartnerLogo/PartnerLogo'

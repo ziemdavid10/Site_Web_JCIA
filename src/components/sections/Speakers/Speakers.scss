@@ -1,0 +1,19 @@
+@use '@/styles/abstracts' as *;
+
+// Les styles des catégories et des cartes sont dans components/speakers/Speakers.scss
+.speakers {
+  &__cta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: $space-4;
+    margin-top: $space-7;
+    text-align: center;
+
+    p {
+      font-weight: $fw-medium;
+      color: $text-soft;
+    }
+  }
+}

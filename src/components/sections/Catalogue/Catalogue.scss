@@ -1,0 +1,209 @@
+@use '@/styles/abstracts' as *;
+
+.catalogue {
+  &__grid {
+    display: grid;
+    gap: $space-7;
+    align-items: center;
+
+    @include mq('lg') {
+      grid-template-columns: 1fr 1fr;
+      gap: $space-8;
+    }
+  }
+
+  &__method p {
+    display: flex;
+    gap: $space-3;
+    padding: $space-4;
+    font-size: 0.88rem;
+    color: $ink-soft;
+    background: $sand-100;
+    border-radius: $radius-md;
+
+    .icon {
+      flex-shrink: 0;
+      color: $teal-text;
+      margin-top: 2px;
+    }
+  }
+
+  &__ctas {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: $space-4;
+    margin-top: $space-6;
+  }
+
+  &__target {
+    font-size: 0.92rem;
+    color: $ink-soft;
+
+    strong {
+      color: $accent-text;
+    }
+  }
+
+  &__impacts {
+    display: grid;
+    gap: $space-4;
+    margin-top: $space-9;
+
+    @include mq('md') {
+      grid-template-columns: repeat(3, 1fr);
+    }
+
+    li {
+      padding: $space-5;
+      border-radius: $radius-lg;
+      border: 1px solid $border;
+      transition:
+        border-color $duration,
+        box-shadow $duration;
+
+      &:hover {
+        border-color: rgba($teal, 0.6);
+        box-shadow: $shadow-md;
+      }
+    }
+
+    span {
+      display: block;
+      margin-bottom: $space-2;
+      font-size: 0.75rem;
+      font-weight: $fw-bold;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: $teal-text;
+    }
+
+    p {
+      font-weight: $fw-medium;
+      line-height: 1.5;
+    }
+  }
+}
+
+// --- Maquette du moteur de recherche ---------------------------------------------------
+.catalogue-mock {
+  position: relative;
+  padding: 0 $space-5 $space-6;
+  color: $white;
+  background: $navy;
+  border-radius: $radius-xl;
+  box-shadow: $shadow-lg;
+  overflow: hidden;
+
+  > *:not(.pattern-bg) {
+    position: relative;
+    z-index: 1;
+  }
+
+  &__bar {
+    display: flex;
+    align-items: center;
+    gap: $space-4;
+    margin: 0 (-$space-5) $space-5;
+    padding: $space-3 $space-5;
+    font-size: 0.75rem;
+    color: rgba($white, 0.55);
+    background: rgba($white, 0.05);
+    border-bottom: 1px solid rgba($white, 0.08);
+  }
+
+  &__dots {
+    display: flex;
+    gap: 6px;
+
+    i {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      // Les trois couleurs de la mascotte (drapeau)
+      &:nth-child(1) {
+        background: $flag-green;
+      }
+      &:nth-child(2) {
+        background: $flag-red;
+      }
+      &:nth-child(3) {
+        background: $orange;
+      }
+    }
+  }
+
+  &__search {
+    display: flex;
+    align-items: center;
+    gap: $space-3;
+    padding: $space-4;
+    color: $navy;
+    background: $white;
+    border-radius: $radius-md;
+    box-shadow: 0 0 0 4px rgba($teal, 0.35);
+
+    .icon {
+      color: $teal-700;
+    }
+  }
+
+  // Effet « machine à écrire » à chaque changement de requête
+  &__query {
+    overflow: hidden;
+    white-space: nowrap;
+    font-weight: $fw-medium;
+    border-right: 2px solid $orange;
+    animation: typing 1.1s steps(28, end) both;
+  }
+
+  &__filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: $space-2;
+    margin: $space-4 0 $space-5;
+
+    span {
+      padding: 0.35rem 0.8rem;
+      font-size: 0.78rem;
+      border-radius: $radius-pill;
+      border: 1px solid rgba($white, 0.2);
+
+      &::after {
+        content: ' ▾';
+        opacity: 0.6;
+      }
+    }
+  }
+
+  &__actors {
+    display: flex;
+    flex-wrap: wrap;
+    gap: $space-2;
+
+    li {
+      padding: 0.5rem 0.85rem;
+      font-size: 0.8rem;
+      border-radius: $radius-sm;
+      background: rgba($white, 0.07);
+      border-left: 3px solid $teal;
+
+      &:nth-child(3n + 2) {
+        border-left-color: $orange;
+      }
+
+      &:nth-child(3n + 3) {
+        border-left-color: $rust;
+      }
+    }
+  }
+}
+
+@keyframes typing {
+  from {
+    max-width: 0;
+  }
+  to {
+    max-width: 100%;
+  }
+}
