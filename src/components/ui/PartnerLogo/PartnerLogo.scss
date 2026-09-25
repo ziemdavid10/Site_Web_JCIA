@@ -1,0 +1,108 @@
+@use '@/styles/abstracts' as *;
+
+// Logo + nom d'un partenaire / d'un média
+.partner-logo {
+  display: flex;
+  align-items: center;
+  gap: $space-3;
+  margin: 0;
+  padding: $space-2 $space-4 $space-2 $space-2;
+  background: $surface;
+  border: 1px solid $border;
+  border-radius: $radius-md;
+  white-space: nowrap;
+
+  --mono: #{$orange};
+
+  &--c1 {
+    --mono: #{$teal};
+  }
+  &--c2 {
+    --mono: #{$rust};
+  }
+  &--c3 {
+    --mono: #{$purple};
+  }
+
+  // Pastille blanche : les logos officiels restent lisibles en thème sombre.
+  // Flexbox (et non grid) : la hauteur de la pastille est définie, donc les
+  // dimensions en % de l'image s'y résolvent vraiment. `object-fit: contain`
+  // garantit qu'aucun logo — même carré ou en hauteur (ENSPY, IRIC, Huawei,
+  // CAMPOST, PAK…) — ne déborde ni ne se déforme.
+  &__mark {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 84px;
+    height: 56px;
+    padding: 6px;
+    overflow: hidden;
+    background: $white;
+    border-radius: $radius-sm;
+    box-shadow: inset 0 0 0 1px rgba($navy, 0.08);
+
+    img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      object-position: center;
+    }
+  }
+
+  &__monogram {
+    display: grid;
+    place-items: center;
+    width: 100%;
+    height: 100%;
+    font-size: 0.95rem;
+    font-weight: $fw-black;
+    letter-spacing: 0.02em;
+    color: $white;
+    background:
+      linear-gradient(135deg, transparent 55%, rgba($white, 0.18) 55%),
+      var(--mono);
+    border-radius: 6px;
+  }
+
+  &__name {
+    font-size: 0.95rem;
+    font-weight: $fw-semibold;
+    color: $text;
+  }
+
+  &--media &__mark {
+    width: 70px;
+    height: 48px;
+  }
+
+  &--media &__name {
+    font-size: 0.88rem;
+    font-weight: $fw-medium;
+    color: $text-soft;
+  }
+}
+
+// Mur de logos statique (page Partenaires)
+.logo-wall {
+  display: grid;
+  gap: $space-3;
+
+  @include mq('sm') {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  @include mq('lg') {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  @include mq('xl') {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .partner-logo {
+    height: 100%;
+    white-space: normal;
+  }
+}

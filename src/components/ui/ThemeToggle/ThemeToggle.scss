@@ -1,0 +1,68 @@
+@use '@/styles/abstracts' as *;
+
+.theme-toggle {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  color: inherit;
+  border: 1px solid currentColor;
+  border-color: color-mix(in srgb, currentColor 25%, transparent);
+  transition:
+    background $duration,
+    border-color $duration;
+
+  &:hover {
+    background: color-mix(in srgb, currentColor 10%, transparent);
+  }
+
+  svg {
+    overflow: visible;
+    transition: transform 500ms $ease-out;
+  }
+
+  &__core {
+    fill: $orange;
+    transition:
+      r 400ms $ease-out,
+      fill $duration;
+  }
+
+  &__bite {
+    transition:
+      cx 400ms $ease-out,
+      cy 400ms $ease-out;
+  }
+
+  &__rays line {
+    stroke: $orange;
+    stroke-width: 2;
+    stroke-linecap: round;
+    transform-origin: 12px 12px;
+    transition:
+      opacity $duration,
+      transform 400ms $ease-out;
+  }
+
+  // --- État « sombre » : la lune -------------------------------------------------------
+  &.is-dark {
+    svg {
+      transform: rotate(-40deg);
+    }
+
+    .theme-toggle__core {
+      r: 8px;
+      fill: #f2e6cf;
+    }
+
+    .theme-toggle__bite {
+      cx: 17px;
+      cy: 7px;
+    }
+
+    .theme-toggle__rays line {
+      opacity: 0;
+    }
+  }
+}

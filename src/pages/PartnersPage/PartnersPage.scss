@@ -1,0 +1,91 @@
+@use '@/styles/abstracts' as *;
+
+.partners-page {
+  &__gap {
+    margin-top: $space-7 !important;
+  }
+
+  .page-hero__art img {
+    max-width: 340px;
+    height: auto;
+  }
+
+  &__cta {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: $space-3;
+    margin-top: $space-7;
+
+    @include mq-down('sm') {
+      .btn {
+        width: 100%;
+      }
+    }
+  }
+}
+
+// Avant / pendant / après : trois colonnes reliées
+.comms-phases {
+  display: grid;
+  gap: $space-4;
+  margin-top: $space-7;
+
+  @include mq('md') {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.comms-phase {
+  --phase: #{$teal};
+  padding: $space-5;
+  background: $surface;
+  border: 1px solid $border;
+  border-radius: $radius-lg;
+  border-top: 6px solid var(--phase);
+
+  &--1 {
+    --phase: #{$orange};
+  }
+
+  &--2 {
+    --phase: #{$rust};
+  }
+
+  h3 {
+    display: flex;
+    align-items: baseline;
+    gap: $space-3;
+    margin-bottom: $space-4;
+    font-size: 1.3rem;
+
+    span {
+      font-size: 0.85rem;
+      color: var(--phase);
+    }
+  }
+
+  ul {
+    display: grid;
+    gap: $space-2;
+  }
+
+  li {
+    position: relative;
+    padding-left: $space-4;
+    font-size: 0.9rem;
+    line-height: 1.55;
+    color: $text-soft;
+
+    &::before {
+      content: '';
+      position: absolute;
+      top: 0.55em;
+      left: 0;
+      width: 6px;
+      height: 6px;
+      background: var(--phase);
+      border-radius: 50%;
+    }
+  }
+}

@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <style>
+      * { box-sizing: border-box; }
+      body { margin: 0; padding: 20px; font: 13px/1.5 Inter, system-ui, sans-serif; color: #19203a; background: #fbf6ee; }
+      h1 { margin: 0 0 4px; font-size: 16px; }
+      p { margin: 0 0 12px; color: #4a5170; }
+      .frise { height: 6px; margin: -20px -20px 16px; background: repeating-linear-gradient(90deg, #f6a343 0 24px, #19203a 24px 30px, #2db8bd 30px 54px, #19203a 54px 60px, #cd6035 60px 84px, #19203a 84px 90px, #5d4696 90px 114px, #19203a 114px 120px); }
+      button { width: 100%; padding: 12px; font: 600 14px Inter, sans-serif; color: #19203a; background: #f6a343; border: 0; border-radius: 999px; cursor: pointer; }
+      button:disabled { opacity: 0.6; cursor: wait; }
+      .bar { height: 8px; margin: 14px 0 8px; overflow: hidden; background: #e9d9bf; border-radius: 99px; }
+      .bar i { display: block; width: 0; height: 100%; background: linear-gradient(90deg, #f6a343, #cd6035); transition: width 0.3s; }
+      #status { min-height: 40px; font-size: 12px; }
+      .stats { font-size: 12px; color: #6f7593; }
+    </style>
+  </head>
+  <body>
+    <div class="frise"></div>
+    <h1>JCIA 2027 — Maquette &amp; prototype</h1>
+    <p>Construit tous les écrans du site en calques Figma éditables, le design system et les liens du prototype.</p>
+    <p class="stats" id="stats"></p>
+    <button id="go">Construire la maquette</button>
+    <div class="bar"><i id="bar"></i></div>
+    <div id="status">Prêt.</div>
+
+    <!-- Données exportées par « npm run figma:export » -->
+    <script type="application/json" id="data">__DATA__</script>
+    <script>
+      const data = JSON.parse(document.getElementById('data').textContent)
+      const $ = (id) => document.getElementById(id)
+      $('stats').textContent = data.frames.length + ' écrans · ' + Object.keys(data.images).length + ' images · export du ' + new Date(data.generatedAt).toLocaleString('fr-FR')
+
+      // Envoi séquentiel : on attend l'accusé de réception du plugin avant l'envoi suivant
+      let resolveAck = null
+      const send = (msg) =>
+        new Promise((resolve) => {
+          resolveAck = resolve
+          parent.postMessage({ pluginMessage: msg }, '*')
+        })
+
+      onmessage = (e) => {
+        const msg = e.data.pluginMessage
+        if (!msg) return
+        if (msg.type === 'ack' && resolveAck) {
+          const r = resolveAck
+          resolveAck = null
+          r()
+        }
+        if (msg.type === 'progress') {
+          $('status').textContent = msg.text
+          $('bar').style.width = msg.pct + '%'
+          if (msg.pct >= 100) $('go').disabled = false
+        }
+      }
+
+      $('go').onclick = async () => {
+        $('go').disabled = true
+        await send({ type: 'start', meta: { routes: data.routes, site: data.site } })
+        // Images par paquets de 8
+        const keys = Object.keys(data.images)
+        for (let i = 0; i < keys.length; i += 8) {
+          const chunk = {}
+          keys.slice(i, i + 8).forEach((k) => (chunk[k] = data.images[k]))
+          $('status').textContent = 'Images… ' + Math.min(keys.length, i + 8) + ' / ' + keys.length
+          $('bar').style.width = 5 + (10 * i) / keys.length + '%'
+          await send({ type: 'images', images: chunk })
+        }
+        for (let i = 0; i < data.frames.length; i++) {
+          await send({ type: 'frame', frame: data.frames[i], pct: Math.round(15 + (80 * (i + 1)) / data.frames.length) })
+        }
+        parent.postMessage({ pluginMessage: { type: 'done' } }, '*')
+      }
+    </script>
+  </body>
+</html>

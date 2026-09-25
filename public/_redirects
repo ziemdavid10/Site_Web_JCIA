@@ -1,0 +1,3 @@
+# Netlify — application monopage : toutes les URL sont servies par index.html
+# (le routeur React affiche la page demandée, ou la page 404 du site)
+/*    /index.html   200

@@ -1,0 +1,168 @@
+@use '@/styles/abstracts' as *;
+
+// =============================================================================
+// BUTTON
+// =============================================================================
+.btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: $space-2;
+  font-weight: $fw-semibold;
+  line-height: 1;
+  white-space: nowrap;
+  border-radius: $radius-pill;
+  border: 2px solid transparent;
+  isolation: isolate;
+  overflow: hidden;
+  transition:
+    transform $duration $ease-out,
+    box-shadow $duration $ease-out,
+    background-color $duration,
+    color $duration,
+    border-color $duration;
+
+  // L'icône glisse légèrement au survol
+  &__icon {
+    transition: transform $duration $ease-out;
+  }
+
+  &:hover &__icon {
+    transform: translateX(4px);
+  }
+
+  // --- Action indisponible (document non publié, paiement fermé…) -------------
+  &:disabled,
+  &.is-disabled {
+    cursor: not-allowed;
+    filter: grayscale(0.85);
+    opacity: 0.55;
+    box-shadow: none;
+    transform: none;
+
+    &:hover {
+      transform: none;
+    }
+
+    .btn__icon {
+      transform: none;
+    }
+  }
+
+  &:hover:not(:disabled) {
+    transform: translateY(-2px);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+
+  // --- Tailles -------------------------------------------------------------
+  &--sm {
+    padding: 0.6rem 1.1rem;
+    font-size: 0.85rem;
+  }
+
+  &--md {
+    padding: 0.85rem 1.5rem;
+    font-size: 0.95rem;
+  }
+
+  &--lg {
+    padding: 1.05rem 1.9rem;
+    font-size: 1.02rem;
+  }
+
+  // --- Variantes -------------------------------------------------------------
+  // Primaire : dégradé « soleil » (orange → latérite)
+  &--primary {
+    color: $navy;
+    background: $orange;
+    box-shadow: $shadow-glow-orange;
+
+    // Balayage lumineux au survol
+    &::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      z-index: -1;
+      @include gradient-sun(100deg);
+      opacity: 0;
+      transition: opacity $duration;
+    }
+
+    &:hover {
+      color: $white;
+
+      &::before {
+        opacity: 1;
+      }
+    }
+  }
+
+  // Secondaire : bleu nuit
+  &--secondary {
+    color: $inverse-text;
+    background: $inverse-bg;
+
+    &:hover {
+      opacity: 0.9;
+      box-shadow: $shadow-md;
+    }
+  }
+
+  // Contour (sur fond clair)
+  &--outline {
+    color: $text;
+    border-color: $border-strong;
+    background: transparent;
+
+    &:hover {
+      border-color: $inverse-bg;
+      background: $inverse-bg;
+      color: $inverse-text;
+    }
+  }
+
+  // Fantôme (sur fond sombre)
+  &--ghost {
+    color: $text;
+    border-color: fg(0.3);
+    background: fg(0.04);
+
+    &:hover {
+      border-color: $teal;
+      background: rgba($teal, 0.15);
+    }
+  }
+
+  // Clair (sur fond coloré)
+  &--light {
+    color: $navy;
+    background: $white;
+
+    &:hover {
+      box-shadow: $shadow-lg;
+    }
+  }
+}
+
+// Pastille « Bientôt » dans un bouton volontairement désactivé
+.btn__soon {
+  margin-left: $space-1;
+  padding: 2px 8px;
+  font-size: 0.68rem;
+  font-weight: $fw-bold;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border: 1px solid currentColor;
+  border-radius: $radius-pill;
+  white-space: nowrap;
+}
+
+// Un libellé long ne doit jamais élargir la page sur téléphone
+.btn.is-disabled {
+  white-space: normal;
+  text-align: center;
+}

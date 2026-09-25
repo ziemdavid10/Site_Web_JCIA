@@ -1,0 +1,160 @@
+@use '@/styles/abstracts' as *;
+
+.footer {
+  position: relative;
+  overflow: hidden;
+  background: $stage-deep;
+  color: fg(0.75);
+  font-size: 0.92rem;
+
+  &__inner {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    gap: $space-7;
+    padding-block: $space-8 $space-7;
+
+    @include mq('md') {
+      grid-template-columns: 1fr 1fr;
+    }
+
+    @include mq('lg') {
+      grid-template-columns: 1.6fr 1fr 1.2fr 1.4fr;
+    }
+
+    @include mq('wide') {
+      gap: $space-9;
+    }
+  }
+
+  &__brand img {
+    width: 200px;
+    height: auto;
+    margin-bottom: $space-5;
+  }
+
+  &__theme {
+    max-width: 34ch;
+    font-size: 1rem;
+    font-weight: $fw-medium;
+    color: $text;
+    line-height: 1.5;
+  }
+
+  &__org {
+    margin-top: $space-3;
+    font-size: 0.82rem;
+    max-width: 40ch;
+  }
+
+  &__socials {
+    display: flex;
+    flex-wrap: wrap;
+    gap: $space-2;
+    margin-top: $space-5;
+
+    a {
+      display: grid;
+      place-items: center;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: 1px solid fg(0.15);
+      transition:
+        background $duration,
+        color $duration,
+        border-color $duration,
+        transform $duration $ease-out;
+
+      &:hover {
+        color: $navy;
+        background: $orange;
+        border-color: $highlight;
+        transform: translateY(-3px);
+      }
+    }
+  }
+
+  &__col {
+    h3 {
+      margin-bottom: $space-4;
+      font-size: 0.78rem;
+      font-weight: $fw-bold;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: $highlight;
+    }
+
+    li + li {
+      margin-top: $space-2;
+    }
+
+    a,
+    .footer__link-btn {
+      transition: color $duration-fast;
+
+      &:hover {
+        color: $text;
+      }
+    }
+  }
+
+  &__subtitle {
+    margin-top: $space-6;
+  }
+
+  // Bouton « Gérer les cookies » présenté comme un lien
+  &__link-btn {
+    font-size: inherit;
+    text-align: left;
+    color: inherit;
+  }
+
+  &__contact p {
+    display: flex;
+    gap: $space-3;
+    margin-bottom: $space-4;
+    line-height: 1.6;
+
+    .icon {
+      flex-shrink: 0;
+      margin-top: 4px;
+      color: $teal;
+    }
+  }
+
+  &__bottom {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: $space-3;
+    padding-block: $space-5;
+    border-top: 1px solid fg(0.08);
+    font-size: 0.8rem;
+    color: fg(0.5);
+  }
+}
+
+// Document annoncé mais pas encore publié : libellé inerte + mention « bientôt »
+.footer__soon {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: $space-2;
+  opacity: 0.6;
+  cursor: not-allowed;
+
+  em {
+    font-size: 0.68rem;
+    font-style: normal;
+    font-weight: $fw-bold;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 2px 8px;
+    border-radius: $radius-pill;
+    border: 1px solid currentColor;
+    white-space: nowrap;
+  }
+}

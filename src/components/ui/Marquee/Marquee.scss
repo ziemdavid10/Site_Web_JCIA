@@ -1,0 +1,60 @@
+@use '@/styles/abstracts' as *;
+
+.marquee {
+  overflow: hidden;
+  mask-image: linear-gradient(to right, transparent, #000 8%, #000 92%, transparent);
+
+  &__track {
+    display: flex;
+    width: max-content;
+    animation: marquee var(--duration) linear infinite;
+  }
+
+  &--reverse &__track {
+    animation-direction: reverse;
+  }
+
+  &:hover &__track {
+    animation-play-state: paused;
+  }
+
+  &__list {
+    display: flex;
+    flex-shrink: 0;
+  }
+
+  &__item {
+    display: flex;
+    align-items: center;
+    white-space: nowrap;
+
+    // Séparateur losange entre deux éléments
+    &::after {
+      content: '';
+      width: 8px;
+      height: 8px;
+      margin-inline: $space-6;
+      background: $orange;
+      transform: rotate(45deg);
+    }
+  }
+
+  @include reduced-motion {
+    mask-image: none;
+
+    &__track {
+      animation: none;
+      flex-wrap: wrap;
+      width: auto;
+    }
+
+    &__list:last-child {
+      display: none;
+    }
+
+    &__list {
+      flex-wrap: wrap;
+      row-gap: $space-3;
+    }
+  }
+}

@@ -1,0 +1,41 @@
+@use '@/styles/abstracts' as *;
+
+.more-link {
+  position: relative;
+  z-index: $z-base;
+  margin-top: $space-7;
+
+  &--center {
+    text-align: center;
+  }
+
+  a {
+    display: inline-flex;
+    align-items: center;
+    gap: $space-3;
+    padding: $space-3 $space-5;
+    font-weight: $fw-semibold;
+    font-size: 0.95rem;
+    color: $text;
+    border: 1.5px solid $border-strong;
+    border-radius: $radius-pill;
+    background: fg(0.02);
+    transition:
+      background $duration,
+      border-color $duration,
+      color $duration,
+      gap $duration $ease-out;
+
+    .icon {
+      color: $highlight;
+      transition: transform $duration $ease-out;
+    }
+
+    &:hover,
+    &:focus-visible {
+      gap: $space-4;
+      border-color: $orange;
+      background: rgba($orange, 0.1);
+    }
+  }
+}

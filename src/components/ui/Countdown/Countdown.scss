@@ -1,0 +1,97 @@
+@use '@/styles/abstracts' as *;
+
+.countdown {
+  &__label {
+    margin-bottom: $space-3;
+    font-size: 0.75rem;
+    font-weight: $fw-semibold;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    opacity: 0.75;
+  }
+
+  &__units {
+    display: flex;
+    gap: $space-2;
+
+    @include mq('sm') {
+      gap: $space-3;
+    }
+  }
+
+  &__unit {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 64px;
+    padding: $space-3 $space-2;
+    border-radius: $radius-md;
+
+    @include mq('sm') {
+      min-width: 78px;
+    }
+  }
+
+  &__value {
+    font-size: 1.9rem;
+    font-weight: $fw-bold;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+
+    @include mq('sm') {
+      font-size: 2.3rem;
+    }
+  }
+
+  &__name {
+    margin-top: $space-2;
+    font-size: 0.66rem;
+    font-weight: $fw-medium;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    opacity: 0.7;
+  }
+
+  // --- Thème sombre (hero) ---------------------------------------------------
+  &--dark {
+    color: $text;
+
+    .countdown__unit {
+      @include glass(0.06);
+    }
+
+    .countdown__unit:first-child .countdown__value {
+      color: $highlight;
+    }
+  }
+
+  // --- Thème clair ------------------------------------------------------------
+  &--light {
+    color: $text;
+
+    .countdown__unit {
+      background: $surface;
+      box-shadow: $shadow-sm;
+      border: 1px solid $border;
+    }
+  }
+
+  // --- Petite taille ------------------------------------------------------------
+  &--sm {
+    .countdown__unit {
+      min-width: 54px;
+      padding: $space-2;
+    }
+
+    .countdown__value {
+      font-size: 1.35rem;
+    }
+  }
+
+  &--ended {
+    font-size: 1.4rem;
+    font-weight: $fw-bold;
+    color: $orange;
+  }
+}

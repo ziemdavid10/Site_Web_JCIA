@@ -1,0 +1,17 @@
+# Dépendances et build
+node_modules
+dist
+dist-ssr
+
+# Environnement local
+.env
+.env.local
+*.local
+
+# Journaux et éditeurs
+*.log
+.DS_Store
+.vscode/*
+!.vscode/extensions.json
+.idea
+figma-plugin/data.json

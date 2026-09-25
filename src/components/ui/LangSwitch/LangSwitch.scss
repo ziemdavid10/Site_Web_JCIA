@@ -1,0 +1,33 @@
+@use '@/styles/abstracts' as *;
+
+.lang-switch {
+  display: inline-flex;
+  padding: 3px;
+  border-radius: $radius-pill;
+  border: 1px solid color-mix(in srgb, currentColor 25%, transparent);
+
+  button {
+    min-width: 36px;
+    padding: 0.35rem 0.55rem;
+    font-size: 0.75rem;
+    font-weight: $fw-bold;
+    letter-spacing: 0.06em;
+    border-radius: $radius-pill;
+    color: inherit;
+    opacity: 0.7;
+    transition:
+      background $duration,
+      color $duration,
+      opacity $duration;
+
+    &:hover {
+      opacity: 1;
+    }
+
+    &.is-active {
+      opacity: 1;
+      color: $navy;
+      background: $orange;
+    }
+  }
+}

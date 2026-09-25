@@ -1,0 +1,185 @@
+@use '@/styles/abstracts' as *;
+
+.faq-page {
+  .page-hero__art img {
+    max-width: 200px;
+  }
+
+  &__grid {
+    display: grid;
+    gap: $space-6;
+
+    > * {
+      min-width: 0; // autorise le défilement horizontal des filtres sur mobile
+    }
+
+    @include mq('lg') {
+      grid-template-columns: 340px 1fr;
+      gap: $space-8;
+      align-items: start;
+    }
+
+    @include mq('xxl') {
+      grid-template-columns: 380px 1fr;
+    }
+  }
+
+  &__tools {
+    display: flex;
+    flex-direction: column;
+    gap: $space-4;
+
+    @include mq('lg') {
+      position: sticky;
+      top: calc(#{$header-height} + #{$space-5});
+    }
+  }
+
+  &__search {
+    display: flex;
+    align-items: center;
+    gap: $space-3;
+    padding: 0 $space-4;
+    background: $surface;
+    border: 1.5px solid $border-strong;
+    border-radius: $radius-pill;
+    transition:
+      border-color $duration-fast,
+      box-shadow $duration-fast;
+
+    &:focus-within {
+      border-color: $teal;
+      box-shadow: 0 0 0 4px rgba($teal, 0.18);
+    }
+
+    .icon {
+      flex-shrink: 0;
+      color: $text-muted;
+    }
+
+    input {
+      width: 100%;
+      padding: 0.85rem 0;
+      font-size: 1rem;
+      background: transparent;
+      border: 0;
+      outline: none;
+    }
+  }
+
+  // Filtres : défilement horizontal sur mobile, empilés en colonne sur desktop
+  &__filters {
+    display: flex;
+    gap: $space-2;
+    overflow-x: auto;
+    padding-bottom: 2px;
+    scrollbar-width: none;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
+
+    @include mq('lg') {
+      flex-direction: column;
+      overflow: visible;
+    }
+
+    button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: $space-3;
+      flex-shrink: 0;
+      padding: 0.55rem 0.9rem;
+      font-size: 0.85rem;
+      font-weight: $fw-medium;
+      text-align: left;
+      white-space: nowrap;
+      background: $surface;
+      border: 1px solid $border;
+      border-radius: $radius-pill;
+      transition:
+        background $duration-fast,
+        border-color $duration-fast,
+        color $duration-fast;
+
+      @include mq('lg') {
+        border-radius: $radius-sm;
+        padding: 0.7rem 1rem;
+      }
+
+      &:hover {
+        border-color: $border-strong;
+      }
+
+      span {
+        min-width: 24px;
+        padding: 1px 7px;
+        font-size: 0.72rem;
+        text-align: center;
+        background: $surface-muted;
+        border-radius: $radius-pill;
+      }
+
+      &.is-active {
+        color: $inverse-text;
+        background: $inverse-bg;
+        border-color: $inverse-bg;
+
+        span {
+          color: $navy;
+          background: $orange;
+        }
+      }
+    }
+  }
+
+  &__still {
+    padding: $space-5;
+    background: $surface-muted;
+    border-radius: $radius-lg;
+
+    h2 {
+      font-size: 1.05rem;
+    }
+
+    p {
+      margin: $space-2 0 $space-4;
+      font-size: 0.88rem;
+      color: $text-soft;
+    }
+
+    .btn {
+      max-width: 100%;
+      white-space: normal;
+      word-break: break-all;
+    }
+  }
+
+  &__phone {
+    display: inline-flex;
+    align-items: center;
+    gap: $space-2;
+    margin-top: $space-3;
+    font-size: 0.88rem;
+    font-weight: $fw-semibold;
+  }
+
+  &__empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: $space-3;
+    padding: $space-8 $space-4;
+    text-align: center;
+    color: $text-muted;
+    border: 2px dashed $border;
+    border-radius: $radius-lg;
+  }
+
+  // Titres des questions en h2 sur cette page : même taille que sur l'accueil
+  .accordion-item h2 {
+    font-size: 1rem;
+    font-weight: $fw-semibold;
+  }
+}

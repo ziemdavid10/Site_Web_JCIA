@@ -1,0 +1,9 @@
+// =============================================================================
+// FEUILLE DE STYLE PRINCIPALE
+// Les styles propres à chaque composant sont co-localisés (Composant.scss)
+// et importés directement par le composant JSX.
+// =============================================================================
+@use 'base/reset';
+@use 'base/themes';
+@use 'base/global';
+@use 'base/animations';

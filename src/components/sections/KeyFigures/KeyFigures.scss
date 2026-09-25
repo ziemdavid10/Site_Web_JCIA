@@ -1,0 +1,92 @@
+@use '@/styles/abstracts' as *;
+
+.key-figures {
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba($teal, 0.15), transparent 60%),
+    $stage;
+
+  .container {
+    position: relative;
+    z-index: 1;
+  }
+
+  // Éventails décoratifs (motif rayonnant tricolore)
+  &__fan {
+    position: absolute;
+    width: clamp(160px, 22vw, 320px);
+    height: auto;
+    opacity: 0.35;
+    pointer-events: none;
+
+    &--left {
+      left: 0;
+      bottom: 0;
+    }
+
+    &--right {
+      right: 0;
+      top: 0;
+    }
+  }
+
+  &__grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    border-radius: $radius-xl;
+    overflow: hidden;
+    @include glass(0.04);
+
+    @include mq('lg') {
+      grid-template-columns: repeat(4, 1fr);
+    }
+  }
+}
+
+.figure {
+  display: flex;
+  flex-direction: column;
+  gap: $space-2;
+  padding: $space-6 $space-4;
+  text-align: center;
+  border-right: 1px solid fg(0.08);
+  border-bottom: 1px solid fg(0.08);
+  transition: background $duration;
+
+  @include mq('md') {
+    padding: $space-7 $space-5;
+  }
+
+  &:hover {
+    background: fg(0.04);
+  }
+
+  @each $name, $color in $accent-colors {
+    &--#{$name} .figure__value {
+      color: $color;
+    }
+  }
+
+  // La couleur violette de la charte est éclaircie pour rester lisible sur fond sombre
+  &--purple .figure__value {
+    color: #9d87dc;
+  }
+
+  &__value {
+    font-size: clamp(2rem, 4.6vw, 3.2rem);
+    font-weight: $fw-black;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.03em;
+  }
+
+  &__suffix {
+    font-size: 0.6em;
+    margin-left: 2px;
+  }
+
+  &__label {
+    font-size: 0.85rem;
+    color: fg(0.7);
+  }
+}

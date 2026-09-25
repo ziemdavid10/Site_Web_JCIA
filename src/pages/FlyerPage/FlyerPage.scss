@@ -1,0 +1,445 @@
+@use '@/styles/abstracts' as *;
+
+// =============================================================================
+// GÉNÉRATEUR DE FLYER « J'Y SERAI »
+// Téléphone / tablette : aperçu en haut, réglages en dessous.
+// Desktop : réglages à gauche, aperçu collant à droite.
+// =============================================================================
+.flyer-editor {
+  display: grid;
+  gap: $space-6;
+
+  @include mq('lg') {
+    grid-template-columns: minmax(340px, 420px) minmax(0, 1fr);
+    align-items: start;
+    gap: $space-7;
+  }
+
+  &__preview {
+    @include mq('lg') {
+      order: 2;
+      position: sticky;
+      top: calc(#{$header-height} + #{$space-4});
+    }
+  }
+
+  // Cadre de l'aperçu : hauteur limitée à l'écran, largeur déduite du ratio
+  &__frame {
+    position: relative;
+    width: 100%;
+    max-width: min(100%, calc((100dvh - 220px) * var(--r, 0.8)));
+    margin-inline: auto;
+    overflow: hidden;
+    background: $surface-muted;
+    border-radius: $radius-lg;
+    box-shadow: $shadow-lg;
+
+    &--portrait {
+      --r: 0.8;
+    }
+
+    &--story {
+      --r: 0.5625;
+    }
+
+    &--square {
+      --r: 1;
+    }
+
+    // Téléphone : aperçu un peu moins haut pour laisser voir les réglages
+    @include mq-down('md') {
+      max-width: min(100%, calc((72dvh) * var(--r, 0.8)));
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+
+      &.is-draggable {
+        cursor: grab;
+        touch-action: none;
+
+        &:active {
+          cursor: grabbing;
+        }
+      }
+
+      &:focus-visible {
+        outline: 3px solid $teal;
+        outline-offset: -3px;
+      }
+    }
+  }
+
+  &__loading {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(100deg, transparent 30%, fg(0.08) 50%, transparent 70%) $surface-muted;
+    background-size: 200% 100%;
+    animation: fx-shimmer 1.2s linear infinite;
+  }
+
+  &__hint {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: $space-2;
+    margin-top: $space-3;
+    font-size: 0.8rem;
+    color: $text-muted;
+    text-align: center;
+  }
+
+  &__controls {
+    display: flex;
+    flex-direction: column;
+    gap: $space-4;
+    min-width: 0;
+  }
+}
+
+// --- Blocs de réglages ---------------------------------------------------------------------
+.fx-block {
+  padding: $space-5 $space-4;
+  background: $surface;
+  border: 1px solid $border;
+  border-radius: $radius-lg;
+
+  @include mq('md') {
+    padding: $space-5;
+  }
+
+  > h2 {
+    display: flex;
+    align-items: center;
+    gap: $space-3;
+    margin-bottom: $space-4;
+    font-size: 1.05rem;
+
+    span {
+      display: grid;
+      place-items: center;
+      width: 28px;
+      height: 28px;
+      font-size: 0.8rem;
+      color: $inverse-text;
+      background: $inverse-bg;
+      border-radius: 50%;
+    }
+  }
+}
+
+// Zone de dépôt de la photo
+.fx-drop {
+  display: flex;
+  align-items: center;
+  gap: $space-4;
+  padding: $space-4;
+  border: 2px dashed $border-strong;
+  border-radius: $radius-md;
+  cursor: pointer;
+  transition:
+    border-color $duration-fast,
+    background $duration-fast;
+
+  input {
+    @include visually-hidden;
+  }
+
+  &:hover,
+  &.is-over {
+    border-color: $orange;
+    background: rgba($orange, 0.08);
+  }
+
+  &:focus-within {
+    @include focus-ring($teal);
+  }
+
+  &__icon {
+    flex-shrink: 0;
+    display: grid;
+    place-items: center;
+    width: 56px;
+    height: 56px;
+    color: $navy;
+    background: $orange;
+    border-radius: 50%;
+  }
+
+  &__thumb {
+    flex-shrink: 0;
+    width: 56px;
+    height: 56px;
+    object-fit: cover;
+    border-radius: 50%;
+    box-shadow: 0 0 0 3px $orange;
+  }
+
+  &__text {
+    min-width: 0;
+
+    strong {
+      display: block;
+      font-size: 0.95rem;
+    }
+
+    small {
+      font-size: 0.78rem;
+      color: $text-muted;
+    }
+  }
+}
+
+.fx-error {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: $space-2;
+  font-size: 0.78rem;
+  color: $flag-red;
+}
+
+.fx-zoom {
+  display: flex;
+  align-items: center;
+  gap: $space-3;
+  margin-top: $space-4;
+  font-size: 0.85rem;
+  font-weight: $fw-semibold;
+
+  .icon {
+    flex-shrink: 0;
+    color: $text-muted;
+  }
+
+  input {
+    flex: 1;
+    min-width: 0;
+    accent-color: $orange;
+    height: 28px; // cible tactile
+  }
+}
+
+.fx-privacy {
+  display: flex;
+  gap: $space-2;
+  margin-top: $space-4;
+  font-size: 0.78rem;
+  line-height: 1.5;
+  color: $text-muted;
+
+  .icon {
+    flex-shrink: 0;
+    margin-top: 2px;
+    color: $flag-green;
+  }
+}
+
+.fx-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  & + & {
+    margin-top: $space-3;
+  }
+
+  label {
+    font-size: 0.8rem;
+    font-weight: $fw-semibold;
+  }
+
+  input {
+    min-height: 46px;
+    padding: 0.7rem 0.95rem;
+    font-size: 1rem;
+    background: $bg-elevated;
+    border: 1.5px solid $border-strong;
+    border-radius: $radius-sm;
+
+    &:focus {
+      outline: none;
+      border-color: $teal;
+      box-shadow: 0 0 0 4px rgba($teal, 0.18);
+    }
+  }
+}
+
+// Formats : boutons segmentés avec la forme du format
+.fx-segmented {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: $space-2;
+
+  label {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: $space-2;
+    padding: $space-3 $space-2;
+    font-size: 0.75rem;
+    font-weight: $fw-semibold;
+    text-align: center;
+    border: 1.5px solid $border-strong;
+    border-radius: $radius-sm;
+    cursor: pointer;
+    transition:
+      border-color $duration-fast,
+      background $duration-fast;
+
+    &.is-checked {
+      border-color: $orange;
+      background: rgba($orange, 0.1);
+    }
+
+    &:focus-within {
+      @include focus-ring($teal);
+    }
+  }
+
+  input {
+    @include visually-hidden;
+  }
+
+  &__shape {
+    display: block;
+    height: 30px;
+    border: 2px solid currentColor;
+    border-radius: 3px;
+
+    &--portrait {
+      width: 24px;
+    }
+
+    &--story {
+      width: 17px;
+    }
+
+    &--square {
+      width: 30px;
+    }
+  }
+}
+
+.fx-label {
+  margin: $space-4 0 $space-2;
+  font-size: 0.8rem;
+  font-weight: $fw-semibold;
+}
+
+// Ambiances : pastilles de couleur
+.fx-styles {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: $space-2;
+
+  label {
+    display: flex;
+    align-items: center;
+    gap: $space-2;
+    padding: $space-2 $space-3;
+    font-size: 0.8rem;
+    font-weight: $fw-semibold;
+    border: 1.5px solid $border-strong;
+    border-radius: $radius-pill;
+    cursor: pointer;
+
+    &.is-checked {
+      border-color: $orange;
+      background: rgba($orange, 0.1);
+    }
+
+    &:focus-within {
+      @include focus-ring($teal);
+    }
+  }
+
+  input {
+    @include visually-hidden;
+  }
+
+  &__swatch {
+    flex-shrink: 0;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--sw-a) 50%, var(--sw-b) 50%);
+    box-shadow: inset 0 0 0 1px fg(0.2);
+  }
+}
+
+// Actions
+.fx-actions {
+  display: flex;
+  flex-direction: column;
+  gap: $space-3;
+
+  > .btn {
+    width: 100%;
+  }
+
+  &__row {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: 1fr;
+    gap: $space-2;
+
+    .btn {
+      padding-inline: $space-3;
+    }
+  }
+}
+
+.fx-hint {
+  font-size: 0.78rem;
+  text-align: center;
+  color: $text-muted;
+}
+
+.fx-caption {
+  padding: $space-3;
+  font-size: 0.8rem;
+  line-height: 1.55;
+  color: $text-soft;
+  background: $surface-muted;
+  border-radius: $radius-sm;
+}
+
+// --- Accès verrouillé -------------------------------------------------------------------------
+.flyer-locked {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: $space-4;
+  max-width: 560px;
+  margin-inline: auto;
+  padding: $space-7 $space-5;
+  text-align: center;
+  background: $surface;
+  border: 1px solid $border;
+  border-radius: $radius-xl;
+  @include woven-border(6px);
+  border-radius: 0 0 $radius-xl $radius-xl;
+
+  p {
+    color: $text-soft;
+  }
+
+  &__icon {
+    display: grid;
+    place-items: center;
+    width: 76px;
+    height: 76px;
+    color: $navy;
+    background: $orange;
+    border-radius: 50%;
+  }
+}
+
+@keyframes fx-shimmer {
+  to {
+    background-position: -200% 0;
+  }
+}

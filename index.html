@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- SEO -->
+    <title>JCIA 2027 | Journées Camerounaises de l'Intelligence Artificielle</title>
+    <meta
+      name="description"
+      content="3e édition des Journées Camerounaises de l'Intelligence Artificielle — 27 & 28 avril 2027, Hilton Hotel, Yaoundé. L'IA Made in Cameroun : conférences, Salon National 100 % IA, masterclasses et Cameroon AI Awards."
+    />
+    <meta name="theme-color" content="#19203a" />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="referrer" content="strict-origin-when-cross-origin" />
+    <!-- La Content-Security-Policy est ajoutée ici au build (voir security/headers.mjs) -->
+    <link rel="canonical" href="https://www.jcia.cm/" />
+
+    <!-- Open Graph / réseaux sociaux -->
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="fr_FR" />
+    <meta property="og:site_name" content="JCIA 2027" />
+    <meta property="og:title" content="JCIA 2027 — L'IA Made in Cameroun" />
+    <meta
+      property="og:description"
+      content="27 & 28 avril 2027 · Hilton Hotel, Yaoundé. Side event stratégique préparatoire au AI for Good Global Summit (UIT, Genève)."
+    />
+    <meta property="og:image" content="/images/og-jcia-2027.jpg" />
+    <meta name="twitter:card" content="summary_large_image" />
+
+    <!-- Icônes -->
+    <link rel="icon" type="image/png" sizes="192x192" href="/images/icon-192.png" />
+    <link rel="apple-touch-icon" href="/images/apple-touch-icon.png" />
+
+    <!-- Données structurées (événement) pour les moteurs de recherche -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "Event",
+        "name": "Journées Camerounaises de l'Intelligence Artificielle (JCIA 2027)",
+        "startDate": "2027-04-27T08:00:00+01:00",
+        "endDate": "2027-04-28T23:00:00+01:00",
+        "eventAttendanceMode": "https://schema.org/MixedEventAttendanceMode",
+        "eventStatus": "https://schema.org/EventScheduled",
+        "location": {
+          "@type": "Place",
+          "name": "Hilton Hotel Yaoundé",
+          "address": { "@type": "PostalAddress", "addressLocality": "Yaoundé", "addressCountry": "CM" }
+        },
+        "image": ["/images/og-jcia-2027.jpg"],
+        "description": "L'IA Made in Cameroun : « Penser l'Intelligence Artificielle au Cameroun, pour le Cameroun »",
+        "organizer": {
+          "@type": "Organization",
+          "name": "Intelligence Artificielle Cameroun (IAC) – Cameroon Artificial Intelligence Policy Institute (CAIPI)",
+          "url": "https://www.iacameroun.com"
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <!--
+      Thème appliqué AVANT le premier affichage (évite un flash de couleur).
+      Script externe (et non en ligne) : compatible avec la Content-Security-Policy.
+    -->
+    <script src="/theme-init.js"></script>
+
+    <!--
+      Écran de chargement initial : visible pendant le téléchargement du JavaScript,
+      puis masqué par src/main.jsx une fois l'application et la police prêtes.
+      Styles en ligne : il doit s'afficher avant toute feuille de style.
+    -->
+    <style>
+      #preloader {
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 28px;
+        background: radial-gradient(ellipse at 50% 40%, #232b4d, #19203a 55%, #0e1326);
+        transition: opacity 0.5s ease, visibility 0.5s ease;
+      }
+      #preloader.is-hidden {
+        opacity: 0;
+        visibility: hidden;
+      }
+      #preloader img {
+        width: 180px;
+        height: auto;
+        animation: pl-in 0.8s ease both;
+      }
+      #preloader .pl-nodes {
+        display: flex;
+        gap: 10px;
+      }
+      #preloader .pl-nodes i {
+        width: 12px;
+        height: 12px;
+        border-radius: 3px;
+        transform: rotate(45deg);
+        animation: pl-pulse 1.1s ease-in-out infinite;
+      }
+      #preloader .pl-nodes i:nth-child(1) { background: #f6a343; }
+      #preloader .pl-nodes i:nth-child(2) { background: #2db8bd; animation-delay: 0.15s; }
+      #preloader .pl-nodes i:nth-child(3) { background: #cd6035; animation-delay: 0.3s; }
+      #preloader .pl-nodes i:nth-child(4) { background: #8a74c9; animation-delay: 0.45s; }
+      @keyframes pl-pulse {
+        0%, 100% { transform: rotate(45deg) scale(0.6); opacity: 0.4; }
+        50% { transform: rotate(45deg) scale(1.1); opacity: 1; }
+      }
+      @keyframes pl-in {
+        from { opacity: 0; transform: translateY(10px); }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        #preloader * { animation: none !important; }
+      }
+    </style>
+    <div id="preloader" role="status" aria-label="Chargement — JCIA 2027">
+      <img src="/images/logo-jcia-white.webp" alt="" width="180" height="75" />
+      <div class="pl-nodes" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+    </div>
+
+    <noscript>
+      <p class="noscript-msg">
+        Veuillez activer JavaScript pour consulter le site des JCIA 2027. / Please enable JavaScript to view the JCIA 2027 website.
+      </p>
+      <style>#preloader { display: none; } .noscript-msg { padding: 2rem; font-family: sans-serif; text-align: center; }</style>
+    </noscript>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>

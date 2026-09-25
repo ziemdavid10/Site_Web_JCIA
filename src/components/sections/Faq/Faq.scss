@@ -1,0 +1,60 @@
+@use '@/styles/abstracts' as *;
+
+.faq {
+  &__grid {
+    display: grid;
+    gap: $space-7;
+
+    @include mq('lg') {
+      grid-template-columns: 0.8fr 1.2fr;
+      gap: $space-8;
+    }
+  }
+
+  &__aside {
+    @include mq('lg') {
+      position: sticky;
+      top: calc(#{$header-height} + #{$space-6});
+      align-self: start;
+    }
+  }
+
+  &__mascot {
+    display: flex;
+    align-items: flex-end;
+    gap: $space-4;
+
+    img {
+      width: 110px;
+      height: auto;
+      flex-shrink: 0;
+      animation: float 5s ease-in-out infinite;
+    }
+  }
+
+  &__bubble {
+    position: relative;
+    padding: $space-4 $space-5;
+    margin-bottom: $space-7;
+    background: $surface;
+    border-radius: $radius-lg $radius-lg $radius-lg 4px;
+    box-shadow: $shadow-md;
+
+    p {
+      margin-bottom: $space-3;
+      font-size: 0.88rem;
+      color: $ink-soft;
+    }
+
+    .btn {
+      white-space: normal;
+      word-break: break-all;
+    }
+  }
+
+  &__list {
+    display: flex;
+    flex-direction: column;
+    gap: $space-3;
+  }
+}

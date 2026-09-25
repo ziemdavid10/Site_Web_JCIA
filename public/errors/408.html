@@ -1,0 +1,27 @@
+<!doctype html>
+<!--
+  Page d'erreur 408 servie directement par l'hébergeur (voir .htaccess / nginx).
+  Elle redirige immédiatement vers la page d'erreur de l'application (/erreur/408),
+  aux couleurs du site et traduite. Sans JavaScript, un message simple s'affiche.
+-->
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex" />
+    <title>408 — Délai dépassé | JCIA 2027</title>
+    <script>location.replace('/erreur/408')</script>
+    <style>
+      body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: #19203a; color: #fff; font-family: system-ui, sans-serif; text-align: center; }
+      a { color: #f6a343; }
+      strong { display: block; font-size: 4rem; color: #f6a343; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <strong>408</strong>
+      <p>Délai dépassé — Request timeout</p>
+      <p><a href="/">Retour à l’accueil / Back to home</a></p>
+    </main>
+  </body>
+</html>

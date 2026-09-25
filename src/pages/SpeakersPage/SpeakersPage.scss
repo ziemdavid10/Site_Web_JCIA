@@ -1,0 +1,36 @@
+@use '@/styles/abstracts' as *;
+
+.speakers-page {
+  .page-hero__art img {
+    max-width: 230px;
+  }
+}
+
+.speakers-call {
+  display: grid;
+  gap: $space-7;
+
+  &__topics {
+    padding: $space-5;
+    border-radius: $radius-lg;
+    @include glass(0.04);
+
+    @include mq('md') {
+      padding: $space-6;
+    }
+  }
+
+  // Les étapes restent empilées dans cette mise en page
+  .steps {
+    grid-template-columns: 1fr;
+
+    @include mq('lg') {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+
+  &__cta {
+    margin-top: $space-7;
+    text-align: center;
+  }
+}

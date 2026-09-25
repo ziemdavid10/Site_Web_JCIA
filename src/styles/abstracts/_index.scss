@@ -1,0 +1,4 @@
+// Point d'entrée des abstractions (aucune sortie CSS).
+// Usage dans un composant :  @use '@/styles/abstracts' as *;
+@forward 'variables';
+@forward 'mixins';

@@ -1,0 +1,542 @@
+@use '@/styles/abstracts' as *;
+
+// --- Étapes du parcours (dans le bandeau) ---------------------------------------
+.tickets-steps {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: $space-3;
+  width: 100%;
+
+  @include mq('lg') {
+    grid-template-columns: repeat(4, auto);
+    justify-content: start;
+    gap: $space-3 $space-5;
+  }
+
+  li {
+    display: flex;
+    align-items: center;
+    gap: $space-3;
+    font-size: 0.85rem;
+    line-height: 1.35;
+    color: fg(0.75);
+  }
+
+  strong {
+    color: $text;
+  }
+
+  &__icon {
+    flex-shrink: 0;
+    display: grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    color: $navy;
+    background: $orange;
+    border-radius: 50%;
+  }
+}
+
+// --- Cartes tarifaires ------------------------------------------------------------------
+.tier-grid {
+  display: grid;
+  gap: $space-5;
+  max-width: 520px;
+  margin-inline: auto;
+
+  @include mq('md') {
+    grid-template-columns: repeat(2, 1fr);
+    max-width: none;
+  }
+
+  @include mq('xl') {
+    grid-template-columns: repeat(4, 1fr);
+    align-items: stretch;
+  }
+}
+
+.tier-card {
+  --tier: #{$orange};
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  padding: $space-6 $space-5 $space-5;
+  background: $surface;
+  border: 1.5px solid $border;
+  border-radius: $radius-xl;
+  transition:
+    transform $duration $ease-out,
+    box-shadow $duration,
+    border-color $duration;
+
+  @each $name, $color in $accent-colors {
+    &--#{$name} {
+      --tier: #{$color};
+    }
+  }
+
+  // Bandeau de couleur en haut de carte
+  &::before {
+    content: '';
+    position: absolute;
+    inset: -1.5px -1.5px auto;
+    height: 8px;
+    background: var(--tier);
+    border-radius: $radius-xl $radius-xl 0 0;
+  }
+
+  &:hover {
+    transform: translateY(-6px);
+    box-shadow: $shadow-lg;
+    border-color: var(--tier);
+  }
+
+  // Tarif complet : carte en retrait, plus de clic possible
+  &.is-sold-out {
+    opacity: 0.72;
+    filter: grayscale(0.35);
+
+    &:hover {
+      transform: none;
+      box-shadow: none;
+      border-color: $border;
+    }
+  }
+
+  &__quota {
+    display: flex;
+    align-items: center;
+    gap: $space-2;
+    margin-bottom: $space-4;
+    font-size: 0.8rem;
+    font-weight: $fw-semibold;
+    color: $text-muted;
+
+    .icon {
+      flex-shrink: 0;
+      color: var(--tier);
+    }
+
+    // Presque complet : on alerte sans dramatiser
+    &.is-low {
+      color: $rust;
+
+      .icon {
+        color: $rust;
+      }
+
+      :root[data-theme='dark'] & {
+        color: #ffb38a;
+      }
+    }
+
+    // Quota vendu : mention « Épuisé »
+    &.is-out {
+      font-weight: $fw-bold;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+  }
+
+  // Billet mis en avant (mention « le plus choisi » désactivée) : styles conservés
+  &--featured {
+    border-color: $orange;
+    box-shadow: $shadow-glow-orange;
+
+    @include mq('xl') {
+      transform: translateY(-12px);
+
+      &:hover {
+        transform: translateY(-16px);
+      }
+    }
+  }
+
+  &__ribbon {
+    position: absolute;
+    z-index: 1;
+    top: -14px;
+    left: 50%;
+    padding: 0.3rem 0.9rem;
+    font-size: 0.7rem;
+    font-weight: $fw-bold;
+    letter-spacing: 0.08em;
+    white-space: nowrap;
+    text-transform: uppercase;
+    color: $navy;
+    background: $orange;
+    border-radius: $radius-pill;
+    transform: translateX(-50%);
+    box-shadow: $shadow-md;
+
+    // Complet : ruban gris, sans appel à l'action
+    &--out {
+      color: $white;
+      background: $ink-muted-raw;
+    }
+  }
+
+  &__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: $space-3;
+    margin-bottom: $space-4;
+  }
+
+  &__icon {
+    display: grid;
+    place-items: center;
+    width: 48px;
+    height: 48px;
+    color: var(--tier);
+    background: color-mix(in srgb, var(--tier) 14%, transparent);
+    border-radius: $radius-md;
+  }
+
+  &__mode {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 0.25rem 0.65rem;
+    font-size: 0.7rem;
+    font-weight: $fw-semibold;
+    color: $text-soft;
+    background: $surface-muted;
+    border-radius: $radius-pill;
+
+    &.is-online {
+      color: $teal-text;
+    }
+  }
+
+  &__name {
+    font-size: 1.4rem;
+  }
+
+  &__tagline {
+    min-height: 2.8em;
+    margin-top: $space-1;
+    font-size: 0.88rem;
+    color: $text-muted;
+  }
+
+  &__price {
+    display: flex;
+    flex-direction: column; // « par personne » toujours sous le prix : cartes alignées
+    gap: 2px;
+    min-height: 4.4rem;
+    margin: $space-4 0;
+    padding-bottom: $space-4;
+    border-bottom: 1px dashed $border-strong;
+
+    strong {
+      font-size: clamp(1.7rem, 2.4vw, 2.1rem);
+      font-weight: $fw-black;
+      line-height: 1.1;
+      white-space: nowrap;
+    }
+
+    span {
+      font-size: 0.8rem;
+      color: $text-muted;
+    }
+  }
+
+  &__features {
+    display: grid;
+    gap: $space-2;
+    margin-bottom: $space-5;
+
+    li {
+      display: flex;
+      gap: $space-2;
+      font-size: 0.88rem;
+      line-height: 1.45;
+    }
+
+    .icon {
+      flex-shrink: 0;
+      margin-top: 2px;
+      color: var(--tier);
+    }
+  }
+
+  &__note {
+    display: flex;
+    gap: $space-2;
+    margin-bottom: $space-4;
+    padding: $space-2 $space-3;
+    font-size: 0.78rem;
+    color: $text-soft;
+    background: $surface-muted;
+    border-radius: $radius-sm;
+
+    .icon {
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+  }
+
+  &__cta {
+    width: 100%;
+    margin-top: auto;
+  }
+}
+
+// --- Tableau comparatif -----------------------------------------------------------------
+// Défilement horizontal sur mobile, première colonne figée.
+.compare {
+  overflow-x: auto;
+  background: $surface;
+  border: 1px solid $border;
+  border-radius: $radius-lg;
+
+  &:focus-visible {
+    @include focus-ring($teal);
+  }
+
+  table {
+    width: 100%;
+    min-width: 640px;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+  }
+
+  th,
+  td {
+    padding: $space-3 $space-4;
+    border-top: 1px solid $border;
+  }
+
+  thead th {
+    border-top: 0;
+    vertical-align: bottom;
+    background: $surface-muted;
+  }
+
+  tbody th {
+    font-weight: $fw-medium;
+    text-align: left;
+  }
+
+  // Première colonne figée lors du défilement horizontal
+  tr > :first-child {
+    position: sticky;
+    left: 0;
+    z-index: 1;
+    min-width: 220px;
+    max-width: 300px;
+    text-align: left;
+    background: $surface;
+  }
+
+  thead tr > :first-child {
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: $text-muted;
+    background: $surface-muted;
+  }
+
+  td {
+    text-align: center;
+  }
+
+  &__quota {
+    display: block;
+    margin-top: 2px;
+    font-size: 0.68rem !important;
+    font-weight: $fw-medium;
+    color: $text-muted;
+
+    &.is-out {
+      font-weight: $fw-bold;
+      text-transform: uppercase;
+      color: $rust;
+    }
+  }
+
+  &__tier {
+    --tier: #{$orange};
+    text-align: center;
+    border-bottom: 4px solid var(--tier) !important;
+
+    @each $name, $color in $accent-colors {
+      &--#{$name} {
+        --tier: #{$color};
+      }
+    }
+
+    span {
+      display: block;
+      font-weight: $fw-bold;
+    }
+
+    small {
+      font-size: 0.75rem;
+      font-weight: $fw-medium;
+      white-space: nowrap;
+      color: $text-muted;
+    }
+  }
+
+  &__yes {
+    display: inline-grid;
+    place-items: center;
+    width: 26px;
+    height: 26px;
+    color: $white;
+    background: $flag-green;
+    border-radius: 50%;
+  }
+
+  &__no {
+    color: $text-muted;
+  }
+}
+
+// --- Groupes & paiement -----------------------------------------------------------------------
+.tickets-info {
+  display: grid;
+  gap: $space-5;
+
+  @include mq('md') {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  &__card {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: $space-3;
+    padding: $space-6 $space-5;
+    background: $surface;
+    border: 1px solid $border;
+    border-radius: $radius-xl;
+
+    @include mq('lg') {
+      padding: $space-7;
+    }
+
+    > .icon {
+      color: $accent-text;
+    }
+
+    h2 {
+      font-size: 1.35rem;
+    }
+
+    p {
+      font-size: 0.93rem;
+      line-height: 1.65;
+      color: $text-soft;
+    }
+
+    .btn {
+      margin-top: auto;
+    }
+  }
+
+  &__ops {
+    display: flex;
+    flex-wrap: wrap;
+    gap: $space-2;
+  }
+
+  &__secure {
+    display: flex;
+    align-items: center;
+    gap: $space-2;
+    margin-top: auto;
+    font-size: 0.82rem !important;
+    font-weight: $fw-semibold;
+    color: $flag-green !important;
+
+    :root[data-theme='dark'] & {
+      color: #4cd384 !important;
+    }
+  }
+}
+
+.tickets-notes {
+  display: grid;
+  gap: $space-2;
+  margin-top: $space-6;
+
+  @include mq('md') {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  li {
+    display: flex;
+    gap: $space-2;
+    font-size: 0.85rem;
+    color: $text-soft;
+
+    .icon {
+      flex-shrink: 0;
+      margin-top: 2px;
+      color: $teal-text;
+    }
+  }
+}
+
+.tickets-page__faq-link {
+  margin-top: $space-5;
+  text-align: center;
+
+  a {
+    display: inline-flex;
+    align-items: center;
+    gap: $space-2;
+    font-weight: $fw-semibold;
+    color: $accent-text;
+  }
+}
+
+// =============================================================================
+// BILLETTERIE EN LIGNE FERMÉE (CONFIG.features.payment = false)
+// =============================================================================
+.tickets-closed {
+  display: grid;
+  justify-items: center;
+  gap: $space-3;
+  max-width: 70ch;
+  margin: 0 auto $space-7;
+  padding: $space-5;
+  text-align: center;
+  border-radius: $radius-lg;
+  background: $surface;
+  border: 1.5px solid $orange;
+  box-shadow: $shadow-sm;
+
+  @include mq('md') {
+    padding: $space-6;
+  }
+
+  &__tag {
+    display: inline-flex;
+    align-items: center;
+    gap: $space-2;
+    padding: 5px 12px;
+    font-size: 0.7rem;
+    font-weight: $fw-bold;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: $navy;
+    background: $orange;
+    border-radius: $radius-pill;
+  }
+
+  h3 {
+    font-size: clamp(1.1rem, 2.4vw, 1.45rem);
+  }
+
+  p {
+    font-size: 0.95rem;
+    line-height: 1.6;
+    color: $text-muted;
+  }
+}

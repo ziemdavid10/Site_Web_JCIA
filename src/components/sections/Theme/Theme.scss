@@ -1,0 +1,210 @@
+@use '@/styles/abstracts' as *;
+
+.theme {
+  &__top {
+    display: grid;
+    gap: $space-7;
+    align-items: center;
+
+    @include mq('lg') {
+      grid-template-columns: 1fr 1.1fr;
+      gap: $space-8;
+    }
+  }
+
+  // --- Citation --------------------------------------------------------------------
+  &__quote {
+    position: relative;
+    padding: $space-6 $space-6 $space-6 $space-8;
+    background: $sand-100;
+    border-radius: $radius-xl;
+    overflow: hidden;
+
+    @include mq('md') {
+      padding-left: 150px;
+    }
+
+    img {
+      position: absolute;
+      left: -30px;
+      top: 50%;
+      width: 110px;
+      height: auto;
+      transform: translateY(-50%) rotate(-6deg);
+      opacity: 0.3;
+
+      @include mq('md') {
+        left: $space-5;
+        width: 100px;
+        opacity: 1;
+      }
+    }
+
+    blockquote p {
+      font-size: clamp(1.25rem, 2.4vw, 1.65rem);
+      font-weight: $fw-semibold;
+      line-height: 1.4;
+      color: $text;
+    }
+
+    figcaption {
+      margin-top: $space-4;
+      font-size: 0.8rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: $accent-text;
+      font-weight: $fw-semibold;
+    }
+  }
+
+  // --- Ambitions -------------------------------------------------------------------
+  &__ambitions {
+    display: grid;
+    gap: $space-4;
+
+    @include mq('sm') {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+
+  // --- Contexte ----------------------------------------------------------------------
+  &__context {
+    margin-top: $space-9;
+  }
+
+  &__context-title {
+    margin-bottom: $space-6;
+    font-size: 1.5rem;
+  }
+}
+
+.ambition {
+  padding: $space-5;
+  border-radius: $radius-lg;
+  border: 1px solid $border;
+  background: $surface;
+  transition:
+    border-color $duration,
+    transform $duration $ease-out,
+    box-shadow $duration $ease-out;
+
+  &:hover {
+    border-color: rgba($orange, 0.6);
+    transform: translateY(-4px);
+    box-shadow: $shadow-md;
+  }
+
+  // Couleurs d'icônes alternées
+  &:nth-child(1) .ambition__icon {
+    color: $orange;
+    background: rgba($orange, 0.12);
+  }
+  &:nth-child(2) .ambition__icon {
+    color: $teal-text;
+    background: rgba($teal, 0.14);
+  }
+  &:nth-child(3) .ambition__icon {
+    color: $accent-text;
+    background: rgba($rust, 0.12);
+  }
+  &:nth-child(4) .ambition__icon {
+    color: $purple-text;
+    background: rgba($purple, 0.12);
+  }
+
+  &__icon {
+    display: grid;
+    place-items: center;
+    width: 52px;
+    height: 52px;
+    margin-bottom: $space-4;
+    border-radius: $radius-md;
+    // Coin « taillé » : clin d'œil aux formes du logo
+    border-top-right-radius: 4px;
+  }
+
+  h3 {
+    margin-bottom: $space-2;
+    font-size: 1.1rem;
+  }
+
+  p {
+    font-size: 0.9rem;
+    color: $ink-soft;
+    line-height: 1.6;
+  }
+}
+
+// --- Jalons (frise horizontale défilable) ---------------------------------------------
+.milestones {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(200px, 1fr);
+
+  // Sur grand écran, les six jalons tiennent sur une ligne (pas de défilement)
+  @include mq('xl') {
+    grid-auto-columns: 1fr;
+    overflow: visible;
+  }
+  gap: $space-5;
+  padding-bottom: $space-4;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  position: relative;
+
+  li {
+    position: relative;
+    padding-top: $space-6;
+    scroll-snap-align: start;
+
+    // Trait de liaison
+    &::before {
+      content: '';
+      position: absolute;
+      top: 8px;
+      left: 0;
+      right: -$space-5;
+      height: 2px;
+      background: $border-strong;
+    }
+
+    &:last-child::before {
+      right: 0;
+    }
+  }
+
+  &__dot {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: $surface;
+    border: 4px solid $teal;
+  }
+
+  time {
+    display: block;
+    margin-bottom: $space-2;
+    font-weight: $fw-bold;
+    color: $text;
+  }
+
+  p {
+    font-size: 0.88rem;
+    color: $ink-soft;
+    line-height: 1.55;
+  }
+
+  .is-current {
+    .milestones__dot {
+      border-color: $orange;
+      box-shadow: 0 0 0 6px rgba($orange, 0.2);
+    }
+
+    time {
+      color: $accent-text;
+    }
+  }
+}

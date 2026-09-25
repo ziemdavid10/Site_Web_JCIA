@@ -1,0 +1,121 @@
+import { CONFIG } from '@/data/config'
+import { storage } from '@/utils/storage'
+import { ORDER_ID_RE, cleanText } from '@/security/sanitize'
+
+/**
+ * Commandes de billets.
+ *
+ * ⚠️ Démonstration : les commandes sont conservées sur l'appareil du visiteur
+ * (localStorage). En production, elles seront créées et vérifiées par le
+ * serveur de billetterie (voir src/services/payment.js) ; l'accès au
+ * générateur de flyer devra alors être contrôlé côté serveur.
+ *
+ * Structure d'une commande :
+ * {
+ *   id, createdAt, lang,
+ *   tierId, quantity, unitPrice, total, currency,
+ *   customer: { name, email, phone, org, school? },
+ *   attendees: [ 'Nom 1', 'Nom 2', … ],
+ *   payment: { method: 'momo'|'card', operator, phone, status: 'free'|'pending'|'paid'|'failed', transactionId, paidAt, mode },
+ * }
+ */
+
+const KEY = CONFIG.storage.orders
+const MAX_ORDERS = 20 // limite la taille des données gardées sur l'appareil
+const TIER_IDS = CONFIG.tickets.tiers.map((t) => t.id)
+const STATUSES = ['free', 'pending', 'paid', 'failed']
+const OPERATORS = CONFIG.payment.operators.map((o) => o.id)
+const METHODS = ['momo', 'card'] // Mobile Money ou carte bancaire
+
+/**
+ * Sécurité : le stockage local peut être modifié à la main par n'importe qui.
+ * Chaque commande relue est donc vérifiée (format, valeurs autorisées, cohérence
+ * du montant) ; toute commande douteuse est ignorée. Les textes sont nettoyés.
+ * ⚠️ Cela protège l'affichage, pas la vente : seul le serveur fait foi en production.
+ */
+function sanitizeOrder(o) {
+  if (!o || typeof o !== 'object') return null
+  if (!ORDER_ID_RE.test(o.id) || !TIER_IDS.includes(o.tierId)) return null
+  const tier = CONFIG.tickets.tiers.find((t) => t.id === o.tierId)
+  const quantity = Number(o.quantity)
+  if (!Number.isInteger(quantity) || quantity < 1 || quantity > tier.maxQty) return null
+  if (Number(o.total) !== tier.price * quantity) return null // montant falsifié
+  const p = o.payment ?? {}
+  if (!STATUSES.includes(p.status)) return null
+  if (p.status === 'free' && tier.price !== 0) return null
+  if (p.operator && !OPERATORS.includes(p.operator)) return null
+  if (p.method && !METHODS.includes(p.method)) return null
+  const attendees = Array.isArray(o.attendees) ? o.attendees.slice(0, quantity).map((a) => cleanText(a, 80)) : []
+  if (attendees.length !== quantity) return null
+  return {
+    id: o.id,
+    createdAt: cleanText(o.createdAt, 40),
+    lang: o.lang === 'en' ? 'en' : 'fr',
+    tierId: o.tierId,
+    quantity,
+    unitPrice: tier.price,
+    total: tier.price * quantity,
+    currency: CONFIG.tickets.currency,
+    customer: {
+      name: cleanText(o.customer?.name, 80),
+      email: cleanText(o.customer?.email, 254),
+      phone: cleanText(o.customer?.phone, 20).replace(/\D/g, ''),
+      org: cleanText(o.customer?.org, 120),
+    },
+    attendees,
+    payment: {
+      status: p.status,
+      method: METHODS.includes(p.method) ? p.method : 'momo',
+      mode: p.mode === 'live' ? 'live' : 'demo',
+      operator: p.operator ?? undefined,
+      phone: p.phone ? cleanText(p.phone, 20).replace(/\D/g, '') : undefined,
+      transactionId: p.transactionId ? cleanText(p.transactionId, 80) : undefined,
+      paidAt: p.paidAt ? cleanText(p.paidAt, 40) : undefined,
+      reason: p.reason ? cleanText(p.reason, 40) : undefined,
+    },
+  }
+}
+
+export function listOrders() {
+  const raw = storage.getJSON(KEY)
+  return Array.isArray(raw) ? raw.map(sanitizeOrder).filter(Boolean) : []
+}
+
+export function getOrder(id) {
+  if (!ORDER_ID_RE.test(id ?? '')) return null // identifiant venu de l'URL : format strict
+  return listOrders().find((o) => o.id === id) ?? null
+}
+
+export function saveOrder(order) {
+  const clean = sanitizeOrder(order)
+  if (!clean) throw new Error('Commande invalide')
+  const others = listOrders().filter((o) => o.id !== clean.id)
+  storage.setJSON(KEY, [clean, ...others].slice(0, MAX_ORDERS))
+  return clean
+}
+
+/** Commande confirmée = payée, ou billet gratuit validé */
+export function isConfirmed(order) {
+  return ['paid', 'free'].includes(order?.payment?.status)
+}
+
+/**
+ * Le flyer « J'y serai » est réservé aux billets payants : une commande gratuite
+ * (statut 'free') donne accès à l'événement mais pas au générateur de flyer.
+ * Règle ré-appliquée côté serveur le jour où la billetterie sera en ligne.
+ */
+export function canGenerateFlyer(order) {
+  return order?.payment?.status === 'paid'
+}
+
+/** Dernière commande donnant droit au flyer (billet payant confirmé) */
+export function latestConfirmedOrder() {
+  return listOrders().find(canGenerateFlyer) ?? null
+}
+
+/** Identifiant lisible : JCIA27-7K3F9Q */
+export function newOrderId() {
+  const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789' // sans caractères ambigus (0/O, 1/I)
+  const rand = crypto.getRandomValues(new Uint8Array(6))
+  return `JCIA27-${[...rand].map((n) => alphabet[n % alphabet.length]).join('')}`
+}

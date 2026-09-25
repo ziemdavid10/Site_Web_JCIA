@@ -1,0 +1,79 @@
+@use '@/styles/abstracts' as *;
+
+// Élément d'accordéon (FAQ de l'accueil, page FAQ, pages détaillées)
+.accordion {
+  display: flex;
+  flex-direction: column;
+  gap: $space-3;
+}
+
+.accordion-item {
+  background: $surface;
+  border-radius: $radius-md;
+  border: 1px solid $border;
+  transition:
+    box-shadow $duration,
+    border-color $duration;
+
+  &.is-open {
+    border-color: rgba($orange, 0.5);
+    box-shadow: $shadow-md;
+  }
+
+  h3 {
+    font-size: 1rem;
+    font-weight: $fw-semibold;
+  }
+
+  button {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: $space-4;
+    width: 100%;
+    padding: $space-4 $space-5;
+    text-align: left;
+    line-height: 1.4;
+  }
+
+  &__toggle {
+    flex-shrink: 0;
+    display: grid;
+    place-items: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: $sand-100;
+    transition:
+      transform $duration $ease-out,
+      background $duration,
+      color $duration;
+  }
+
+  &.is-open &__toggle {
+    transform: rotate(45deg);
+    color: $navy;
+    background: $orange;
+  }
+
+  &__panel {
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows $duration $ease-out;
+
+    > div {
+      overflow: hidden;
+    }
+
+    p {
+      padding: 0 $space-5 $space-5;
+      font-size: 0.93rem;
+      line-height: 1.7;
+      color: $ink-soft;
+    }
+  }
+
+  &.is-open &__panel {
+    grid-template-rows: 1fr;
+  }
+}

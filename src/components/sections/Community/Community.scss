@@ -1,0 +1,140 @@
+@use '@/styles/abstracts' as *;
+
+// =============================================================================
+// COMMUNAUTÉ — CAMEROON AI NETWORK
+// =============================================================================
+.community {
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 12% 0%, rgba($teal, 0.1), transparent 46%),
+    radial-gradient(circle at 92% 100%, rgba($orange, 0.12), transparent 46%),
+    $bg-alt;
+
+  &__inner {
+    position: relative;
+    z-index: 1;
+  }
+
+  // --- Ce que la communauté apporte -------------------------------------------
+  &__perks {
+    display: grid;
+    gap: $space-4;
+    margin-bottom: $space-7;
+
+    @include mq('sm') {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    @include mq('lg') {
+      grid-template-columns: repeat(3, 1fr);
+      gap: $space-5;
+    }
+
+    li {
+      padding: $space-5;
+      border-radius: $radius-lg;
+      background: $surface;
+      border: 1px solid $border;
+      box-shadow: $shadow-sm;
+      transition:
+        transform $duration $ease-out,
+        box-shadow $duration;
+
+      &:hover {
+        transform: translateY(-4px);
+        box-shadow: $shadow-md;
+      }
+    }
+
+    h3 {
+      margin-bottom: $space-2;
+      font-size: 1.05rem;
+    }
+
+    p {
+      font-size: 0.92rem;
+      line-height: 1.55;
+      color: $text-muted;
+    }
+  }
+
+  &__perk-icon {
+    display: grid;
+    place-items: center;
+    width: 46px;
+    height: 46px;
+    margin-bottom: $space-3;
+    color: $accent-text;
+    background: fg(0.06);
+    border-radius: $radius-sm;
+  }
+
+  // --- Appel à l'action -------------------------------------------------------
+  &__cta {
+    display: grid;
+    justify-items: center;
+    gap: $space-4;
+    padding: $space-6 $space-5;
+    text-align: center;
+    border-radius: $radius-xl;
+    color: $white;
+    background:
+      radial-gradient(circle at 100% 0%, rgba($teal, 0.35), transparent 55%),
+      radial-gradient(circle at 0% 100%, rgba($orange, 0.28), transparent 55%),
+      $navy;
+    box-shadow: $shadow-lg;
+
+    @include mq('md') {
+      padding: $space-7;
+    }
+
+    h3 {
+      margin-bottom: $space-2;
+      font-size: clamp(1.2rem, 2.4vw, 1.6rem);
+    }
+
+    p {
+      max-width: 52ch;
+      margin-inline: auto;
+      font-size: 0.98rem;
+      line-height: 1.6;
+      color: rgba($white, 0.82);
+    }
+  }
+
+  &__cta-badge {
+    display: grid;
+    place-items: center;
+    width: 62px;
+    height: 62px;
+    color: $navy;
+    background: $orange;
+    border-radius: 50%;
+    box-shadow: 0 10px 26px -12px rgba($orange, 0.9);
+  }
+
+  // Le bouton reste vert « messagerie » pour être immédiatement reconnaissable
+  &__join {
+    --btn-bg: #1f9d55;
+    background: #1f9d55;
+    border-color: #1f9d55;
+    color: $white;
+
+    &:hover,
+    &:focus-visible {
+      background: #17804a;
+      border-color: #17804a;
+    }
+  }
+
+  &__note {
+    font-size: 0.82rem !important;
+    color: rgba($white, 0.62) !important;
+  }
+
+  &__band {
+    position: absolute;
+    inset: auto 0 0;
+  }
+}

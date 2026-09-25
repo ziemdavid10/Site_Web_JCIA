@@ -1,0 +1,50 @@
+@use '@/styles/abstracts' as *;
+
+.catalogue-page {
+  &__target {
+    align-self: center;
+    font-size: 0.95rem;
+    color: fg(0.8);
+
+    strong {
+      color: $highlight;
+    }
+  }
+
+  &__gap {
+    margin-top: $space-7 !important;
+
+    em {
+      font-style: normal;
+      color: $highlight;
+    }
+  }
+
+  &__cta {
+    margin-top: $space-6;
+    text-align: center;
+  }
+}
+
+// Types d'acteurs recensés
+.actor-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $space-3;
+
+  li {
+    display: inline-flex;
+    align-items: center;
+    gap: $space-2;
+    padding: 0.7rem 1.1rem;
+    font-size: 0.9rem;
+    font-weight: $fw-medium;
+    background: $surface;
+    border: 1px solid $border;
+    border-radius: $radius-pill;
+
+    .icon {
+      color: $teal-text;
+    }
+  }
+}

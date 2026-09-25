@@ -1,0 +1,169 @@
+@use '@/styles/abstracts' as *;
+
+.salon {
+  overflow: hidden;
+
+  &__doodle {
+    position: absolute;
+    height: auto;
+    filter: var(--c-doodle-filter);
+    opacity: 0.14;
+    pointer-events: none;
+
+    &--djembe {
+      width: 180px;
+      left: -30px;
+      bottom: 40px;
+      transform: rotate(-12deg);
+    }
+
+    &--pot {
+      width: 170px;
+      right: 2%;
+      top: 60px;
+      transform: rotate(8deg);
+
+      @include mq-down('lg') {
+        display: none;
+      }
+    }
+  }
+
+  &__grid {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    gap: $space-7;
+    align-items: center;
+
+    @include mq('lg') {
+      grid-template-columns: 1.05fr 0.95fr;
+      gap: $space-9;
+    }
+  }
+
+  &__activities {
+    display: grid;
+    gap: $space-5;
+
+    @include mq('sm') {
+      grid-template-columns: 1fr 1fr;
+    }
+
+    li {
+      display: flex;
+      gap: $space-3;
+    }
+
+    h3 {
+      font-size: 1rem;
+      margin-bottom: $space-1;
+    }
+
+    p {
+      font-size: 0.88rem;
+      color: $ink-soft;
+    }
+  }
+
+  &__activity-num {
+    flex-shrink: 0;
+    font-size: 0.85rem;
+    font-weight: $fw-black;
+    color: $accent-text;
+    padding-top: 2px;
+  }
+}
+
+// --- Carte exposants (fond latérite + motif Ndop) -------------------------------------
+.exhibitors {
+  position: relative;
+  padding: $space-6;
+  color: $white;
+  border-radius: $radius-xl;
+  background:
+    radial-gradient(circle at 100% 0%, rgba($orange, 0.55), transparent 55%),
+    linear-gradient(160deg, $rust, $rust-dark);
+  box-shadow: $shadow-lg;
+  overflow: hidden;
+
+  @include mq('md') {
+    padding: $space-7;
+  }
+
+  // Texture de losanges discrète
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(45deg, rgba($white, 0.06) 25%, transparent 25%),
+      linear-gradient(-45deg, rgba($white, 0.06) 25%, transparent 25%);
+    background-size: 28px 28px;
+    pointer-events: none;
+  }
+
+  > * {
+    position: relative;
+  }
+
+  &__head {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: $space-2 $space-4;
+    margin-bottom: $space-5;
+    padding-bottom: $space-5;
+    border-bottom: 1px solid rgba($white, 0.2);
+
+    p:last-child {
+      font-size: 0.95rem;
+      color: rgba($white, 0.85);
+    }
+  }
+
+  &__big {
+    font-size: 3.6rem;
+    font-weight: $fw-black;
+    line-height: 1;
+
+    span {
+      color: $orange;
+    }
+  }
+
+  &__list {
+    display: grid;
+    gap: $space-3;
+
+    @include mq('sm') {
+      grid-template-columns: 1fr 1fr;
+    }
+
+    li {
+      display: flex;
+      align-items: center;
+      gap: $space-3;
+      padding: $space-3;
+      font-size: 0.88rem;
+      font-weight: $fw-medium;
+      line-height: 1.3;
+      background: rgba($navy, 0.18);
+      border-radius: $radius-md;
+      transition: background $duration;
+
+      &:hover {
+        background: rgba($navy, 0.32);
+      }
+    }
+
+    .icon {
+      flex-shrink: 0;
+      color: $orange;
+    }
+  }
+
+  &__cta {
+    margin-top: $space-6;
+  }
+}
