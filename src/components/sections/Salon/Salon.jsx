@@ -1,4 +1,4 @@
-import { Button, Icon, MoreLink, Reveal, SectionHeader } from '@/components/ui'
+import { Button, CallButton, Icon, MoreLink, PhotoStack, Reveal, SectionHeader } from '@/components/ui'
 import { useI18n } from '@/i18n/context'
 import { CONFIG } from '@/data/config'
 import djembe from '@/assets/images/motifs/djembe.webp'
@@ -36,6 +36,9 @@ export default function Salon() {
             ))}
           </ol>
           <MoreLink route="salon" />
+          <Reveal className="salon__photos" delay={120}>
+            <PhotoStack ids={['salon-2025', 'posters-2025', 'village-2025', 'ambiance-2025']} tilt="right" interval={5600} />
+          </Reveal>
         </div>
 
         {/* Carte des exposants */}
@@ -57,6 +60,7 @@ export default function Salon() {
           <Button href={bookingHref} variant="light" icon="arrow-right" className="exhibitors__cta">
             {sa.cta}
           </Button>
+          <CallButton variant="light" className="exhibitors__call" />
         </Reveal>
       </div>
     </section>

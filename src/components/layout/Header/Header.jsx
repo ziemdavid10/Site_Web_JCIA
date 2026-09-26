@@ -24,7 +24,7 @@ export default function Header() {
   const { t } = useI18n()
   const { pathname } = useLocation()
   const scrollY = useScrollPosition()
-  const { routes } = CONFIG
+  const { routes, links } = CONFIG
   const activeSection = useScrollSpy(pathname === '/' ? t.nav.map((l) => l.section) : [])
 
   /**
@@ -96,7 +96,8 @@ export default function Header() {
           <span className="header__announce-dot" aria-hidden="true" />
           <span>
             {rich(t.header.announce)}{' '}
-            <Link to={routes.awards}>{t.header.announceLink}</Link>
+            {/* Le bandeau mène désormais à la billetterie, pas aux candidatures */}
+            <Link to={routes.tickets}>{t.header.announceLink}</Link>
           </span>
         </p>
       </div>
@@ -137,6 +138,18 @@ export default function Header() {
         <div className="header__actions">
           <LangSwitch className="header__lang" />
           <ThemeToggle className="header__theme" />
+          {/* Soutien à l'événement : cagnotte GoFundMe (nouvel onglet) */}
+          <Button
+            href={links.donate}
+            external
+            size="sm"
+            variant="outline"
+            iconLeft="heart"
+            className="header__donate"
+            aria-label={t.header.donateLong}
+          >
+            {t.header.donate}
+          </Button>
           <Button as={Link} to={routes.tickets} size="sm" icon="ticket" className="header__cta">
             {t.header.cta}
           </Button>
@@ -188,6 +201,9 @@ export default function Header() {
           </div>
           <Button as={Link} to={routes.tickets} size="lg" icon="arrow-right" onClick={closeMenu}>
             {t.header.mobileCta}
+          </Button>
+          <Button href={links.donate} external size="lg" variant="outline" iconLeft="heart" className="mobile-menu__donate">
+            {t.header.donateLong}
           </Button>
           <p>
             {t.event.dateLabel} · {t.event.venue.name}, {t.event.venue.city}

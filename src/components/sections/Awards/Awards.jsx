@@ -1,4 +1,4 @@
-import { Button, Countdown, Icon, MoreLink, Reveal, SectionHeader } from '@/components/ui'
+import { Button, Countdown, Icon, MoreLink, PhotoStack, Reveal, SectionHeader } from '@/components/ui'
 import { useI18n } from '@/i18n/context'
 import { rich } from '@/i18n/rich'
 import { CONFIG } from '@/data/config'
@@ -73,7 +73,7 @@ export default function Awards() {
             </div>
             <p className="deadline-card__title">{aw.card.title}</p>
             <p className="deadline-card__dates">{rich(aw.card.dates)}</p>
-            <Countdown target={CONFIG.awardsDeadline} label={aw.card.countdown} size="sm" />
+            <Countdown target={CONFIG.awardsStart} label={aw.card.countdown} size="sm" />
             <ul className="deadline-card__facts">
               {aw.card.facts.map((f) => (
                 <li key={f.label}>
@@ -84,6 +84,11 @@ export default function Awards() {
             <p className="deadline-card__gala">
               <Icon name="star" size={16} /> {aw.card.gala}
             </p>
+          </Reveal>
+
+          {/* Souvenirs des remises de prix précédentes */}
+          <Reveal className="awards__photos" delay={220}>
+            <PhotoStack ids={['trophee-2025', 'laureats-2025', 'remise-prix-2025', 'remise-2023']} tilt="right" interval={6200} />
           </Reveal>
         </div>
 

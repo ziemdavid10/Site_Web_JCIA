@@ -1,4 +1,4 @@
-import { MoreLink, PatternBg, Reveal, SectionHeader } from '@/components/ui'
+import { MoreLink, PatternBg, PhotoStack, Reveal, SectionHeader } from '@/components/ui'
 import { useI18n } from '@/i18n/context'
 import { rich } from '@/i18n/rich'
 import mascot from '@/assets/images/brand/mascot.webp'
@@ -20,6 +20,11 @@ export default function About() {
           <SectionHeader id="about-title" eyebrow={a.eyebrow} title={a.title} lead={a.lead} />
           <Reveal as="p" className="about__text">
             {rich(a.text)}
+          </Reveal>
+
+          {/* Un paquet de photos des éditions précédentes, qui se relaient */}
+          <Reveal className="about__photos" delay={120}>
+            <PhotoStack ids={['ouverture-2025', 'grande-salle-2025', 'photo-famille-2025', 'pleniere-2023']} tilt="left" />
           </Reveal>
         </div>
 

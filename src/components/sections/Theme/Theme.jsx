@@ -19,7 +19,7 @@ export default function Theme() {
             <SectionHeader id="theme-title" eyebrow={th.eyebrow} title={th.title} />
             {/* Citation du thème, encadrée par la carte « circuits » du logo */}
             <Reveal as="figure" className="theme__quote">
-              <img src={mapColors} alt="" width="302" height="517" loading="lazy" aria-hidden="true" />
+              <img src={mapColors} alt="" width="340" height="513" loading="lazy" aria-hidden="true" />
               <blockquote>
                 <p>{th.quote}</p>
               </blockquote>

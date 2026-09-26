@@ -1,4 +1,4 @@
-import { Button, Icon, Marquee, MoreLink, PartnerLogo, Reveal, SectionHeader } from '@/components/ui'
+import { Button, CallButton, Icon, Marquee, MoreLink, PartnerLogo, Reveal, SectionHeader } from '@/components/ui'
 import { useI18n } from '@/i18n/context'
 import { CONFIG } from '@/data/config'
 import { PARTNER_LOGO_DIR, PARTNER_LOGOS } from '@/data/partners'
@@ -101,6 +101,7 @@ export default function Partners() {
               >
                 {b.contact}
               </Button>
+              <CallButton variant="ghost" />
             </div>
           </div>
           <ul className="become-partner__benefits">

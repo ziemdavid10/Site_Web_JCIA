@@ -1,0 +1,234 @@
+@use '@/styles/abstracts' as *;
+
+// =============================================================================
+// PARTICIPANTS INSCRITS
+// =============================================================================
+.attendees {
+  &__toolbar {
+    display: grid;
+    gap: $space-4;
+    margin-bottom: $space-4;
+
+    @include mq('lg') {
+      grid-template-columns: 1fr auto;
+      align-items: center;
+    }
+  }
+
+  &__filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: $space-2;
+  }
+
+  &__filter {
+    display: inline-flex;
+    align-items: center;
+    gap: $space-2;
+    padding: 7px 14px;
+    font-size: 0.84rem;
+    font-weight: $fw-semibold;
+    color: $text;
+    background: $surface;
+    border: 1.5px solid $border;
+    border-radius: $radius-pill;
+    transition:
+      color $duration-fast,
+      background-color $duration-fast,
+      border-color $duration-fast;
+
+    span {
+      font-size: 0.72rem;
+      font-weight: $fw-bold;
+      padding: 1px 7px;
+      border-radius: $radius-pill;
+      background: fg(0.08);
+    }
+
+    &:hover {
+      border-color: $orange;
+    }
+
+    &.is-active {
+      color: $navy;
+      background: $orange;
+      border-color: $orange;
+
+      span {
+        background: rgba($navy, 0.14);
+      }
+    }
+  }
+
+  &__search {
+    display: flex;
+    align-items: center;
+    gap: $space-2;
+    padding: 0 $space-4;
+    height: 46px;
+    background: $surface;
+    border: 1.5px solid $border;
+    border-radius: $radius-pill;
+
+    &:focus-within {
+      border-color: $teal;
+    }
+
+    .icon {
+      flex-shrink: 0;
+      color: $text-muted;
+    }
+
+    input {
+      width: 100%;
+      min-width: 0;
+      border: 0;
+      background: none;
+      color: $text;
+      font-size: 0.92rem;
+
+      @include mq('lg') {
+        width: 260px;
+      }
+
+      &:focus {
+        outline: none;
+      }
+    }
+  }
+
+  &__count {
+    margin-bottom: $space-4;
+    font-size: 0.85rem;
+    color: $text-muted;
+  }
+
+  &__grid {
+    display: grid;
+    gap: $space-3;
+
+    @include mq('sm') {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    @include mq('lg') {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    @include mq('xl') {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+  }
+
+  &__empty,
+  &__note {
+    margin-top: $space-4;
+    font-size: 0.88rem;
+    color: $text-muted;
+  }
+
+  &__note {
+    text-align: center;
+  }
+}
+
+// --- Carte d'un participant ---------------------------------------------------
+.attendee-card {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: $space-3;
+  height: 100%;
+  padding: $space-3 $space-4;
+  background: $surface;
+  border: 1px solid $border;
+  border-radius: $radius-md;
+  transition:
+    transform $duration $ease-out,
+    box-shadow $duration,
+    border-color $duration;
+
+  &:hover {
+    transform: translateY(-3px);
+    border-color: $orange;
+    box-shadow: $shadow-sm;
+  }
+
+  // La personne inscrite depuis cet appareil
+  &.is-own {
+    border-color: $teal;
+    box-shadow: 0 0 0 2px rgba($teal, 0.18);
+  }
+
+  &__avatar {
+    flex-shrink: 0;
+    display: grid;
+    place-items: center;
+    width: 46px;
+    height: 46px;
+    font-size: 0.92rem;
+    font-weight: $fw-bold;
+    color: $white;
+    border-radius: 50%;
+    background: linear-gradient(135deg, $navy, $orange);
+
+    &--teal {
+      background: linear-gradient(135deg, $navy, $teal);
+    }
+
+    &--rust {
+      background: linear-gradient(135deg, $navy, $rust);
+    }
+
+    &--purple {
+      background: linear-gradient(135deg, $navy, $purple);
+    }
+  }
+
+  &__body {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    min-width: 0;
+
+    strong {
+      font-size: 0.95rem;
+      line-height: 1.25;
+    }
+
+    small {
+      font-size: 0.82rem;
+      color: $text-muted;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  }
+
+  &__meta {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    margin-top: 2px;
+    font-size: 0.74rem;
+    color: $accent-text;
+
+    .icon {
+      flex-shrink: 0;
+    }
+  }
+
+  &__you {
+    position: absolute;
+    top: -9px;
+    right: $space-3;
+    padding: 2px 9px;
+    font-size: 0.64rem;
+    font-weight: $fw-bold;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: $navy;
+    background: $teal;
+    border-radius: $radius-pill;
+  }
+}

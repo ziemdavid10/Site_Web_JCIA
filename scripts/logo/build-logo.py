@@ -108,6 +108,25 @@ for path, img in files.items():
     img.save(path, lossless=True, method=6)
     print(f'{path.split("/")[-1]:26s} {img.size}')
 
+# --- Carte du Cameroun seule (section Hero, page À propos, flyer) -------------
+# La carte est la partie gauche du logo, séparée du sigle par un filet vertical
+# orange : on repère ce filet (la seule colonne très haute et très fine) et on
+# découpe tout ce qui est à sa gauche. La carte du site est ainsi, au pixel
+# près, celle du logo officiel.
+ink = np.abs(arr.astype(int) - bg).max(2) > 25
+counts = ink.sum(0)
+tall = np.where(counts > 0.35 * ink.shape[0])[0]
+if len(tall) == 0:
+    raise SystemExit('filet séparateur introuvable')
+rule_x = int(tall.min())
+map_img = cut_out(arr[:, : rule_x - 8], bg)
+print('carte :', map_img.size, 'ratio', round(map_img.width / map_img.height, 3))
+
+for name, width in (('map-large.webp', 340), ('map-large-dark.webp', 340), ('map-colors.webp', 200)):
+    h = round(width * map_img.height / map_img.width)
+    map_img.resize((width, h), Image.LANCZOS).save(BRAND + name, lossless=True, method=6)
+    print(f'{name:26s} {(width, h)}')
+
 # --- Image de partage (Open Graph, 1200 × 630) -------------------------------
 og = Image.new('RGB', (1200, 630), (250, 245, 239))
 w = 940

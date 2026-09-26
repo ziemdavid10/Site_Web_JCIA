@@ -103,21 +103,29 @@
     border-radius: $radius-pill;
   }
 
+  // Le titre porte désormais le nom complet de l'événement : la taille est
+  // calée sur sa longueur pour rester lisible du téléphone au très grand écran.
   &__title {
-    font-size: clamp(2.4rem, 7.4vw, 5.6rem);
     font-weight: $fw-black;
-    line-height: 1;
-    letter-spacing: -0.035em;
+    line-height: 1.02;
+    letter-spacing: -0.03em;
   }
 
+  &__title-main {
+    display: block;
+    font-size: clamp(2rem, 5.1vw, 4rem);
+    text-wrap: balance;
+  }
+
+  // L'organisateur, sous le titre
   &__title-small {
     display: block;
-    margin-bottom: $space-4;
-    font-size: clamp(0.8rem, 1.5vw, 1rem);
+    margin-top: $space-4;
+    font-size: clamp(0.72rem, 1.25vw, 0.92rem);
     font-weight: $fw-semibold;
-    letter-spacing: 0.14em;
+    letter-spacing: 0.13em;
     text-transform: uppercase;
-    line-height: 1.4;
+    line-height: 1.5;
     color: $teal-text;
   }
 

@@ -98,6 +98,7 @@ export default function CheckoutPage() {
   const [samePhone, setSamePhone] = useState(true)
   const [payPhone, setPayPhone] = useState('')
   const [terms, setTerms] = useState(false)
+  const [listed, setListed] = useState(false) // accord pour la liste publique des participants
   const [errors, setErrors] = useState({})
   const [pay, setPay] = useState(null) // { order, status: 'running'|'failed', step }
   const [honeypot, setHoneypot] = useState('') // champ invisible : rempli uniquement par les robots
@@ -237,6 +238,7 @@ export default function CheckoutPage() {
         org: cleanText(isStudent ? values.school : values.org, MAX.org),
       },
       attendees: [cleanText(values.name, MAX.name), ...extraAttendees.map((a) => cleanText(a, MAX.name))],
+      publicListing: listed,
       payment: isFree
         ? { status: 'free', method, mode: PAYMENT_MODE }
         : isCard
@@ -698,6 +700,15 @@ export default function CheckoutPage() {
                 )}
               </>
             )}
+
+            {/* Facultatif : figurer dans la liste publique des participants */}
+            <label className="co-check">
+              <input type="checkbox" checked={listed} onChange={(ev) => setListed(ev.target.checked)} />
+              <span>
+                {c.publicListing}
+                <small>{c.publicListingHint}</small>
+              </span>
+            </label>
 
             <label className={`co-check co-check--terms ${errors.terms ? 'has-error' : ''}`}>
               <input

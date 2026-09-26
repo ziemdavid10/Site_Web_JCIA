@@ -42,8 +42,13 @@ export default function Hero() {
           </p>
 
           <h1 className="hero__title" id="hero-title">
+            <span className="hero__title-main">
+              {h.titleStart}
+              <span className="hero__title-accent">{h.titleAccent}</span>
+              {h.titleEnd}
+            </span>
+            {/* L'organisateur, en petites capitales sous le nom de l'événement */}
             <span className="hero__title-small">{h.kicker}</span>
-            {h.titleStart} <span className="hero__title-accent">{h.titleAccent}</span> {h.titleEnd}
           </h1>
 
           <p className="hero__theme">{rich(h.theme)}</p>
@@ -90,7 +95,7 @@ export default function Hero() {
           </div>
           <div className="hero__orbit hero__orbit--3" />
           <div className="hero__sun" />
-          <ThemeImg className="hero__map" light={mapCircuitLight} dark={mapCircuit} width="336" height="563" />
+          <ThemeImg className="hero__map" light={mapCircuitLight} dark={mapCircuit} width="340" height="513" />
 
           {/* Cartes flottantes : chiffres clés */}
           {h.chips.map((chip, i) => (

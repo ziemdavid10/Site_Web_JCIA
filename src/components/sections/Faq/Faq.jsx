@@ -1,4 +1,4 @@
-import { Accordion, Button, MoreLink, Reveal, SectionHeader } from '@/components/ui'
+import { Accordion, Button, CallButton, MoreLink, Reveal, SectionHeader } from '@/components/ui'
 import { useI18n } from '@/i18n/context'
 import { useTheme } from '@/theme/context'
 import { CONFIG } from '@/data/config'
@@ -29,6 +29,7 @@ export default function Faq() {
               <Button href={`mailto:${email}`} size="sm" variant="secondary" iconLeft="mail">
                 {email}
               </Button>
+              <CallButton size="sm" variant="ghost" />
             </div>
           </Reveal>
         </div>

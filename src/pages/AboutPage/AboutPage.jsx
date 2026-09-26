@@ -29,7 +29,7 @@ export default function AboutPage() {
         eyebrow={a.hero.eyebrow}
         title={a.hero.title}
         lead={a.hero.lead}
-        art={<img src={mapColors} alt="" width="380" height="380" />}
+        art={<img src={mapColors} alt="" width="200" height="302" />}
         stats={t.figures.items.slice(0, 4).map((f) => ({ value: `${f.value.toLocaleString(locale)}${f.suffix}`, label: f.label }))}
       />
       <Toc items={a.toc} />

@@ -101,6 +101,7 @@ const SCREENS = [
   { id: '04 Programme', route: '/programme', views: 'dm' },
   { id: '05 Intervenants', route: '/intervenants', views: 'dm' },
   { id: '06 Fiche intervenant', route: '/intervenants?intervenant=herve-nkoulou', views: 'dm' },
+  { id: '06b Participants', route: '/participants', views: 'd' },
   { id: '07 Salon 100 % IA', route: '/salon', views: 'd' },
   { id: '08 CAIA Awards', route: '/awards', views: 'd' },
   { id: '09 Catalogue', route: '/catalogue', views: 'd' },

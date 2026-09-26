@@ -1,4 +1,4 @@
-import { Button, PartnerLogo, Reveal, ThemeImg } from '@/components/ui'
+import { Button, CallButton, PartnerLogo, Reveal, ThemeImg } from '@/components/ui'
 import { CheckList, CtaBand, IconCards, PageHero, PageSection, Steps } from '@/components/page'
 import Partners from '@/components/sections/Partners/Partners'
 import { useI18n } from '@/i18n/context'
@@ -36,6 +36,7 @@ export default function PartnersPage() {
       <Button href={contactHref} size="lg" variant={variant} icon="arrow-right">
         {b.contact}
       </Button>
+      <CallButton size="lg" variant={variant} />
     </>
   )
 

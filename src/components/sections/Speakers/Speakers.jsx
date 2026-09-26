@@ -1,4 +1,4 @@
-import { Button, MoreLink, Reveal, SectionHeader } from '@/components/ui'
+import { Button, CallButton, MoreLink, Reveal, SectionHeader } from '@/components/ui'
 import SpeakersExplorer from '@/components/speakers/SpeakersExplorer'
 import { useI18n } from '@/i18n/context'
 import { CONFIG } from '@/data/config'
@@ -27,6 +27,8 @@ export default function Speakers() {
           >
             {sp.ctaButton}
           </Button>
+          {/* Deuxième voie de contact : l'appel */}
+          <CallButton variant="ghost" />
         </Reveal>
         <MoreLink route="speakers" align="center" />
       </div>

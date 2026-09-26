@@ -23,10 +23,11 @@ export default {
   hero: {
     badgeLead: 'Side event préparatoire au',
     badgeStrong: 'AI for Good Global Summit',
-    kicker: 'Journées Camerounaises de l’Intelligence Artificielle',
-    titleStart: 'L’IA',
-    titleAccent: 'Made in',
-    titleEnd: 'Cameroun',
+    // Titre principal : le nom complet de l'événement ; sous-titre : l'organisateur
+    titleStart: 'Journées Camerounaises de l’',
+    titleAccent: 'Intelligence Artificielle',
+    titleEnd: '',
+    kicker: 'Intelligence Artificielle Cameroun — Cameroon AI Policy Institute',
     theme: '« Penser l’Intelligence Artificielle **au Cameroun**, **pour le Cameroun** »',
     ctaRegister: 'Réserver ma place',
     ctaAwards: 'Candidater aux CAIA 2027',
@@ -274,7 +275,7 @@ export default {
     card: {
       title: 'Concours national ouvert et gratuit',
       dates: 'Du **15 novembre 2026** au **28 février 2027 à 23h59**',
-      countdown: 'Clôture des candidatures dans',
+      countdown: 'Lancement des candidatures dans',
       facts: [
         { value: '10', label: 'prix' },
         { value: '50', label: 'présélectionnés' },
@@ -406,7 +407,7 @@ export default {
     perks: [
       { icon: 'users', title: 'Un écosystème à portée de main', text: 'Échangez directement avec les acteurs de l’IA au Cameroun et dans la diaspora, du débutant au chercheur confirmé.' },
       { icon: 'megaphone', title: 'Les annonces en premier', text: 'Appels à candidatures, masterclasses, ouverture de la billetterie, offres de stage : l’information circule d’abord ici.' },
-      { icon: 'spark', title: 'Entraide et projets', text: 'Questions techniques, relectures de projets, recherche de coéquipiers pour le Startup Pitch et les CAIA Awards.' },
+      { icon: 'spark', title: 'Entraide et projets', text: 'Questions techniques, relectures de projets, recherche de coéquipiers pour le Startup Pitch et les Cameroon AI Awards.' },
     ],
     cta: {
       title: 'Rejoignez le forum de la communauté',
@@ -515,6 +516,33 @@ export default {
       text: 'Cette carte est fournie par OpenStreetMap, un service tiers. Son affichage nécessite votre accord (contenus tiers).',
       button: 'Afficher la carte',
     },
+  },
+
+  // ---------------------------------------------------------------------------
+  attendees: {
+    eyebrow: 'Participants',
+    title: 'Ils *y seront*',
+    lead: 'Étudiants, entreprises, chercheurs, startups et institutions : découvrez qui a déjà réservé sa place pour les 27 et 28 avril 2027.',
+    counter: '{n} participants déjà inscrits',
+    all: 'Tous',
+    filterLabel: 'Filtrer par profil',
+    profiles: [
+      { id: 'etudiant', label: 'Étudiants' },
+      { id: 'entreprise', label: 'Entreprises' },
+      { id: 'recherche', label: 'Recherche' },
+      { id: 'startup', label: 'Startups' },
+      { id: 'institution', label: 'Institutions' },
+      { id: 'enLigne', label: 'En ligne' },
+    ],
+    searchLabel: 'Rechercher un participant',
+    searchPlaceholder: 'Nom, organisation, ville…',
+    count: '{n} participant(s)',
+    noResults: 'Aucun participant ne correspond à votre recherche.',
+    empty: 'Les premiers participants apparaîtront ici dès les premières réservations.',
+    you: 'Vous',
+    exampleNote: 'Liste de démonstration : les noms affichés sont fictifs. Les vrais participants apparaîtront au fil des réservations, avec leur accord.',
+    ctaText: 'Vous aussi, rejoignez-les au Hilton de Yaoundé.',
+    ctaButton: 'Réserver ma place',
   },
 
   // ---------------------------------------------------------------------------

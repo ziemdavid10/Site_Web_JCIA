@@ -20,7 +20,7 @@ export default {
         title: '1. Data controller',
         blocks: [
           'The data controller is **Intelligence Artificielle Cameroun (IAC) – Cameroon Artificial Intelligence Policy Institute (CAIPI)**, a non-profit association (registration receipt No. 00001626/RDA/JO6/SAAJP/BAPP of 6 October 2023), headquartered at Route de l’aéroport, Cami-Toyota roundabout, Coron, Dangote Building, 2nd floor, Yaoundé, Cameroon.',
-          'Contact: **contact@jcia.cm** or **jcia@iacameroun.com** — Tel.: (+237) 222 306 079.',
+          'Contact: **contact@jciacm.com** or **jcia@iacameroun.com** — Tel.: (+237) 699 089 937.',
         ],
       },
       {
@@ -112,7 +112,7 @@ export default {
         title: '8. Your rights',
         blocks: [
           'Under the applicable regulations, you have the right to **access**, **rectify**, **erase** and **object** to the processing of your data, to **restrict** processing and to **withdraw your consent** at any time.',
-          'To exercise these rights, write to **contact@jcia.cm** or **jcia@iacameroun.com** describing your request. Proof of identity may be requested in case of reasonable doubt. We will reply within one month.',
+          'To exercise these rights, write to **contact@jciacm.com** or **jcia@iacameroun.com** describing your request. Proof of identity may be requested in case of reasonable doubt. We will reply within one month.',
           'If you believe your rights have not been respected, you may lodge a complaint with the competent personal data protection authority in Cameroon.',
         ],
       },
@@ -161,8 +161,8 @@ export default {
           {
             list: [
               'Head office: Route de l’aéroport, Cami-Toyota roundabout, Coron, Dangote Building, 2nd floor, Yaoundé, Cameroon',
-              'Phone: (+237) 222 306 079 / 699 089 937 / 677 238 022',
-              'E-mail: contact@jcia.cm — jcia@iacameroun.com',
+              'Phone: (+237) 699 089 937 / 677 238 022',
+              'E-mail: contact@jciacm.com — jcia@iacameroun.com',
               'Publication director: the President of IAC – CAIPI',
               'Host: [To be completed: company name, address and phone number of the hosting provider]',
             ],
@@ -310,7 +310,7 @@ export default {
       {
         id: 'contact',
         title: '5. Contact',
-        blocks: ['For any question: **contact@jcia.cm**. See also our [privacy policy](/confidentialite).'],
+        blocks: ['For any question: **contact@jciacm.com**. See also our [privacy policy](/confidentialite).'],
       },
     ],
   },

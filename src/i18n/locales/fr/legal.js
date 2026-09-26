@@ -26,7 +26,7 @@ export default {
         title: '1. Responsable du traitement',
         blocks: [
           'Le responsable du traitement est **Intelligence Artificielle Cameroun (IAC) – Cameroon Artificial Intelligence Policy Institute (CAIPI)**, association à but non lucratif (récépissé n° 00001626/RDA/JO6/SAAJP/BAPP du 6 octobre 2023), dont le siège est situé Route de l’aéroport, Rond-point Cami-Toyota, Coron, Immeuble Dangote, 2e étage, Yaoundé, Cameroun.',
-          'Contact : **contact@jcia.cm** ou **jcia@iacameroun.com** — Tél. : (+237) 222 306 079.',
+          'Contact : **contact@jciacm.com** ou **jcia@iacameroun.com** — Tél. : (+237) 699 089 937.',
         ],
       },
       {
@@ -118,7 +118,7 @@ export default {
         title: '8. Vos droits',
         blocks: [
           'Conformément à la réglementation, vous disposez d’un droit d’**accès**, de **rectification**, de **suppression**, d’**opposition**, de **limitation** du traitement et du droit de **retirer votre consentement** à tout moment.',
-          'Pour les exercer, écrivez à **contact@jcia.cm** ou **jcia@iacameroun.com** en précisant votre demande. Une pièce justificative d’identité pourra vous être demandée en cas de doute raisonnable. Nous vous répondons dans un délai d’un mois.',
+          'Pour les exercer, écrivez à **contact@jciacm.com** ou **jcia@iacameroun.com** en précisant votre demande. Une pièce justificative d’identité pourra vous être demandée en cas de doute raisonnable. Nous vous répondons dans un délai d’un mois.',
           'Si vous estimez que vos droits ne sont pas respectés, vous pouvez introduire une réclamation auprès de l’autorité de protection des données à caractère personnel compétente au Cameroun.',
         ],
       },
@@ -167,8 +167,8 @@ export default {
           {
             list: [
               'Siège : Route de l’aéroport, Rond-point Cami-Toyota, Coron, Immeuble Dangote, 2e étage, Yaoundé, Cameroun',
-              'Téléphone : (+237) 222 306 079 / 699 089 937 / 677 238 022',
-              'E-mail : contact@jcia.cm — jcia@iacameroun.com',
+              'Téléphone : (+237) 699 089 937 / 677 238 022',
+              'E-mail : contact@jciacm.com — jcia@iacameroun.com',
               'Directeur de la publication : le Président de l’IAC – CAIPI',
               'Hébergeur : [À compléter : raison sociale, adresse et téléphone de l’hébergeur]',
             ],
@@ -315,7 +315,7 @@ export default {
       {
         id: 'contact',
         title: '5. Contact',
-        blocks: ['Pour toute question : **contact@jcia.cm**. Voir aussi notre [politique de confidentialité](/confidentialite).'],
+        blocks: ['Pour toute question : **contact@jciacm.com**. Voir aussi notre [politique de confidentialité](/confidentialite).'],
       },
     ],
   },

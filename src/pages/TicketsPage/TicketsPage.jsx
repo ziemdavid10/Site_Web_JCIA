@@ -1,5 +1,5 @@
 import { Link } from 'react-router'
-import { Accordion, Button, Icon, Reveal } from '@/components/ui'
+import { Accordion, Button, CallButton, Icon, Reveal } from '@/components/ui'
 import { PageHero, PageSection } from '@/components/page'
 import OperatorBadge from '@/components/tickets/OperatorBadge'
 import { useI18n } from '@/i18n/context'
@@ -214,13 +214,16 @@ export default function TicketsPage() {
             <Icon name="users" size={28} />
             <h2>{tp.groups.title}</h2>
             <p>{tp.groups.text}</p>
-            <Button
-              href={`mailto:${contact.emails[0]}?subject=${encodeURIComponent(tp.groups.subject)}`}
-              variant="outline"
-              iconLeft="mail"
-            >
-              {tp.groups.cta}
-            </Button>
+            <div className="tickets-info__ctas">
+              <Button
+                href={`mailto:${contact.emails[0]}?subject=${encodeURIComponent(tp.groups.subject)}`}
+                variant="outline"
+                iconLeft="mail"
+              >
+                {tp.groups.cta}
+              </Button>
+              <CallButton variant="ghost" />
+            </div>
           </Reveal>
           <Reveal className="tickets-info__card tickets-info__card--pay" delay={100}>
             <Icon name="smartphone" size={28} />

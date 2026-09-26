@@ -11,6 +11,7 @@ import { CONFIG } from '@/data/config'
 const AboutPage = lazy(() => import('@/pages/AboutPage/AboutPage'))
 const ProgrammePage = lazy(() => import('@/pages/ProgrammePage/ProgrammePage'))
 const SpeakersPage = lazy(() => import('@/pages/SpeakersPage/SpeakersPage'))
+const AttendeesPage = lazy(() => import('@/pages/AttendeesPage/AttendeesPage'))
 const SalonPage = lazy(() => import('@/pages/SalonPage/SalonPage'))
 const AwardsPage = lazy(() => import('@/pages/AwardsPage/AwardsPage'))
 const CataloguePage = lazy(() => import('@/pages/CataloguePage/CataloguePage'))
@@ -26,7 +27,7 @@ const LegalPage = lazy(() => import('@/pages/LegalPage/LegalPage'))
  * <App /> — table de routage.
  *
  *   /                                   Accueil (toutes les sections, en résumé)
- *   /a-propos, /programme, /intervenants,
+ *   /a-propos, /programme, /intervenants, /participants,
  *   /salon, /awards, /catalogue,
  *   /partenaires, /faq                  Pages détaillées (une par section)
  *   /billetterie                        Choix du tarif
@@ -49,6 +50,7 @@ export default function App() {
         <Route path={routes.about} element={<AboutPage />} />
         <Route path={routes.programme} element={<ProgrammePage />} />
         <Route path={routes.speakers} element={<SpeakersPage />} />
+        <Route path={routes.attendees} element={<AttendeesPage />} />
         <Route path={routes.salon} element={<SalonPage />} />
         <Route path={routes.awards} element={<AwardsPage />} />
         <Route path={routes.catalogue} element={<CataloguePage />} />

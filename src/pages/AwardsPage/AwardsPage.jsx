@@ -77,7 +77,7 @@ export default function AwardsPage() {
             </div>
             <p className="deadline-card__title">{aw.card.title}</p>
             <p className="deadline-card__dates">{rich(aw.card.dates)}</p>
-            <Countdown target={CONFIG.awardsDeadline} label={aw.card.countdown} size="sm" />
+            <Countdown target={CONFIG.awardsStart} label={aw.card.countdown} size="sm" />
             <ul className="deadline-card__facts">
               {aw.card.facts.map((f) => (
                 <li key={f.label}>

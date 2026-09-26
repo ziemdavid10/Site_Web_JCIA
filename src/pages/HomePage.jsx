@@ -14,6 +14,7 @@ import Organizer from '@/components/sections/Organizer/Organizer'
 import Community from '@/components/sections/Community/Community'
 import Partners from '@/components/sections/Partners/Partners'
 import Registration from '@/components/sections/Registration/Registration'
+import Attendees from '@/components/sections/Attendees/Attendees'
 import Faq from '@/components/sections/Faq/Faq'
 import Gallery from '@/components/sections/Gallery/Gallery'
 
@@ -45,6 +46,7 @@ export default function HomePage() {
       <Community />
       <Partners />
       <Registration />
+      <Attendees />
       <Faq />
       {/* Galerie : dernière section, juste avant le pied de page */}
       <Gallery />

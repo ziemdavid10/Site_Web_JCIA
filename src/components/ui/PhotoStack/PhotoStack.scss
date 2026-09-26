@@ -1,0 +1,79 @@
+@use '@/styles/abstracts' as *;
+
+// =============================================================================
+// PAQUET DE PHOTOS (pile qui se relaie)
+// =============================================================================
+.photo-stack {
+  --tilt: -1;
+
+  width: 100%;
+  max-width: 420px;
+
+  &--right {
+    --tilt: 1;
+  }
+
+  &__deck {
+    position: relative;
+    display: block;
+    width: 100%;
+    aspect-ratio: 3 / 2;
+    // Les tirages du dessous débordent vers le bas : on leur laisse la place
+    margin-bottom: 44px;
+    cursor: pointer;
+    // Place pour les tirages du dessous, qui dépassent du cadre
+    padding: 0;
+    background: none;
+    border: 0;
+
+    &:focus-visible {
+      @include focus-ring($orange);
+      border-radius: $radius-lg;
+    }
+  }
+
+  &__photo {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: $radius-lg;
+    background: $surface;
+    border: 5px solid $white;
+    box-shadow: $shadow-md;
+    transform-origin: 50% 90%;
+    // Chaque tirage sous le premier est décalé et pivoté d'un cran
+    transform: rotate(calc(var(--tilt) * var(--pos) * 3.2deg))
+      translate(calc(var(--tilt) * var(--pos) * 10px), calc(var(--pos) * 6px)) scale(calc(1 - var(--pos) * 0.035));
+    opacity: calc(1 - var(--pos) * 0.12);
+    transition:
+      transform 620ms $ease-out,
+      opacity 620ms $ease-out;
+
+    :root[data-theme='dark'] & {
+      border-color: rgba($white, 0.9);
+    }
+  }
+
+  &__deck:hover &__photo,
+  &__deck:focus-visible &__photo {
+    // La pile s'étale un peu au survol : on devine les photos suivantes
+    transform: rotate(calc(var(--tilt) * var(--pos) * 4.6deg))
+      translate(calc(var(--tilt) * var(--pos) * 15px), calc(var(--pos) * 8px)) scale(calc(1 - var(--pos) * 0.03));
+  }
+
+  &__caption {
+    margin-top: 0;
+    font-size: 0.82rem;
+    line-height: 1.45;
+    color: $text-muted;
+    text-align: center;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    &__photo {
+      transition: none;
+    }
+  }
+}

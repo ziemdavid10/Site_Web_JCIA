@@ -1,5 +1,5 @@
 import { useParams } from 'react-router'
-import { Button, Frise, NeuralCanvas, SectionLink, ThemeImg } from '@/components/ui'
+import { Button, CallButton, Frise, NeuralCanvas, SectionLink, ThemeImg } from '@/components/ui'
 import { useI18n } from '@/i18n/context'
 import { CONFIG } from '@/data/config'
 import useDocumentMeta from '@/hooks/useDocumentMeta'
@@ -68,6 +68,7 @@ export default function ErrorPage({ code: codeProp, embedded = false }) {
             <Button href={`mailto:${CONFIG.contact.emails[0]}?subject=${encodeURIComponent(`${e.eyebrow} ${code}`)}`} variant="ghost" iconLeft="mail" size="lg">
               {e.contact}
             </Button>
+            <CallButton variant="ghost" size="lg" />
           </div>
 
           <nav className="error-page__suggestions" aria-label={e.suggestionsTitle}>

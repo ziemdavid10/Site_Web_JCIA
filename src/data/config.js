@@ -8,6 +8,8 @@ export const CONFIG = {
   // Dates ISO avec fuseau du Cameroun (WAT, UTC+1)
   startDate: '2027-04-27T08:00:00+01:00',
   endDate: '2027-04-28T23:00:00+01:00',
+  // Cameroon AI Awards : ouverture puis clôture des candidatures
+  awardsStart: '2026-11-15T08:00:00+01:00',
   awardsDeadline: '2027-02-28T23:59:00+01:00',
 
   venue: {
@@ -21,24 +23,26 @@ export const CONFIG = {
     awards: 'https://awards.jcia.cm',
     iac: 'https://www.iacameroun.com',
     tdrPdf: '/documents/TDR-CAIA-2027.pdf',
+    // Cagnotte de soutien (bouton « Donate » de la barre de navigation)
+    donate: 'https://www.gofundme.com/f/iac-journees-camerounaises-de-lintelligence-artificielle',
     // Forum WhatsApp du Cameroon AI Network (section « Communauté »)
     community: 'https://chat.whatsapp.com/LvSIFIgfSthIciLZWVCJlF',
     partnershipPdf: '/documents/Dossier-Partenariat-JCIA-2027.pdf',
   },
 
   contact: {
-    phones: ['+237 222 306 079', '+237 699 089 937', '+237 677 238 022'],
-    emails: ['contact@jcia.cm', 'jcia@iacameroun.com'],
-    privacyEmail: 'contact@jcia.cm',
+    // Numéros du secrétariat : affichés en clair, cliquables pour appeler.
+    phones: ['+237 699 089 937', '+237 677 238 022'],
+    emails: ['contact@jciacm.com', 'jcia@iacameroun.com'],
+    privacyEmail: 'contact@jciacm.com',
     websites: ['www.jcia.cm', 'www.iacameroun.com'],
-    // ⚠️ À remplacer par les URL des comptes officiels JCIA / IAC
+    // Comptes officiels de l'IAC – CAIPI
     socials: [
-      { name: 'LinkedIn', url: 'https://www.linkedin.com/', icon: 'linkedin' },
-      { name: 'Facebook', url: 'https://www.facebook.com/', icon: 'facebook' },
-      { name: 'X', url: 'https://x.com/', icon: 'x' },
-      { name: 'Instagram', url: 'https://www.instagram.com/', icon: 'instagram' },
-      { name: 'YouTube', url: 'https://www.youtube.com/', icon: 'youtube' },
-      { name: 'TikTok', url: 'https://www.tiktok.com/', icon: 'tiktok' },
+      { name: 'LinkedIn', url: 'https://www.linkedin.com/company/iacameroun/', icon: 'linkedin' },
+      { name: 'Facebook', url: 'https://www.facebook.com/iacameroun/', icon: 'facebook' },
+      { name: 'YouTube', url: 'https://www.youtube.com/@iacameroun', icon: 'youtube' },
+      { name: 'TikTok', url: 'https://www.tiktok.com/@iacameroun', icon: 'tiktok' },
+      { name: 'WhatsApp', url: 'https://chat.whatsapp.com/LvSIFIgfSthIciLZWVCJlF', icon: 'chat' },
     ],
   },
 
@@ -60,9 +64,9 @@ export const CONFIG = {
    *                     plus cliquables, en attendant la liste officielle.
    */
   features: {
-    payment: false,
-    documentDownloads: false,
-    speakerDirectory: false,
+    payment: true,
+    documentDownloads: true,
+    speakerDirectory: true,
   },
 
   /** Routes du site (identiques quelle que soit la langue) */
@@ -72,6 +76,7 @@ export const CONFIG = {
     about: '/a-propos',
     programme: '/programme',
     speakers: '/intervenants',
+    attendees: '/participants',
     salon: '/salon',
     awards: '/awards',
     catalogue: '/catalogue',

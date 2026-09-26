@@ -144,6 +144,8 @@ export default {
       detected: '{op} number detected',
       mismatch: 'This number seems to belong to {op}. Please check the selected operator.',
       freeInfo: 'This ticket is free: no payment is required.',
+      publicListing: 'Show my name in the public list of attendees',
+      publicListingHint: 'Only your name, organisation and profile are shown. You can ask for their removal at any time.',
       terms: 'I accept the [terms of use](/conditions-utilisation) and the [privacy policy](/confidentialite). *',
       summaryTitle: 'Order summary',
       subtotal: 'Subtotal',

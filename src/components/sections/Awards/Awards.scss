@@ -635,3 +635,20 @@
     border-radius: $radius-pill;
   }
 }
+
+// Paquet de photos des remises de prix, sous la carte « candidatures »
+.awards__photos {
+  margin-top: $space-5;
+
+  .photo-stack {
+    margin-inline: auto;
+  }
+
+  .photo-stack__caption {
+    color: $text-muted;
+
+    :root[data-theme='dark'] & {
+      color: rgba($white, 0.68);
+    }
+  }
+}

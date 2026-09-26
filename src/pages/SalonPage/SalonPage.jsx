@@ -1,5 +1,5 @@
 import { Link } from 'react-router'
-import { Accordion, Button } from '@/components/ui'
+import { Accordion, Button, CallButton } from '@/components/ui'
 import { Callout, CtaBand, IconCards, PageHero, PageSection, Steps } from '@/components/page'
 import Salon from '@/components/sections/Salon/Salon'
 import { useI18n } from '@/i18n/context'
@@ -35,6 +35,7 @@ export default function SalonPage() {
         <Button as={Link} to={routes.tickets} size="lg" variant="ghost" iconLeft="ticket">
           {t.header.mobileCta}
         </Button>
+        <CallButton size="lg" variant="ghost" />
       </PageHero>
 
       {/* Activités et exposants */}

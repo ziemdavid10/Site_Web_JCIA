@@ -1,4 +1,4 @@
-import { Button, Icon, Reveal } from '@/components/ui'
+import { Button, CallButton, Icon, Reveal } from '@/components/ui'
 import { CheckList, CtaBand, IconCards, PageHero, PageSection, Steps } from '@/components/page'
 import Catalogue from '@/components/sections/Catalogue/Catalogue'
 import { useI18n } from '@/i18n/context'
@@ -31,6 +31,7 @@ export default function CataloguePage() {
         <Button href={referHref} size="lg" iconLeft="mail">
           {t.catalogue.cta}
         </Button>
+        <CallButton size="lg" variant="ghost" />
         <p className="catalogue-page__target">{rich(t.catalogue.target)}</p>
       </PageHero>
 

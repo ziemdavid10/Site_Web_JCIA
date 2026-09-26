@@ -225,3 +225,12 @@
     animation: float 5s ease-in-out infinite;
   }
 }
+
+// Paquet de photos des éditions précédentes, sous le texte d'introduction
+.about__photos {
+  margin-top: $space-6;
+
+  @include mq('lg') {
+    margin-top: $space-7;
+  }
+}

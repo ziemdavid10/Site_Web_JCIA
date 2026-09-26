@@ -31,20 +31,23 @@ export default {
     { route: 'about', section: 'apropos', label: 'À propos' },
     { route: 'programme', section: 'programme', label: 'Programme' },
     { route: 'salon', section: 'salon', label: 'Salon 100 % IA' },
-    { route: 'awards', section: 'awards', label: 'CAIA Awards' },
+    { route: 'awards', section: 'awards', label: 'Cameroon AI Awards' },
     { route: 'catalogue', section: 'catalogue', label: 'Catalogue national' },
     { route: 'partners', section: 'partenaires', label: 'Partenaires' },
     { route: 'faq', section: 'faq', label: 'FAQ' },
   ],
 
   /** Action volontairement bloquée (document non publié, paiement fermé) */
+  callCta: 'Appeler le secrétariat',
   soon: 'Bientôt disponible',
   soonShort: 'Bientôt',
   soonDoc: 'Document en cours de finalisation — disponible très bientôt.',
 
   header: {
-    announce: 'Appel à candidatures **CAIA 2027** : du 15 novembre 2026 au 28 février 2027 —',
-    announceLink: 'en savoir plus',
+    donate: 'Donate',
+    donateLong: 'Soutenir les JCIA 2027',
+    announce: '**Inscriptions ouvertes — JCIA 2027** : participez aux JCIA 2027, les 27 et 28 avril 2027 à Yaoundé —',
+    announceLink: 's’inscrire maintenant',
     cta: 'Billetterie',
     mobileCta: 'Réserver ma place',
   },
@@ -62,7 +65,7 @@ export default {
   footer: {
     organizedBy: 'Organisé par',
     eventTitle: 'L’événement',
-    extra: { speakers: 'Intervenants', tickets: 'Billetterie', flyer: 'Mon flyer « J’y serai »' },
+    extra: { attendees: 'Participants', speakers: 'Intervenants', tickets: 'Billetterie', flyer: 'Mon flyer « J’y serai »' },
     docsTitle: 'Documents',
     docs: {
       tdr: 'TDR — Appel à candidatures CAIA',

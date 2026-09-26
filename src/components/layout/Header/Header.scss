@@ -167,11 +167,50 @@
   }
 
   // Sur téléphone : seuls le thème et le burger restent dans la barre
-  // (la langue et l'inscription sont dans le menu)
+  // (la langue, le don et l'inscription sont dans le menu)
   &__lang,
   &__cta {
     @include mq-down('sm') {
       display: none !important;
+    }
+  }
+
+  // Bouton « Donate » : visible dès la tablette. Entre 1280 et 1535 px, la
+  // navigation complète occupe déjà la barre : le bouton se réduit alors à son
+  // cœur (libellé accessible conservé), puis retrouve son texte au-delà.
+  &__donate {
+    display: none;
+    white-space: nowrap;
+
+    @include mq('md') {
+      display: inline-flex;
+    }
+
+    // Tant que la navigation complète partage la barre, le bouton se réduit à
+    // son cœur ; son libellé reste lu par les lecteurs d'écran.
+    @media (min-width: 1280px) and (max-width: 1699.98px) {
+      padding-inline: 0.7rem;
+
+      span {
+        @include visually-hidden;
+      }
+    }
+  }
+
+  // Barre compacte entre 1280 et 1700 px : la navigation, le don et
+  // l'inscription doivent tenir sur une seule ligne sans être rognés.
+  @media (min-width: 1280px) and (max-width: 1699.98px) {
+    .header__bar {
+      gap: $space-3;
+    }
+
+    .header__actions {
+      gap: $space-2;
+    }
+
+    .header__nav a {
+      padding: 6px 5px;
+      font-size: 0.79rem;
     }
   }
 
@@ -303,6 +342,12 @@
     display: flex;
     align-items: center;
     gap: $space-3;
+  }
+
+  // Bouton de soutien du menu mobile
+  &__donate {
+    justify-self: stretch;
+    grid-column: 1 / -1;
   }
 
   // --- Pied fixe : toujours atteignable ---------------------------------------

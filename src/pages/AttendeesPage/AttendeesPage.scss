@@ -1,0 +1,39 @@
+@use '@/styles/abstracts' as *;
+
+.attendees-page {
+  &__privacy {
+    display: grid;
+    gap: $space-4;
+
+    li {
+      display: flex;
+      gap: $space-4;
+      padding: $space-4;
+      background: $surface;
+      border: 1px solid $border;
+      border-radius: $radius-md;
+    }
+
+    .icon {
+      flex-shrink: 0;
+      color: $accent-text;
+    }
+
+    h3 {
+      margin-bottom: $space-1;
+      font-size: 1rem;
+    }
+
+    p {
+      font-size: 0.92rem;
+      line-height: 1.6;
+      color: $text-muted;
+    }
+  }
+
+  &__legal {
+    margin-top: $space-4;
+    font-size: 0.85rem;
+    color: $text-muted;
+  }
+}

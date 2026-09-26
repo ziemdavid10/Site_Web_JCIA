@@ -3,6 +3,7 @@ import { Icon, NdopBand, PatternBg, SectionLink, ThemeImg } from '@/components/u
 import { useI18n } from '@/i18n/context'
 import { useConsent } from '@/consent/context'
 import { CONFIG } from '@/data/config'
+import { PARTNER_LOGO_DIR, PARTNER_LOGOS } from '@/data/partners'
 import logoWhite from '@/assets/images/brand/logo-jcia-white-sm.webp'
 import logoColor from '@/assets/images/brand/logo-jcia-sm.webp'
 import './Footer.scss'
@@ -29,9 +30,30 @@ export default function Footer() {
         <div className="footer__brand">
           <ThemeImg light={logoColor} dark={logoWhite} alt={`${t.event.shortName} — ${t.event.name}`} width="200" height="83" loading="lazy" />
           <p className="footer__theme">« {t.event.theme} »</p>
-          <p className="footer__org">
-            {f.organizedBy} <strong>{t.organizer.name}</strong> – {t.organizer.fullName}
-          </p>
+          {/* Organisateur : logo officiel de l'IAC – CAIPI + raison sociale */}
+          <a
+            className="footer__org"
+            href={links.iac}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label={`${f.organizedBy} ${t.organizer.name}`}
+          >
+            <span className="footer__org-logo">
+              <img
+                src={`${PARTNER_LOGO_DIR}${PARTNER_LOGOS['iac-caipi']}`}
+                alt=""
+                width="132"
+                height="72"
+                loading="lazy"
+                decoding="async"
+              />
+            </span>
+            <span className="footer__org-text">
+              <small>{f.organizedBy}</small>
+              <strong>{t.organizer.name}</strong>
+              {t.organizer.fullName}
+            </span>
+          </a>
           <ul className="footer__socials" aria-label={t.a11y.socials}>
             {contact.socials.map((s) => (
               <li key={s.name}>
@@ -59,6 +81,9 @@ export default function Footer() {
             ))}
             <li>
               <Link to={routes.speakers}>{f.extra.speakers}</Link>
+            </li>
+            <li>
+              <Link to={routes.attendees}>{f.extra.attendees}</Link>
             </li>
             <li>
               <Link to={routes.tickets}>{f.extra.tickets}</Link>
@@ -105,6 +130,12 @@ export default function Footer() {
             <li>
               <a href={links.iac} target="_blank" rel="noopener noreferrer">
                 {f.docs.iac}
+              </a>
+            </li>
+            <li>
+              {/* Cagnotte de soutien, également proposée dans la barre du haut */}
+              <a href={links.donate} target="_blank" rel="noopener noreferrer">
+                {t.header.donateLong}
               </a>
             </li>
           </ul>

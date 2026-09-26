@@ -23,10 +23,11 @@ export default {
   hero: {
     badgeLead: 'Preparatory side event to the',
     badgeStrong: 'AI for Good Global Summit',
-    kicker: 'Cameroon Artificial Intelligence Days',
-    titleStart: 'AI',
-    titleAccent: 'Made in',
-    titleEnd: 'Cameroon',
+    // Main title: the full event name; second line: the organiser
+    titleStart: 'Cameroon ',
+    titleAccent: 'Artificial Intelligence',
+    titleEnd: ' Days',
+    kicker: 'Intelligence Artificielle Cameroun — Cameroon AI Policy Institute',
     theme: '“Thinking Artificial Intelligence **in Cameroon**, **for Cameroon**”',
     ctaRegister: 'Book my seat',
     ctaAwards: 'Apply for CAIA 2027',
@@ -274,7 +275,7 @@ export default {
     card: {
       title: 'Open and free national competition',
       dates: 'From **15 November 2026** to **28 February 2027, 23:59**',
-      countdown: 'Applications close in',
+      countdown: 'Applications open in',
       facts: [
         { value: '10', label: 'awards' },
         { value: '50', label: 'shortlisted' },
@@ -406,7 +407,7 @@ export default {
     perks: [
       { icon: 'users', title: 'The ecosystem within reach', text: 'Talk directly with AI practitioners in Cameroon and across the diaspora, from first-timers to senior researchers.' },
       { icon: 'megaphone', title: 'Announcements first', text: 'Calls for applications, masterclasses, ticket sales opening, internship offers: news travels here first.' },
-      { icon: 'spark', title: 'Help and projects', text: 'Technical questions, project reviews, teammates for the Startup Pitch and the CAIA Awards.' },
+      { icon: 'spark', title: 'Help and projects', text: 'Technical questions, project reviews, teammates for the Startup Pitch and the Cameroon AI Awards.' },
     ],
     cta: {
       title: 'Join the community forum',
@@ -515,6 +516,33 @@ export default {
       text: 'This map is provided by OpenStreetMap, a third-party service. Displaying it requires your consent (third-party content).',
       button: 'Show the map',
     },
+  },
+
+  // ---------------------------------------------------------------------------
+  attendees: {
+    eyebrow: 'Attendees',
+    title: 'They *will be there*',
+    lead: 'Students, companies, researchers, startups and institutions: see who has already booked a seat for 27 & 28 April 2027.',
+    counter: '{n} attendees already registered',
+    all: 'All',
+    filterLabel: 'Filter by profile',
+    profiles: [
+      { id: 'etudiant', label: 'Students' },
+      { id: 'entreprise', label: 'Companies' },
+      { id: 'recherche', label: 'Research' },
+      { id: 'startup', label: 'Startups' },
+      { id: 'institution', label: 'Institutions' },
+      { id: 'enLigne', label: 'Online' },
+    ],
+    searchLabel: 'Search for an attendee',
+    searchPlaceholder: 'Name, organisation, city…',
+    count: '{n} attendee(s)',
+    noResults: 'No attendee matches your search.',
+    empty: 'The first attendees will appear here as soon as bookings start.',
+    you: 'You',
+    exampleNote: 'Demo list: the names shown are fictional. Real attendees will appear as bookings come in, with their consent.',
+    ctaText: 'Join them at the Hilton Yaoundé.',
+    ctaButton: 'Book my seat',
   },
 
   // ---------------------------------------------------------------------------

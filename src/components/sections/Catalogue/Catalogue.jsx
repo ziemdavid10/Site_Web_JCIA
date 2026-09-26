@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Button, Icon, MoreLink, PatternBg, Reveal, SectionHeader } from '@/components/ui'
+import { Button, CallButton, Icon, MoreLink, PatternBg, Reveal, SectionHeader } from '@/components/ui'
 import { useI18n } from '@/i18n/context'
 import { rich } from '@/i18n/rich'
 import { CONFIG } from '@/data/config'
@@ -42,6 +42,7 @@ export default function Catalogue() {
             >
               {c.cta}
             </Button>
+            <CallButton variant="ghost" />
             <span className="catalogue__target">{rich(c.target)}</span>
           </Reveal>
         </div>

@@ -1,0 +1,46 @@
+@use '@/styles/abstracts' as *;
+
+// =============================================================================
+// SECTION « ILS Y SERONT » (accueil)
+// =============================================================================
+.attendees-section {
+  position: relative;
+
+  &__inner {
+    position: relative;
+    z-index: 1;
+  }
+
+  // Compteur d'inscrits
+  &__counter {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: $space-3;
+    margin-bottom: $space-5;
+
+    .icon {
+      color: $accent-text;
+    }
+
+    strong {
+      font-size: clamp(1rem, 2vw, 1.2rem);
+      font-weight: $fw-semibold;
+    }
+  }
+
+  &__cta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: $space-4;
+    margin-top: $space-6;
+    text-align: center;
+
+    p {
+      font-size: 0.98rem;
+      color: $text-muted;
+    }
+  }
+}

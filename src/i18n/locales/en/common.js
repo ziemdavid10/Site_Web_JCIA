@@ -31,20 +31,23 @@ export default {
     { route: 'about', section: 'apropos', label: 'About' },
     { route: 'programme', section: 'programme', label: 'Programme' },
     { route: 'salon', section: 'salon', label: '100% AI Expo' },
-    { route: 'awards', section: 'awards', label: 'CAIA Awards' },
+    { route: 'awards', section: 'awards', label: 'Cameroon AI Awards' },
     { route: 'catalogue', section: 'catalogue', label: 'National Directory' },
     { route: 'partners', section: 'partenaires', label: 'Partners' },
     { route: 'faq', section: 'faq', label: 'FAQ' },
   ],
 
   /** Action volontairement bloquée (document non publié, paiement fermé) */
+  callCta: 'Call the secretariat',
   soon: 'Coming soon',
   soonShort: 'Soon',
   soonDoc: 'Document being finalised — available very soon.',
 
   header: {
-    announce: '**CAIA 2027** call for applications: 15 November 2026 to 28 February 2027 —',
-    announceLink: 'learn more',
+    donate: 'Donate',
+    donateLong: 'Support JCIA 2027',
+    announce: '**Registration open — JCIA 2027**: join JCIA 2027 on 27 & 28 April 2027 in Yaoundé —',
+    announceLink: 'register now',
     cta: 'Tickets',
     mobileCta: 'Book my seat',
   },
@@ -62,7 +65,7 @@ export default {
   footer: {
     organizedBy: 'Organised by',
     eventTitle: 'The event',
-    extra: { speakers: 'Speakers', tickets: 'Tickets', flyer: 'My “I’ll be there” flyer' },
+    extra: { attendees: 'Attendees', speakers: 'Speakers', tickets: 'Tickets', flyer: 'My “I’ll be there” flyer' },
     docsTitle: 'Documents',
     docs: {
       tdr: 'CAIA call for applications — ToR (FR)',

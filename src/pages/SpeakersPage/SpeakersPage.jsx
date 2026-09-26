@@ -1,5 +1,5 @@
 import { Link } from 'react-router'
-import { Button, Reveal, ThemeImg } from '@/components/ui'
+import { Button, CallButton, Reveal, ThemeImg } from '@/components/ui'
 import { CheckList, CtaBand, PageHero, PageSection, Steps } from '@/components/page'
 import SpeakersExplorer from '@/components/speakers/SpeakersExplorer'
 import { useI18n } from '@/i18n/context'
@@ -58,6 +58,7 @@ export default function SpeakersPage() {
           <Button href={proposeHref} size="lg" iconLeft="mail">
             {sp.call.button}
           </Button>
+          <CallButton size="lg" variant="ghost" />
         </Reveal>
       </PageSection>
 

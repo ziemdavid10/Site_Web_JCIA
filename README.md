@@ -37,6 +37,9 @@ npm run figma:export # régénérer la maquette Figma (site lancé avec npm run 
 | **Pages détaillées** : chaque section de l'accueil a sa page (À propos, Programme, Intervenants, Salon, Awards, Catalogue, Partenaires, FAQ), avec fil d'Ariane, sommaire collant et lien « En savoir plus » depuis l'accueil | `src/pages/*Page/`, `src/components/page/` |
 | **Billetterie** : 4 tarifs (dont un billet « En ligne »), quotas et places restantes, bouton « Épuisé » quand le quota est vendu, commande (quantité, participants), paiement Mobile Money **ou carte Visa / Mastercard**, confirmation avec billets à QR code, impression, ajout à l'agenda | `src/pages/TicketsPage/`, `CheckoutPage/`, `ConfirmationPage/`, `src/utils/tickets.js`, `src/services/` |
 | **Communauté Cameroon AI Network** : section dédiée et bouton « Rejoindre la communauté » vers le forum WhatsApp officiel | `src/components/sections/Community/` |
+| **Participants inscrits** : section « Ils y seront » et page `/participants` — filtres par profil, recherche, compteur ; n'affiche que les personnes ayant coché l'accord d'affichage public au moment de leur commande | `src/components/sections/Attendees/`, `src/components/attendees/`, `src/data/attendees.js`, `src/services/attendees.js` |
+| **Paquets de photos** : 3 à 4 tirages empilés qui se relaient (À propos, Salon, Awards), au clic ou toutes les 5 s, en pause au survol et immobiles si le système demande moins d'animations | `src/components/ui/PhotoStack/` |
+| **Soutien** : bouton « Donate » dans la barre de navigation (libellé complet sur tablette et très grand écran, cœur seul entre les deux), dans le menu mobile et dans le pied de page | `src/components/layout/Header/`, `src/data/config.js` |
 | **Galerie photos** : dernière section de l'accueil, filtres par édition (2025, 2023), visionneuse au clavier (Échap, ← →), images WebP en deux tailles chargées paresseusement | `src/components/sections/Gallery/`, `src/data/gallery.js`, `public/images/gallery/` |
 | **Flyer « J'y serai »** : réservé aux billets confirmés ; photo (glisser-déposer, zoom, recadrage), nom, titre, 3 formats (4:5, 9:16, 1:1), 3 ambiances ; export PNG, partage natif ; la photo ne quitte jamais l'appareil | `src/pages/FlyerPage/`, `src/components/tickets/flyerRenderer.js` |
 | **Intervenants** : catégories cliquables → cartes (photo, thème, propos, créneau) → fiche détaillée ; recherche et lien partageable sur /intervenants | `src/components/speakers/`, `src/data/speakers.js` |
@@ -52,7 +55,7 @@ npm run figma:export # régénérer la maquette Figma (site lancé avec npm run 
 | URL | Page |
 |---|---|
 | `/` | Accueil (toutes les sections, en résumé) |
-| `/a-propos` · `/programme` · `/intervenants` · `/salon` · `/awards` · `/catalogue` · `/partenaires` · `/faq` | Pages détaillées |
+| `/a-propos` · `/programme` · `/intervenants` · `/participants` · `/salon` · `/awards` · `/catalogue` · `/partenaires` · `/faq` | Pages détaillées |
 | `/billetterie` | Choix du tarif |
 | `/billetterie/commande/:tarif` | Commande et paiement (`etudiant`, `standard`, `en-ligne`, `professionnel`) |
 | `/billetterie/confirmation/:commande` | Billets électroniques |
@@ -146,6 +149,22 @@ remplacer les objets de `src/data/speakers.js` (`example: false`), déposer les 
 dans `src/assets/images/speakers/` et les importer, puis écrire fonction, thème, propos et biographie dans
 `src/i18n/locales/fr/speakers.js` et `en/speakers.js`.
 
+## Identité de l'événement et contacts
+
+- **Titre du Hero** : le nom complet de l'événement en grand, l'organisateur (« Intelligence Artificielle Cameroun — Cameroon AI Policy Institute ») en petites capitales juste en dessous.
+- **Carte du Cameroun** : extraite du logo officiel par `scripts/logo/build-logo.py` (elle alimente le Hero, la section Thème, la page À propos et le flyer) — elle est donc, au pixel près, celle du logo.
+- **Bandeau d'annonce** : « Inscriptions ouvertes — JCIA 2027 », qui mène à la billetterie.
+- **Cameroon AI Awards** : nom complet employé partout ; le compte à rebours de la section Awards vise désormais l'**ouverture** des candidatures (`CONFIG.awardsStart`, 15 novembre 2026).
+- **Coordonnées** : `contact@jciacm.com`, `jcia@iacameroun.com`, (+237) 699 089 937 et 677 238 022 — tous cliquables (`mailto:` / `tel:`).
+- **Réseaux** : LinkedIn, Facebook, YouTube, TikTok et le forum WhatsApp de la communauté.
+- **Contacter en deux gestes** : partout où le site propose d'écrire, un bouton « Appeler le secrétariat » (`<CallButton />`) propose l'appel.
+
+## Participants inscrits
+
+La page `/participants` et la section « Ils y seront » n'affichent que les personnes ayant coché **« Afficher mon nom dans la liste publique des participants »** au moment de leur commande (case décochée par défaut). Seuls le nom, l'organisation, la ville et le profil sont publiés — jamais l'e-mail, le téléphone ni le numéro de billet, et le retrait se fait sur simple demande.
+
+En démonstration, la liste combine les commandes confirmées sur l'appareil (`src/services/attendees.js`) et un jeu d'exemple (`src/data/attendees.js`). En production, elle doit venir du serveur de billetterie (`GET /attendees`), seul juge de ce qui est publiable.
+
 ## Logos des partenaires
 
 Déposer chaque logo officiel (SVG de préférence) dans `public/images/partners/`, puis indiquer son nom de fichier
@@ -199,7 +218,9 @@ Les pastilles Visa / Mastercard sont typographiques, comme celles des opérateur
 
 Le site est livré en production avant que tout soit prêt. Trois booléens dans `CONFIG.features` (`src/data/config.js`) suffisent à rallumer chaque brique :
 
-| Drapeau | `false` (état livré) | À `true` |
+Les trois drapeaux sont à **`true`** dans la version livrée : la billetterie, les téléchargements et la liste des intervenants sont ouverts. Les repasser à `false` referme proprement la brique correspondante.
+
+| Drapeau | `false` | `true` (état livré) |
 | --- | --- | --- |
 | `payment` | Billetterie consultable (tarifs, quotas, places restantes) ; bandeau « Ouverture prochaine », boutons « Bientôt disponible », `/billetterie/commande/*` affiche un message et renvoie vers le secrétariat | Parcours complet commande → paiement → confirmation → flyer |
 | `documentDownloads` | Boutons TDR (appel à candidatures CAIA) et dossier de partenariat grisés (`<button disabled>` + pastille « Bientôt »), liens neutralisés dans le pied de page | Téléchargement des PDF |
@@ -263,6 +284,7 @@ Le dossier `dist/` est un site statique.
 - Remplacer les URL génériques des **réseaux sociaux** (`src/data/config.js`).
 - Remplacer les PDF de travail (BAT) de `public/documents/` par les versions définitives.
 - **Valider les tarifs et les quotas** des billets et les **préfixes opérateurs** (`CONFIG.payment.operators`).
+- **Brancher la liste des participants** sur le serveur de billetterie (`GET /attendees`) : elle ne doit contenir que les inscrits ayant coché l'accord d'affichage public.
 - **Rallumer les trois interrupteurs** de `CONFIG.features` au fur et à mesure : paiement, téléchargements, liste des intervenants.
 - Déposer les **logos officiels Visa et Mastercard** (kits de marque des réseaux) et les logos des **médias**.
 - Vérifier les **droits de diffusion des photos** de la galerie (personnes identifiables) et compléter les légendes si besoin.

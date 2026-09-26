@@ -161,6 +161,28 @@ export default {
     },
 
     // =========================================================================
+    attendees: {
+      title: 'Participants',
+      hero: {
+        eyebrow: 'Ils y seront',
+        title: 'La communauté des *inscrits*',
+        lead: 'La liste des personnes ayant réservé leur place et accepté d’y figurer. Elle s’actualise au fil des réservations.',
+        statAttendees: 'inscrits publiés',
+        statTiers: 'formules de billets',
+      },
+      listTitle: 'Les participants inscrits',
+      privacy: {
+        title: 'Votre nom, vos règles',
+        items: [
+          { icon: 'check', title: 'Uniquement avec votre accord', text: 'Votre nom n’apparaît que si vous cochez **« Afficher mon nom dans la liste publique »** au moment de votre commande. La case est décochée par défaut.' },
+          { icon: 'shield', title: 'Rien d’autre n’est publié', text: 'Seuls votre nom, votre organisation, votre ville et votre profil sont visibles. Ni e-mail, ni téléphone, ni numéro de billet.' },
+          { icon: 'refresh', title: 'Retrait à tout moment', text: 'Un simple message au secrétariat suffit pour être retiré de la liste, sans justification et sans délai.' },
+        ],
+        contact: 'Pour toute demande concernant vos données : {email}.',
+      },
+    },
+
+    // =========================================================================
     speakers: {
       title: 'Intervenants',
       hero: {
@@ -187,7 +209,7 @@ export default {
         stepsTitle: 'Comment proposer une intervention ?',
         steps: [
           { title: 'Préparez votre proposition', text: 'Titre, résumé (10 lignes), format souhaité (plénière, masterclass, forum) et courte biographie.' },
-          { title: 'Envoyez-la au secrétariat', text: 'Par e-mail à contact@jcia.cm, en joignant une photo et vos liens (LinkedIn, publications).' },
+          { title: 'Envoyez-la au secrétariat', text: 'Par e-mail à contact@jciacm.com, en joignant une photo et vos liens (LinkedIn, publications).' },
           { title: 'Sélection par le Comité Scientifique', text: 'Les propositions sont examinées au regard de la thématique et de l’équilibre du programme.' },
         ],
         button: 'Proposer une intervention',
@@ -224,7 +246,7 @@ export default {
       steps: {
         title: 'Réserver un stand en 4 étapes',
         items: [
-          { title: 'Contactez le secrétariat', text: 'Écrivez à contact@jcia.cm en présentant votre structure et votre solution.' },
+          { title: 'Contactez le secrétariat', text: 'Écrivez à contact@jciacm.com en présentant votre structure et votre solution.' },
           { title: 'Recevez l’offre', text: 'Le Comité d’Organisation vous adresse les formules de stand disponibles.' },
           { title: 'Confirmez votre participation', text: 'Validation de la formule et des informations pour le Catalogue National.' },
           { title: 'Préparez votre démonstration', text: 'Réservez votre créneau sur la scène du Salon et vos rendez-vous via l’application.' },
@@ -240,7 +262,7 @@ export default {
 
     // =========================================================================
     awards: {
-      title: 'CAIA Awards',
+      title: 'Cameroon AI Awards',
       hero: {
         eyebrow: 'Cameroon Artificial Intelligence Awards 2027',
         title: 'Révéler, récompenser, *projeter*',
@@ -328,7 +350,7 @@ export default {
           { title: 'Engagements', text: 'Les présélectionnés s’engagent à être présents les 27 et 28 avril 2027 et à exposer au Salon ; les lauréats à participer au gala et au programme de préparation pour Genève.' },
         ],
       },
-      contact: 'Secrétariat des CAIA 2027 — Commission Awards et Gala : jcia@iacameroun.com · contact@jcia.cm · (+237) 222 306 079',
+      contact: 'Secrétariat des CAIA 2027 — Commission Awards et Gala : jcia@iacameroun.com · contact@jciacm.com · (+237) 699 089 937',
     },
 
     // =========================================================================
@@ -370,7 +392,7 @@ export default {
       howTo: {
         title: 'Se faire référencer',
         steps: [
-          { title: 'Écrivez-nous', text: 'Envoyez une demande de référencement à contact@jcia.cm.' },
+          { title: 'Écrivez-nous', text: 'Envoyez une demande de référencement à contact@jciacm.com.' },
           { title: 'Complétez votre fiche', text: 'Compétences, secteurs, région, réalisations et contacts publics.' },
           { title: 'Validez la publication', text: 'Vous relisez et consentez à la publication de votre fiche.' },
         ],
@@ -441,7 +463,7 @@ export default {
       categories: [
         { id: 'general', label: 'L’événement' },
         { id: 'tickets', label: 'Billetterie & paiement' },
-        { id: 'awards', label: 'CAIA Awards' },
+        { id: 'awards', label: 'Cameroon AI Awards' },
         { id: 'salon', label: 'Salon & exposants' },
         { id: 'partners', label: 'Partenaires & presse' },
       ],
@@ -450,7 +472,7 @@ export default {
         { cat: 'general', top: true, q: 'Qui peut participer ?', a: 'Tout l’écosystème : décideurs publics, entreprises, investisseurs, chercheurs, startups, étudiants, diaspora, société civile et grand public curieux de l’IA.' },
         { cat: 'general', q: 'Dans quelles langues se déroulent les sessions ?', a: 'En français et en anglais.' },
         { cat: 'general', q: 'Les masterclasses donnent-elles lieu à une attestation ?', a: 'Oui. Les quatre masterclasses du 28 avril comprennent des exercices pratiques et une attestation de participation.' },
-        { cat: 'tickets', top: true, q: 'Comment réserver ma place ?', a: 'La page Billetterie présente les quatre billets, leurs quotas et les places restantes. La réservation en ligne ouvre très bientôt : le paiement se fera par MTN Mobile Money, Orange Money, Visa ou Mastercard. En attendant, le secrétariat enregistre votre réservation (contact@jcia.cm).' },
+        { cat: 'tickets', top: true, q: 'Comment réserver ma place ?', a: 'La page Billetterie présente les quatre billets, leurs quotas et les places restantes. La réservation en ligne ouvre très bientôt : le paiement se fera par MTN Mobile Money, Orange Money, Visa ou Mastercard. En attendant, le secrétariat enregistre votre réservation (contact@jciacm.com).' },
         { cat: 'tickets', top: true, q: 'Comment fonctionnera le paiement ?', a: 'Par Mobile Money : vous saisissez votre numéro MTN ou Orange, une demande de paiement arrive sur votre téléphone et vous la validez avec votre code secret — que nous ne vous demanderons jamais. Par carte Visa ou Mastercard : vous serez redirigé vers la page sécurisée de la banque ; aucune donnée bancaire ne transite par ce site.' },
         { cat: 'tickets', q: 'Puis-je suivre l’événement à distance ?', a: 'Oui. Le billet « En ligne » (15 000 FCFA) donne accès à l’intégralité des travaux en direct, à une masterclass avec attestation, aux rendez-vous B2B / B2G via l’application et au replay des sessions pendant 30 jours.' },
         { cat: 'tickets', q: 'Le tarif étudiant est-il soumis à conditions ?', a: 'Oui : il est réservé aux étudiants et une carte d’étudiant en cours de validité sera demandée à l’accueil.' },
@@ -459,9 +481,9 @@ export default {
         { cat: 'awards', top: true, q: 'Comment candidater aux Cameroon AI Awards (CAIA 2027) ?', a: 'Exclusivement via le formulaire en ligne (awards.jcia.cm ou iacameroun.com), du 15 novembre 2026 au 28 février 2027 à 23h59. Le concours est ouvert et entièrement gratuit.' },
         { cat: 'awards', q: 'Faut-il être au Cameroun pour candidater ?', a: 'Non. Toute personne de nationalité camerounaise âgée d’au moins 18 ans peut candidater, qu’elle réside au Cameroun ou dans la diaspora.' },
         { cat: 'awards', q: 'Comment est calculée la note finale ?', a: 'La note du jury compte pour 60 % et le vote du public (du 20 mars au 15 avril 2027) pour 40 %.' },
-        { cat: 'salon', top: true, q: 'Comment exposer au Salon National 100 % IA ?', a: 'Contactez le secrétariat (contact@jcia.cm) : les formules de stand vous seront communiquées. Les 50 projets présélectionnés aux CAIA exposent gratuitement.' },
+        { cat: 'salon', top: true, q: 'Comment exposer au Salon National 100 % IA ?', a: 'Contactez le secrétariat (contact@jciacm.com) : les formules de stand vous seront communiquées. Les 50 projets présélectionnés aux CAIA exposent gratuitement.' },
         { cat: 'partners', q: 'Comment devenir partenaire ou sponsor ?', a: 'Téléchargez le dossier de partenariat puis contactez le Comité d’Organisation pour construire une formule adaptée.' },
-        { cat: 'partners', q: 'Je suis journaliste : comment obtenir une accréditation ?', a: 'Une centaine de journalistes seront accrédités. Écrivez au secrétariat (contact@jcia.cm) en précisant votre média.' },
+        { cat: 'partners', q: 'Je suis journaliste : comment obtenir une accréditation ?', a: 'Une centaine de journalistes seront accrédités. Écrivez au secrétariat (contact@jciacm.com) en précisant votre média.' },
       ],
       stillTitle: 'Vous n’avez pas trouvé votre réponse ?',
       stillText: 'Le secrétariat vous répond par e-mail ou par téléphone.',

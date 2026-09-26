@@ -160,6 +160,28 @@ export default {
     },
 
     // =========================================================================
+    attendees: {
+      title: 'Attendees',
+      hero: {
+        eyebrow: 'They will be there',
+        title: 'The community of *registered attendees*',
+        lead: 'The list of people who booked a seat and agreed to appear. It updates as bookings come in.',
+        statAttendees: 'published attendees',
+        statTiers: 'ticket types',
+      },
+      listTitle: 'Registered attendees',
+      privacy: {
+        title: 'Your name, your rules',
+        items: [
+          { icon: 'check', title: 'Only with your consent', text: 'Your name appears only if you tick **“Show my name in the public list”** when ordering. The box is unticked by default.' },
+          { icon: 'shield', title: 'Nothing else is published', text: 'Only your name, organisation, city and profile are visible. No e-mail, no phone number, no ticket number.' },
+          { icon: 'refresh', title: 'Removal at any time', text: 'A single message to the secretariat is enough to be removed from the list, with no justification and no delay.' },
+        ],
+        contact: 'For any request about your data: {email}.',
+      },
+    },
+
+    // =========================================================================
     speakers: {
       title: 'Speakers',
       hero: {
@@ -186,7 +208,7 @@ export default {
         stepsTitle: 'How to propose a talk',
         steps: [
           { title: 'Prepare your proposal', text: 'Title, abstract (10 lines), preferred format (plenary, masterclass, forum) and a short bio.' },
-          { title: 'Send it to the secretariat', text: 'By e-mail to contact@jcia.cm, with a photo and your links (LinkedIn, publications).' },
+          { title: 'Send it to the secretariat', text: 'By e-mail to contact@jciacm.com, with a photo and your links (LinkedIn, publications).' },
           { title: 'Selection by the Scientific Committee', text: 'Proposals are reviewed for relevance to the theme and programme balance.' },
         ],
         button: 'Propose a talk',
@@ -223,7 +245,7 @@ export default {
       steps: {
         title: 'Book a stand in 4 steps',
         items: [
-          { title: 'Contact the secretariat', text: 'Write to contact@jcia.cm presenting your organisation and solution.' },
+          { title: 'Contact the secretariat', text: 'Write to contact@jciacm.com presenting your organisation and solution.' },
           { title: 'Receive the offer', text: 'The Organising Committee sends you the available stand packages.' },
           { title: 'Confirm your participation', text: 'Validate your package and your National Directory information.' },
           { title: 'Prepare your demo', text: 'Book your slot on the Expo stage and your meetings via the app.' },
@@ -239,7 +261,7 @@ export default {
 
     // =========================================================================
     awards: {
-      title: 'CAIA Awards',
+      title: 'Cameroon AI Awards',
       hero: {
         eyebrow: 'Cameroon Artificial Intelligence Awards 2027',
         title: 'Reveal, reward, *showcase*',
@@ -327,7 +349,7 @@ export default {
           { title: 'Commitments', text: 'Shortlisted applicants commit to attending on 27–28 April 2027 and exhibiting at the Expo; winners to attending the gala and the Geneva preparation programme.' },
         ],
       },
-      contact: 'CAIA 2027 Secretariat — Awards and Gala Commission: jcia@iacameroun.com · contact@jcia.cm · (+237) 222 306 079',
+      contact: 'CAIA 2027 Secretariat — Awards and Gala Commission: jcia@iacameroun.com · contact@jciacm.com · (+237) 699 089 937',
     },
 
     // =========================================================================
@@ -369,7 +391,7 @@ export default {
       howTo: {
         title: 'Get listed',
         steps: [
-          { title: 'Write to us', text: 'Send a listing request to contact@jcia.cm.' },
+          { title: 'Write to us', text: 'Send a listing request to contact@jciacm.com.' },
           { title: 'Complete your profile', text: 'Skills, sectors, region, achievements and public contacts.' },
           { title: 'Approve publication', text: 'You review and consent to the publication of your profile.' },
         ],
@@ -440,7 +462,7 @@ export default {
       categories: [
         { id: 'general', label: 'The event' },
         { id: 'tickets', label: 'Tickets & payment' },
-        { id: 'awards', label: 'CAIA Awards' },
+        { id: 'awards', label: 'Cameroon AI Awards' },
         { id: 'salon', label: 'Expo & exhibitors' },
         { id: 'partners', label: 'Partners & press' },
       ],
@@ -449,7 +471,7 @@ export default {
         { top: true, cat: 'general', q: 'Who can attend?', a: 'The whole ecosystem: public decision-makers, companies, investors, researchers, startups, students, the diaspora, civil society and anyone curious about AI.' },
         { cat: 'general', q: 'In which languages are the sessions held?', a: 'In French and English.' },
         { cat: 'general', q: 'Do the masterclasses include a certificate?', a: 'Yes. The four masterclasses on 28 April include hands-on exercises and a certificate of attendance.' },
-        { top: true, cat: 'tickets', q: 'How do I book my seat?', a: 'The Tickets page lists the four tickets, their quotas and the seats left. Online booking opens very soon: payment will be made with MTN Mobile Money, Orange Money, Visa or Mastercard. In the meantime the secretariat records your booking (contact@jcia.cm).' },
+        { top: true, cat: 'tickets', q: 'How do I book my seat?', a: 'The Tickets page lists the four tickets, their quotas and the seats left. Online booking opens very soon: payment will be made with MTN Mobile Money, Orange Money, Visa or Mastercard. In the meantime the secretariat records your booking (contact@jciacm.com).' },
         { top: true, cat: 'tickets', q: 'How will payment work?', a: 'With Mobile Money: you enter your MTN or Orange number, a payment request arrives on your phone and you approve it with your PIN — which we will never ask for. With a Visa or Mastercard: you will be redirected to the bank’s secure page; no card data goes through this site.' },
         { cat: 'tickets', q: 'Can I follow the event remotely?', a: 'Yes. The “Online” ticket (15,000 FCFA) gives access to the whole programme live, one masterclass with certificate, B2B / B2G meetings via the app and session replays for 30 days.' },
         { cat: 'tickets', q: 'Are there conditions for the student rate?', a: 'Yes: it is reserved for students and a valid student card will be requested at the entrance.' },
@@ -458,9 +480,9 @@ export default {
         { top: true, cat: 'awards', q: 'How do I apply for the Cameroon AI Awards (CAIA 2027)?', a: 'Only through the online form (awards.jcia.cm or iacameroun.com), from 15 November 2026 to 28 February 2027 at 23:59. The competition is open and completely free.' },
         { cat: 'awards', q: 'Do I need to live in Cameroon to apply?', a: 'No. Any Cameroonian national aged 18 or over may apply, whether living in Cameroon or in the diaspora.' },
         { cat: 'awards', q: 'How is the final score calculated?', a: 'The jury score counts for 60% and the public vote (20 March to 15 April 2027) for 40%.' },
-        { top: true, cat: 'salon', q: 'How can I exhibit at the National 100% AI Expo?', a: 'Contact the secretariat (contact@jcia.cm) to receive the stand packages. The 50 CAIA shortlisted projects exhibit free of charge.' },
+        { top: true, cat: 'salon', q: 'How can I exhibit at the National 100% AI Expo?', a: 'Contact the secretariat (contact@jciacm.com) to receive the stand packages. The 50 CAIA shortlisted projects exhibit free of charge.' },
         { cat: 'partners', q: 'How can I become a partner or sponsor?', a: 'Download the partnership package and contact the Organising Committee to build a tailored package.' },
-        { cat: 'partners', q: 'I am a journalist: how do I get accredited?', a: 'Around one hundred journalists will be accredited. Write to the secretariat (contact@jcia.cm) stating your media outlet.' },
+        { cat: 'partners', q: 'I am a journalist: how do I get accredited?', a: 'Around one hundred journalists will be accredited. Write to the secretariat (contact@jciacm.com) stating your media outlet.' },
       ],
       stillTitle: 'Didn’t find your answer?',
       stillText: 'The secretariat will reply by e-mail or phone.',

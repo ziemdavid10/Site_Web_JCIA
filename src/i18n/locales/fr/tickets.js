@@ -144,6 +144,8 @@ export default {
       detected: 'Numéro {op} détecté',
       mismatch: 'Ce numéro semble appartenir à {op}. Vérifiez l’opérateur choisi.',
       freeInfo: 'Ce billet est gratuit : aucun paiement n’est nécessaire.',
+      publicListing: 'Afficher mon nom dans la liste publique des participants',
+      publicListingHint: 'Seuls votre nom, votre organisation et votre profil seront visibles. Vous pouvez demander leur retrait à tout moment.',
       terms: 'J’accepte les [conditions d’utilisation](/conditions-utilisation) et la [politique de confidentialité](/confidentialite). *',
       summaryTitle: 'Récapitulatif',
       subtotal: 'Sous-total',

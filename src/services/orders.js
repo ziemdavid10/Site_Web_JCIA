@@ -16,6 +16,7 @@ import { ORDER_ID_RE, cleanText } from '@/security/sanitize'
  *   tierId, quantity, unitPrice, total, currency,
  *   customer: { name, email, phone, org, school? },
  *   attendees: [ 'Nom 1', 'Nom 2', … ],
+ *   publicListing: true | false,   // accord pour figurer dans la liste publique
  *   payment: { method: 'momo'|'card', operator, phone, status: 'free'|'pending'|'paid'|'failed', transactionId, paidAt, mode },
  * }
  */
@@ -63,6 +64,8 @@ function sanitizeOrder(o) {
       org: cleanText(o.customer?.org, 120),
     },
     attendees,
+    // Consentement explicite pour apparaître dans la liste publique des participants
+    publicListing: o.publicListing === true,
     payment: {
       status: p.status,
       method: METHODS.includes(p.method) ? p.method : 'momo',
