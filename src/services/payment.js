@@ -23,12 +23,20 @@ import { cleanText } from '@/security/sanitize'
  *   GET  {API}/payments/:id      → { status: 'PENDING' | 'SUCCESSFUL' | 'FAILED', transactionId, reason? }
  *
  * ─── CARTES VISA / MASTERCARD ────────────────────────────────────────────────
- * `method: 'card'` : le backend crée la session chez le prestataire et renvoie
- * `redirectUrl`, la page sécurisée (3-D Secure) de la banque. Le navigateur y
- * est redirigé : AUCUN numéro de carte n'est jamais saisi ni transporté par ce
- * site (exigence PCI-DSS). Au retour, le prestataire rappelle le backend par
- * webhook et le visiteur revient sur la page de confirmation.
- * `redirectUrl` est vérifiée avant usage : HTTPS et même origine que l'API.
+ * `method: 'card'` : les coordonnées saisies dans le formulaire sont envoyées
+ * au backend, en HTTPS, dans le corps de la requête `POST /payments`, puis
+ * transmises par lui au prestataire bancaire. Elles ne sont ni journalisées, ni
+ * stockées, ni renvoyées au navigateur ; la commande ne garde que le réseau et
+ * les quatre derniers chiffres.
+ * Si la banque exige une authentification forte (3-D Secure), le backend
+ * renvoie `redirectUrl` : le navigateur y est envoyé, puis revient sur la page
+ * de confirmation. `redirectUrl` est vérifiée avant usage (HTTPS + même origine
+ * que l'API), pour qu'une réponse altérée ne puisse pas rediriger ailleurs.
+ *
+ * ⚠️ Conformité : dès que le numéro de carte traverse nos pages, le commerçant
+ * relève du questionnaire PCI-DSS le plus exigeant (SAQ D). La solution
+ * recommandée reste la tokenisation du prestataire (champs hébergés / SDK) :
+ * `cardFieldsMode` ci-dessous permet de basculer sans toucher au reste.
  *
  * Le client interroge le statut toutes les 3 s jusqu'à confirmation ou échec
  * (l'utilisateur valide la transaction en saisissant son code secret sur son
@@ -51,6 +59,12 @@ function secureApiUrl(url) {
 }
 
 const API = secureApiUrl(CONFIG.payment.apiUrl)
+/**
+ * 'form'  : le formulaire du site collecte le numéro (implémentation actuelle) ;
+ * 'hosted': à activer le jour où le prestataire fournit ses champs hébergés —
+ *           `processPayment` n'enverra alors qu'un jeton (`cardToken`).
+ */
+export const CARD_FIELDS_MODE = 'form'
 export const PAYMENT_MODE = API ? 'live' : 'demo'
 
 const PAYMENT_ID_RE = /^[\w-]{1,100}$/
@@ -115,17 +129,19 @@ export async function processPayment(params, onStep = () => {}) {
  * Paiement simulé : reproduit les étapes et délais d'un vrai paiement mobile.
  * Pour tester l'écran d'échec, utiliser un numéro se terminant par « 0000 ».
  */
-async function processDemo({ orderId, operator, phone = '' }, onStep) {
+async function processDemo({ orderId, method, operator, phone = '', card }, onStep) {
   onStep('initiating')
   await wait(1200)
-  onStep('awaiting') // « Validez le paiement sur votre téléphone »
+  onStep('awaiting') // « Validez le paiement sur votre téléphone » / « Authentification »
   await wait(2600)
-  if (String(phone).endsWith('0000')) return { status: 'FAILED', reason: 'declined', mode: 'demo' }
+  // Pour tester l'écran d'échec : numéro (ou carte) se terminant par 0000
+  const tail = method === 'card' ? String(card?.number ?? '').replace(/\D/g, '') : String(phone)
+  if (tail.endsWith('0000')) return { status: 'FAILED', reason: 'declined', mode: 'demo' }
   onStep('confirming')
   await wait(900)
   return {
     status: 'SUCCESSFUL',
-    transactionId: `DEMO-${operator?.toUpperCase?.() ?? 'MM'}-${orderId.slice(-6)}-${Date.now().toString(36).toUpperCase()}`,
+    transactionId: `DEMO-${(method === 'card' ? 'CARD' : operator?.toUpperCase?.()) ?? 'MM'}-${orderId.slice(-6)}-${Date.now().toString(36).toUpperCase()}`,
     mode: 'demo',
   }
 }
@@ -144,6 +160,18 @@ async function processLive(params, onStep) {
       method: params.method === 'card' ? 'card' : 'momo',
       operator: params.operator,
       phone: params.phone,
+      // Coordonnées de carte : uniquement pour cette requête, jamais stockées
+      ...(params.method === 'card' && params.card
+        ? {
+            card: {
+              number: String(params.card.number).replace(/\D/g, ''),
+              holder: params.card.name,
+              expMonth: String(params.card.exp).replace(/\D/g, '').slice(0, 2),
+              expYear: `20${String(params.card.exp).replace(/\D/g, '').slice(2, 4)}`,
+              cvc: String(params.card.cvc).replace(/\D/g, ''),
+            },
+          }
+        : {}),
       customer: { name: params.customer?.name, email: params.customer?.email },
       description: params.description,
     },
@@ -153,12 +181,12 @@ async function processLive(params, onStep) {
     return { status: 'FAILED', reason: 'init', mode: 'live' }
   }
 
-  // Carte bancaire : la saisie se fait sur la page sécurisée de la banque
-  if (params.method === 'card') {
-    const url = safeRedirectUrl(created?.redirectUrl)
+  // Authentification forte (3-D Secure) demandée par la banque : on y va
+  if (created?.redirectUrl) {
+    const url = safeRedirectUrl(created.redirectUrl)
     if (!url) return { status: 'FAILED', reason: 'init', mode: 'live' }
     window.location.assign(url)
-    // La page est quittée ; on rend un état d'attente au cas où la redirection tarde
+    // La page est quittée ; on rend un état d'attente si la redirection tarde
     return { status: 'PENDING', mode: 'live' }
   }
 

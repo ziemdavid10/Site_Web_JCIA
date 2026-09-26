@@ -137,7 +137,16 @@ export default {
         momo: { name: 'Mobile Money', detail: 'MTN Mobile Money ou Orange Money' },
         card: { name: 'Carte bancaire', detail: 'Visa ou Mastercard' },
       },
-      cardInfo: 'Vous serez redirigé vers la page sécurisée de la banque pour saisir votre carte. Aucune donnée bancaire ne transite par ce site.',
+      card: {
+        name: 'Nom du titulaire *',
+        namePlaceholder: 'Tel qu’il figure sur la carte',
+        number: 'Numéro de carte *',
+        numberHint: 'Visa ou Mastercard, 16 chiffres.',
+        exp: 'Expiration *',
+        cvc: 'CVC *',
+        cvcHint: 'Les 3 chiffres au dos de la carte.',
+      },
+      cardInfo: 'Connexion chiffrée (HTTPS). Vos coordonnées de carte sont transmises au seul prestataire bancaire pour cette transaction : elles ne sont ni affichées, ni enregistrées, ni conservées sur cet appareil. Seuls le réseau et les 4 derniers chiffres figurent sur votre reçu.',
       operatorLabel: 'Choisissez votre opérateur',
       payPhone: 'Numéro Mobile Money à débiter *',
       samePhone: 'Utiliser mon numéro de téléphone',
@@ -167,6 +176,10 @@ export default {
         email: 'Adresse e-mail invalide.',
         phone: 'Numéro camerounais invalide (9 chiffres commençant par 6).',
         school: 'Veuillez indiquer votre établissement.',
+        cardName: 'Veuillez indiquer le nom figurant sur la carte.',
+        cardNumber: 'Numéro de carte invalide (Visa ou Mastercard).',
+        cardExp: 'Date d’expiration invalide ou dépassée.',
+        cardCvc: 'CVC invalide (3 chiffres).',
         operator: 'Veuillez choisir votre opérateur.',
         payPhone: 'Numéro Mobile Money invalide.',
         attendee: 'Veuillez indiquer le nom de ce participant.',
@@ -184,6 +197,13 @@ export default {
         awaiting: 'Validation sur votre téléphone',
         confirming: 'Confirmation et émission du billet',
       },
+      // Mêmes étapes, vues côté carte bancaire
+      cardSteps: {
+        initiating: 'Vérification de la carte',
+        awaiting: 'Authentification bancaire',
+        confirming: 'Confirmation et émission du billet',
+      },
+      cardAwaiting: 'Un paiement de **{amount}** est en cours de validation par votre banque sur la carte **{card}**. Si votre banque le demande, confirmez l’opération (code reçu par SMS ou application).',
       awaiting: 'Une demande de paiement de **{amount}** a été envoyée au **{phone}**. Validez-la en saisissant votre code secret {op}.',
       noPrompt: 'Pas de notification ? Composez {ussd} puis consultez vos approbations en attente.',
       ussd: { mtn: '*126#', orange: '#150#' },
@@ -199,7 +219,7 @@ export default {
     confirmation: {
       title: 'Confirmation',
       heading: 'C’est confirmé, *vous y serez* !',
-      lead: 'Merci {name}. Votre commande est validée ; un récapitulatif sera envoyé à {email}.',
+      lead: 'Merci {name}. Votre commande est validée.',
       order: 'Commande',
       date: 'Date',
       paidWith: 'Payé avec',
@@ -218,6 +238,16 @@ export default {
       notFoundTitle: 'Commande introuvable',
       notFoundText: 'Cette commande n’existe pas sur cet appareil. Si vous avez déjà payé, consultez l’e-mail de confirmation ou contactez le secrétariat.',
       demo: 'Commande de démonstration — ce billet n’est pas valable pour l’entrée.',
+      // Récapitulatif envoyé par e-mail (voir src/services/email.js)
+      receipt: {
+        sending: 'Envoi du récapitulatif en cours…',
+        sent: 'Récapitulatif envoyé à {email}. Pensez à vérifier vos courriers indésirables.',
+        queued: 'Votre récapitulatif part vers {email} dans quelques instants.',
+        failed: 'Le récapitulatif n’a pas pu être envoyé. Écrivez-nous et nous vous le renverrons.',
+        demo: 'Mode démonstration : aucun e-mail n’est envoyé.',
+        retry: 'Réessayer l’envoi',
+        contact: 'Nous écrire',
+      },
     },
 
     // ----------------------------------------------------------------------- Flyer

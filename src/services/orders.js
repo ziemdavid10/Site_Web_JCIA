@@ -17,7 +17,10 @@ import { ORDER_ID_RE, cleanText } from '@/security/sanitize'
  *   customer: { name, email, phone, org, school? },
  *   attendees: [ 'Nom 1', 'Nom 2', … ],
  *   publicListing: true | false,   // accord pour figurer dans la liste publique
- *   payment: { method: 'momo'|'card', operator, phone, status: 'free'|'pending'|'paid'|'failed', transactionId, paidAt, mode },
+ *   payment: { method: 'momo'|'card', operator, phone, brand, last4,
+ *              status: 'free'|'pending'|'paid'|'failed', transactionId, paidAt, mode },
+ *   ⚠️ Aucun numéro de carte, aucun CVC : seuls le réseau (« visa ») et les
+ *      quatre derniers chiffres sont conservés, pour le reçu.
  * }
  */
 
@@ -27,6 +30,7 @@ const TIER_IDS = CONFIG.tickets.tiers.map((t) => t.id)
 const STATUSES = ['free', 'pending', 'paid', 'failed']
 const OPERATORS = CONFIG.payment.operators.map((o) => o.id)
 const METHODS = ['momo', 'card'] // Mobile Money ou carte bancaire
+const BRANDS = ['visa', 'mastercard']
 
 /**
  * Sécurité : le stockage local peut être modifié à la main par n'importe qui.
@@ -69,6 +73,8 @@ function sanitizeOrder(o) {
     payment: {
       status: p.status,
       method: METHODS.includes(p.method) ? p.method : 'momo',
+      brand: BRANDS.includes(p.brand) ? p.brand : undefined,
+      last4: /^\d{4}$/.test(String(p.last4 ?? '')) ? String(p.last4) : undefined,
       mode: p.mode === 'live' ? 'live' : 'demo',
       operator: p.operator ?? undefined,
       phone: p.phone ? cleanText(p.phone, 20).replace(/\D/g, '') : undefined,

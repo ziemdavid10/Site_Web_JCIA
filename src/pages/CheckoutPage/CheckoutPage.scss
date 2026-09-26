@@ -708,6 +708,53 @@
   margin-bottom: $space-5;
 }
 
+// --- Carte bancaire ------------------------------------------------------------
+.co-card {
+  display: grid;
+  gap: $space-4;
+  padding: $space-4;
+  margin-bottom: $space-5;
+  background: $surface;
+  border: 1.5px solid $border;
+  border-radius: $radius-md;
+
+  @include mq('sm') {
+    padding: $space-5;
+  }
+
+  // Champ « numéro » : la pastille du réseau s'affiche à droite, dans le champ
+  &__input {
+    position: relative;
+    display: flex;
+    align-items: center;
+
+    input {
+      width: 100%;
+      padding-right: 104px;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: 0.06em;
+    }
+  }
+
+  &__brand {
+    position: absolute;
+    right: 10px;
+    pointer-events: none;
+  }
+
+  .co-secure--card {
+    margin: 0;
+  }
+}
+
+// Deux champs courts côte à côte (expiration / CVC)
+.co-row--tight {
+  @include mq('sm') {
+    grid-template-columns: 1fr 1fr;
+    max-width: 380px;
+  }
+}
+
 .co-check {
   display: flex;
   align-items: flex-start;
@@ -727,6 +774,15 @@
   a {
     text-decoration: underline;
     text-underline-offset: 3px;
+  }
+
+  // Précision sous une case à cocher (liste publique des participants)
+  small {
+    display: block;
+    margin-top: 3px;
+    font-size: 0.8rem;
+    line-height: 1.45;
+    color: $text-muted;
   }
 
   &--terms {

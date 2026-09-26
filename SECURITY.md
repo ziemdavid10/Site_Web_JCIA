@@ -27,6 +27,12 @@ publier la faille avant sa correction. Voir aussi `/.well-known/security.txt`.
 | Essais répétés | Après 3 échecs de paiement : pause de 60 s | `CheckoutPage` |
 | API de paiement | HTTPS obligatoire, délai max 15 s, aucun cookie envoyé, réponses vérifiées, données minimales envoyées | `src/services/payment.js` |
 | Code secret Mobile Money | **Jamais demandé** : validation sur le téléphone de l'utilisateur | parcours de paiement |
+| Coordonnées de carte | Jamais écrites dans le stockage local ni journalisées : elles restent dans l'état du composant, sont passées **séparément de la commande** et envoyées en HTTPS au serveur. La commande ne garde que le réseau et les **4 derniers chiffres** (liste blanche à la relecture) | `CheckoutPage`, `card.js`, `orders.js` |
+| Carte invalide ou faute de frappe | Réseau, longueur, **somme de Luhn**, date non dépassée et CVC vérifiés avant l'appel (sans jamais prétendre valider le paiement : seule la banque le fait) | `src/utils/card.js` |
+| Redirection 3-D Secure détournée | L'adresse renvoyée par le serveur n'est suivie que si elle est en HTTPS **et** sur l'origine de l'API (`safeRedirectUrl`) | `src/services/payment.js` |
+| E-mail de récapitulatif détourné | Le navigateur ne peut que *demander* l'envoi : il transmet l'identifiant de commande, jamais le contenu du message ; clé d'idempotence pour éviter les doublons | `src/services/email.js` |
+| Fuite de carte dans un reçu | `validateOrder()` refuse toute commande contenant une suite de 13 à 19 chiffres ; tout texte inséré dans l'e-mail est échappé (test automatique) | `scripts/email/` |
+| Identifiants SMTP | Uniquement dans l'environnement (jamais dans le dépôt), TLS exigé, certificat invalide refusé ; un test vérifie l'absence de mot de passe en dur | `scripts/email/send-receipt.mjs` |
 | Fichiers image piégés | Signature binaire vérifiée (JPEG/PNG/WebP), 15 Mo et 50 Mpx max, image redessinée (métadonnées GPS retirées) ; la photo ne quitte pas l'appareil | `src/security/files.js` |
 | Code source exposé | Pas de fichiers `.map` publiés ; `.env`, `.map`, `README.md` refusés par Apache | `vite.config.js`, `.htaccess` |
 | Dépendances vulnérables | `npm run audit` (0 vulnérabilité au dernier contrôle) | `package.json` |
@@ -37,6 +43,7 @@ publier la faille avant sa correction. Voir aussi `/.well-known/security.txt`.
 ```bash
 npm run build && npm run check:security   # règles du projet + site construit
 npm run audit                             # failles connues des dépendances
+npm run test:email                        # envoi réel du récapitulatif : contenu, échappement, aucune donnée de carte
 ```
 
 ## ⚠️ À faire côté serveur avant la vente réelle
@@ -52,5 +59,6 @@ billetterie (appelé par `VITE_PAYMENT_API_URL`) doit :
 6. **Autoriser uniquement l'origine du site** en CORS (`Access-Control-Allow-Origin: https://www.jcia.cm`).
 7. **Signer les QR codes** (jeton signé, ex. HMAC ou JWT) et les vérifier au contrôle d'accès ; marquer un billet « utilisé » après scan.
 8. **Contrôler l'accès au générateur de flyer** côté serveur (billet confirmé).
-9. **Protéger les données personnelles** : HTTPS, chiffrement au repos, accès restreint, durées de conservation de la politique de confidentialité, journalisation sans numéro complet ni e-mail en clair.
-10. **Ajouter l'origine de l'API** dans la CSP : automatique pour `_headers` et `.htaccess` (lue depuis `VITE_PAYMENT_API_URL` au build) ; à ajouter à la main dans `vercel.json` et la configuration Nginx.
+9. **N'envoyer le récapitulatif que depuis le serveur** (`POST /orders/:id/receipt`) : relire la commande côté serveur, refuser si elle n'est pas payée, limiter le débit et l'idempotence par commande, et ne jamais construire le message à partir de données envoyées par le navigateur. Les coordonnées de carte ne doivent apparaître **dans aucun e-mail, aucun journal, aucune sauvegarde** : seuls le réseau et les 4 derniers chiffres.
+10. **Protéger les données personnelles** : HTTPS, chiffrement au repos, accès restreint, durées de conservation de la politique de confidentialité, journalisation sans numéro complet ni e-mail en clair.
+11. **Ajouter l'origine de l'API** dans la CSP : automatique pour `_headers` et `.htaccess` (lue depuis `VITE_PAYMENT_API_URL` au build) ; à ajouter à la main dans `vercel.json` et la configuration Nginx.

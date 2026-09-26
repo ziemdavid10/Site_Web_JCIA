@@ -85,7 +85,7 @@ export default function Partners() {
             <div className="become-partner__ctas">
               {/* Dossier de partenariat : téléchargement bloqué
                   (CONFIG.features.documentDownloads) */}
-              {CONFIG.features.documentDownloads ? (
+              {/* {CONFIG.features.documentDownloads ? (
                 <Button href={CONFIG.links.partnershipPdf} external iconLeft="download">
                   {b.download}
                 </Button>
@@ -93,7 +93,7 @@ export default function Partners() {
                 <Button iconLeft="download" disabled title={t.soonDoc}>
                   {b.download} <span className="btn__soon">{t.soonShort}</span>
                 </Button>
-              )}
+              )} */}
               <Button
                 href={`mailto:${CONFIG.contact.emails[0]}?subject=${encodeURIComponent(b.subject)}`}
                 variant="ghost"

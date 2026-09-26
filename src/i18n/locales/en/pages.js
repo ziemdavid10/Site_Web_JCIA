@@ -328,7 +328,7 @@ export default {
       },
       governance: {
         title: 'Patronage, organisation & *jury*',
-        egide: 'The **UNESCO Regional Office for Central Africa** ensures the process complies with the Recommendation on the Ethics of AI, sits on the jury and awards the “UNESCO Award Winner” mention. The **British High Commission** hosts the gala evening at its Residence.',
+        egide: 'The **UNESCO Regional Office for Central Africa** ensures the process complies with the Recommendation on the Ethics of AI, sits on the jury and awards the “UNESCO Award Winner” mention.',
         organisation: 'The Awards and Gala Commission of the Organising Committee (IAC/CAIPI) runs the secretariat, under the supervision of the Scientific Committee, guarantor of methodological rigour.',
         juryTitle: 'A jury of 8 independent members',
         jury: [

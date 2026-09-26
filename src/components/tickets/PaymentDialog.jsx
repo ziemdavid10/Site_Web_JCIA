@@ -20,11 +20,16 @@ const STEPS = ['initiating', 'awaiting', 'confirming']
  * @param {string} amount    Montant formaté
  * @param {string} phone     Numéro formaté
  * @param {object} operator  Opérateur (CONFIG.payment.operators)
+ * @param {'momo'|'card'} method  Moyen de paiement
+ * @param {string} cardLabel Réseau et 4 derniers chiffres (paiement par carte)
  * @param {boolean} demo     Paiement simulé
  */
-export default function PaymentDialog({ status, step, amount, phone, operator, demo, onRetry, onClose }) {
+export default function PaymentDialog({ status, step, amount, phone, operator, method = 'momo', cardLabel, demo, onRetry, onClose }) {
   const { t } = useI18n()
   const p = t.tickets.payment
+  const isCard = method === 'card'
+  // Les libellés d'étapes diffèrent : validation au téléphone / authentification bancaire
+  const labels = isCard ? p.cardSteps : p.steps
   const dialogRef = useRef(null)
   const failed = status === 'failed'
   const current = STEPS.indexOf(step)
@@ -62,6 +67,7 @@ export default function PaymentDialog({ status, step, amount, phone, operator, d
 
         <div className="pay-dialog__head">
           {operator && <OperatorBadge id={operator.id} />}
+          {isCard && cardLabel && <span className="pay-dialog__card">{cardLabel}</span>}
           <strong className="pay-dialog__amount">{amount}</strong>
         </div>
 
@@ -96,21 +102,27 @@ export default function PaymentDialog({ status, step, amount, phone, operator, d
                     <span className="pay-dialog__dot" aria-hidden="true">
                       {state === 'done' ? <Icon name="check" size={14} /> : i + 1}
                     </span>
-                    {p.steps[s]}
+                    {labels[s]}
                   </li>
                 )
               })}
             </ol>
 
-            {/* Consignes pendant la validation sur le téléphone */}
+            {/* Consignes : validation au téléphone (Mobile Money) ou banque (carte) */}
             <div id="pay-dialog-desc" className={`pay-dialog__phone ${step === 'awaiting' ? 'is-awaiting' : ''}`}>
               <span className="pay-dialog__phone-icon" aria-hidden="true">
-                <Icon name="smartphone" size={30} />
+                <Icon name={isCard ? 'lock' : 'smartphone'} size={30} />
                 <i />
               </span>
               <div>
-                <p>{rich(fill(p.awaiting, { amount, phone, op: operator?.name ?? '' }))}</p>
-                {operator && <p className="pay-dialog__ussd">{fill(p.noPrompt, { ussd: p.ussd[operator.id] })}</p>}
+                {isCard ? (
+                  <p>{rich(fill(p.cardAwaiting, { amount, card: cardLabel ?? '' }))}</p>
+                ) : (
+                  <>
+                    <p>{rich(fill(p.awaiting, { amount, phone, op: operator?.name ?? '' }))}</p>
+                    {operator && <p className="pay-dialog__ussd">{fill(p.noPrompt, { ussd: p.ussd[operator.id] })}</p>}
+                  </>
+                )}
               </div>
             </div>
 

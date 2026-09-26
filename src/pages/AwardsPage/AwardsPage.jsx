@@ -42,7 +42,7 @@ export default function AwardsPage() {
           {aw.ctaApply}
         </Button>
         {/* TDR : téléchargement bloqué (CONFIG.features.documentDownloads) */}
-        {features.documentDownloads ? (
+        {/* {features.documentDownloads ? (
           <Button href={links.tdrPdf} external size="lg" variant="ghost" iconLeft="download">
             {aw.ctaTdr}
           </Button>
@@ -50,7 +50,7 @@ export default function AwardsPage() {
           <Button size="lg" variant="ghost" iconLeft="download" disabled title={t.soonDoc}>
             {aw.ctaTdr} <span className="btn__soon">{t.soonShort}</span>
           </Button>
-        )}
+        )} */}
       </PageHero>
       <Toc items={a.toc} />
 
@@ -171,11 +171,11 @@ export default function AwardsPage() {
       {/* --- Dispositions ------------------------------------------------------------------------------ */}
       <PageSection id="dispositions" tone="white" title={a.provisions.title}>
         <IconCards items={a.provisions.items.map((p, i) => ({ ...p, icon: ['lock', 'shield', 'handshake'][i] }))} columns={3} />
-        <div className="awards-page__gap">
+        {/* <div className="awards-page__gap">
           <Callout icon="mail" tone="teal">
             <p>{a.contact}</p>
           </Callout>
-        </div>
+        </div> */}
       </PageSection>
 
       <CtaBand />

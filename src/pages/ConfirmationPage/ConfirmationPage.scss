@@ -64,6 +64,73 @@
     border-radius: $radius-pill;
   }
 
+  // --- Envoi du récapitulatif par e-mail -------------------------------------
+  // Grille « icône | texte » : le message reste aligné sous lui-même quand il
+  // passe à la ligne, et l'icône ne se retrouve jamais seule sur une ligne.
+  &__receipt {
+    display: inline-grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: $space-2 $space-3;
+    align-items: start;
+    margin-top: $space-5 !important;
+    padding: 0.7rem 1.1rem;
+    max-width: 38rem;
+    font-size: 0.86rem !important;
+    line-height: 1.55;
+    text-align: left;
+    background: $surface;
+    border: 1px solid $border;
+    border-radius: $radius-lg;
+    box-shadow: $shadow-sm;
+
+    > .icon {
+      margin-top: 3px;
+      color: $teal;
+    }
+
+    // L'attente : l'icône tourne doucement, personne ne se demande si c'est figé
+    &.is-sending > .icon {
+      animation: receipt-wait 1.6s linear infinite;
+    }
+
+    &.is-failed {
+      border-color: rgba($rust, 0.4);
+
+      > .icon {
+        color: $rust;
+      }
+    }
+
+    &-actions {
+      grid-column: 2; // sous le texte, jamais sous l'icône
+      display: flex;
+      flex-wrap: wrap;
+      gap: $space-2 $space-4;
+
+      button,
+      a {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.84rem;
+        font-weight: $fw-semibold;
+        color: $accent-text;
+        text-decoration: underline;
+        text-underline-offset: 3px;
+
+        &:hover {
+          text-decoration-thickness: 2px;
+        }
+      }
+    }
+  }
+
+  @keyframes receipt-wait {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
   &__grid {
     display: grid;
     gap: $space-6;

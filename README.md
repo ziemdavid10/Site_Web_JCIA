@@ -20,6 +20,9 @@ npm run check:i18n   # vérifier que l'anglais a exactement la même structure q
 npm run check:security # contrôle de sécurité (après npm run build)
 npm run audit        # failles connues des dépendances
 npm run figma:export # régénérer la maquette Figma (site lancé avec npm run preview)
+npm run test:email   # test d'envoi RÉEL du récapitulatif de commande (serveur SMTP local)
+npm run email:preview # écrit un aperçu HTML du récapitulatif, sans rien envoyer
+npm run email:send   # envoi réel (réglages SMTP dans l'environnement — voir plus bas)
 ```
 
 ## Fonctionnalités
@@ -163,7 +166,9 @@ dans `src/assets/images/speakers/` et les importer, puis écrire fonction, thèm
 
 La page `/participants` et la section « Ils y seront » n'affichent que les personnes ayant coché **« Afficher mon nom dans la liste publique des participants »** au moment de leur commande (case décochée par défaut). Seuls le nom, l'organisation, la ville et le profil sont publiés — jamais l'e-mail, le téléphone ni le numéro de billet, et le retrait se fait sur simple demande.
 
-En démonstration, la liste combine les commandes confirmées sur l'appareil (`src/services/attendees.js`) et un jeu d'exemple (`src/data/attendees.js`). En production, elle doit venir du serveur de billetterie (`GET /attendees`), seul juge de ce qui est publiable.
+L'affichage reprend exactement la grammaire des intervenants : **portrait, profil et fiche détaillée**. Le portrait est mutualisé (`<PersonAvatar />`, utilisé aussi par `<SpeakerAvatar />`) : la photo si elle existe, sinon un avatar dessiné en SVG (dégradé bleu nuit → couleur du profil, motif Ndop, silhouette et initiales) — aucune image manquante, aucun trou dans la grille. La carte (`AttendeeCard`) porte le profil en pastille, le nom, le rôle et l'organisation, la motivation (3 lignes au plus, pour que les cartes gardent la même hauteur), la ville et le tarif ; la fiche (`AttendeeDialog`, `<dialog>` natif) ajoute la motivation complète et les centres d'intérêt. Filtre par profil et recherche (insensible aux accents) sont **dans l'URL** (`?profil=`, `?participant=`) : une fiche se partage par simple lien.
+
+En démonstration, la liste combine les commandes confirmées sur l'appareil (`src/services/attendees.js`) et un jeu d'exemple (`src/data/attendees.js`, noms *lorem ipsum*). En production, elle doit venir du serveur de billetterie (`GET /attendees`), seul juge de ce qui est publiable.
 
 ## Logos des partenaires
 
@@ -210,9 +215,44 @@ Chaque tarif porte un **quota** dans `CONFIG.tickets.tiers` (`quota`, `sold`, `m
 
 ### Moyens de paiement
 
-MTN Mobile Money, Orange Money, **Visa** et **Mastercard**. Le choix se fait au bloc 3 de la commande : Mobile Money demande l'opérateur et le numéro à débiter ; la carte **n'est jamais saisie sur le site** — le serveur de billetterie crée la session et renvoie l'adresse de la page sécurisée (3-D Secure) de la banque, vérifiée par `safeRedirectUrl()` (HTTPS + même origine que l'API) avant toute redirection. Aucune donnée de carte ne transite donc par le site (exigence PCI-DSS).
+MTN Mobile Money, Orange Money, **Visa** et **Mastercard**. Le choix se fait au bloc 3 de la commande.
+
+- **Mobile Money** : opérateur (déduit du préfixe, modifiable) et numéro à débiter. Le code secret n'est jamais demandé : l'utilisateur valide sur son téléphone.
+- **Carte bancaire** : formulaire complet dans la page — nom du porteur, numéro, expiration, CVC (`autocomplete="cc-*"`, clavier numérique sur mobile). `src/utils/card.js` guide la saisie et vérifie *avant* l'appel : réseau reconnu (Visa `4…`, Mastercard `51–55` / `2221–2720`), longueur attendue, **somme de Luhn**, date non dépassée, CVC à 3 chiffres ; le réseau détecté s'affiche en pastille pendant la frappe.
+
+**Ce que deviennent les coordonnées de carte** : elles vivent dans l'état du composant, sont passées à `processPayment()` **séparément de la commande**, envoyées en HTTPS au serveur de billetterie (`POST /payments`, champ `card`), puis disparaissent avec la page. Elles ne sont **ni journalisées, ni stockées** : `src/services/orders.js` n'accepte que `brand` (liste blanche) et `last4` (4 chiffres) — vérifiable avec `npm run test:email`, qui refuse tout reçu contenant une suite de 13 à 19 chiffres. Si la banque exige une authentification forte (3-D Secure), le serveur renvoie `redirectUrl`, vérifiée par `safeRedirectUrl()` (HTTPS + même origine que l'API) avant toute redirection.
+
+> ⚠️ **PCI-DSS** : dès que le numéro traverse nos pages, le commerçant relève du questionnaire le plus exigeant (SAQ D). Le jour où le prestataire fournit ses **champs hébergés**, basculer `CARD_FIELDS_MODE` sur `'hosted'` dans `src/services/payment.js` : seul un jeton sera alors transmis, le reste du parcours est déjà prévu pour.
 
 Les pastilles Visa / Mastercard sont typographiques, comme celles des opérateurs : déposer les logos officiels des réseaux une fois les kits de marque obtenus.
+
+### Récapitulatif de commande par e-mail
+
+Le navigateur **n'envoie pas** l'e-mail : il ne peut pas parler à un serveur SMTP, et le mot de passe d'envoi ne doit jamais se trouver dans une page. Le site se contente donc de **demander** l'envoi au serveur de billetterie (`src/services/email.js`) :
+
+```
+POST {API}/orders/:id/receipt   ← { email, lang }   → { status: 'sent' | 'queued' }
+en-tête Idempotency-Key: receipt-JCIA27-XXXXXX      (aucun doublon)
+```
+
+Le corps ne contient **ni montant, ni tarif, ni participants** : un visiteur ne doit pas pouvoir dicter le contenu d'un message parti de notre nom de domaine — le serveur relit la commande et vérifie qu'elle est payée. La page de confirmation affiche l'état réel de l'envoi (envoi en cours / envoyé à *adresse* / en file / échec avec « Réessayer l'envoi » et « Nous écrire ») : le site n'annonce jamais « envoyé » sans confirmation du serveur.
+
+**Côté serveur**, tout est fourni et réutilisable tel quel dans `scripts/email/` :
+
+| Fichier | Rôle |
+| --- | --- |
+| `receipt-template.mjs` | construit le message (objet, version **texte** *et* HTML responsive, compatible Outlook) ; `validateOrder()` refuse une commande incohérente ou contenant ce qui ressemble à un numéro de carte ; tout texte inséré est échappé |
+| `send-receipt.mjs` | envoi réel par SMTP (nodemailer). **Tous les réglages viennent de l'environnement** : `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASS`, `MAIL_FROM`, `MAIL_REPLY_TO`, `MAIL_BCC`, `SITE_URL`. TLS obligatoire, certificat invalide refusé. `--dry-run` écrit un aperçu HTML sans rien envoyer |
+| `test-receipt.mjs` | **test d'envoi réel** : démarre un vrai serveur SMTP local, fait partir le message, puis ouvre le message reçu et le vérifie (26 assertions) |
+
+```bash
+npm run test:email                    # 26 tests, aucun réseau, aucun identifiant nécessaire
+npm run email:preview                 # aperçu HTML du récapitulatif
+SMTP_HOST=smtp.exemple.cm SMTP_USER=… SMTP_PASS=… MAIL_FROM="JCIA 2027 <contact@jciacm.com>" \
+  npm run email:send -- --demo --to vous@exemple.cm   # envoi vers une vraie boîte
+```
+
+Ce que le test vérifie : le message part bien (code SMTP `250`), l'enveloppe (expéditeur, destinataire, copie cachée **absente des en-têtes**), l'objet accentué correctement encodé, la présence des **deux** versions texte et HTML, la reprise fidèle de la commande (numéro, tarif, total, `Visa •••• 4242`, transaction, dates, lieu, participants), l'échappement d'un nom piégé (`<script>`), le cas Mobile Money, le mode `--dry-run`, les six refus de `validateOrder`, l'absence d'envoi sans `SMTP_HOST`, les réglages TLS selon le port, et qu'**aucun identifiant n'est écrit en dur** dans le script.
 
 ### Interrupteurs de mise en production
 
@@ -289,6 +329,8 @@ Le dossier `dist/` est un site statique.
 - Déposer les **logos officiels Visa et Mastercard** (kits de marque des réseaux) et les logos des **médias**.
 - Vérifier les **droits de diffusion des photos** de la galerie (personnes identifiables) et compléter les légendes si besoin.
 - **Brancher l'API de paiement** (`VITE_PAYMENT_API_URL`) et déplacer côté serveur la vérification des commandes et l'accès au flyer (voir `SECURITY.md`).
+- **Brancher l'envoi du récapitulatif** : exposer `POST /orders/:id/receipt` et renseigner les variables SMTP côté serveur (`scripts/email/send-receipt.mjs` est prêt à l'emploi ; `npm run test:email` doit rester vert).
+- **Décider du mode de saisie des cartes** : garder le formulaire (SAQ D) ou demander au prestataire ses champs hébergés et basculer `CARD_FIELDS_MODE` sur `'hosted'`.
 - Remplacer les **intervenants d'exemple** par la liste officielle du Comité Scientifique.
 
 ## Accessibilité et performance

@@ -2,6 +2,7 @@
 
 // =============================================================================
 // PARTICIPANTS INSCRITS
+// Même grammaire visuelle que les intervenants : photo, profil, fiche.
 // =============================================================================
 .attendees {
   &__toolbar {
@@ -103,9 +104,10 @@
     color: $text-muted;
   }
 
+  // --- Grille de cartes ------------------------------------------------------
   &__grid {
     display: grid;
-    gap: $space-3;
+    gap: $space-4;
 
     @include mq('sm') {
       grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -117,6 +119,13 @@
 
     @include mq('xl') {
       grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    > li {
+      display: flex;
+      min-width: 0;
+      animation: attendee-in 520ms $ease-out both;
+      animation-delay: calc(var(--i, 0) * 45ms);
     }
   }
 
@@ -132,103 +141,382 @@
   }
 }
 
-// --- Carte d'un participant ---------------------------------------------------
+@keyframes attendee-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+}
+
+// =============================================================================
+// CARTE D'UN PARTICIPANT
+// =============================================================================
 .attendee-card {
+  --cat: #{$orange};
+
   position: relative;
   display: flex;
-  align-items: center;
-  gap: $space-3;
-  height: 100%;
-  padding: $space-3 $space-4;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  overflow: hidden;
   background: $surface;
   border: 1px solid $border;
-  border-radius: $radius-md;
+  border-radius: $radius-lg;
   transition:
     transform $duration $ease-out,
     box-shadow $duration,
     border-color $duration;
 
-  &:hover {
-    transform: translateY(-3px);
-    border-color: $orange;
-    box-shadow: $shadow-sm;
+  @each $name, $color in $accent-colors {
+    &--#{$name} {
+      --cat: #{$color};
+    }
   }
 
-  // La personne inscrite depuis cet appareil
+  &:hover,
+  &:focus-within {
+    transform: translateY(-6px);
+    border-color: var(--cat);
+    box-shadow: $shadow-lg;
+
+    .attendee-card__avatar {
+      transform: scale(1.05);
+    }
+  }
+
+  // Le participant inscrit depuis cet appareil
   &.is-own {
     border-color: $teal;
     box-shadow: 0 0 0 2px rgba($teal, 0.18);
   }
 
+  &__photo {
+    position: relative;
+    aspect-ratio: 1 / 0.85;
+    overflow: hidden;
+    background: $navy;
+
+    // Liseré de couleur au bas de la photo
+    &::after {
+      content: '';
+      position: absolute;
+      inset: auto 0 0;
+      height: 5px;
+      background: var(--cat);
+    }
+  }
+
   &__avatar {
-    flex-shrink: 0;
-    display: grid;
-    place-items: center;
-    width: 46px;
-    height: 46px;
-    font-size: 0.92rem;
-    font-weight: $fw-bold;
-    color: $white;
-    border-radius: 50%;
-    background: linear-gradient(135deg, $navy, $orange);
-
-    &--teal {
-      background: linear-gradient(135deg, $navy, $teal);
-    }
-
-    &--rust {
-      background: linear-gradient(135deg, $navy, $rust);
-    }
-
-    &--purple {
-      background: linear-gradient(135deg, $navy, $purple);
-    }
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 700ms $ease-out;
   }
 
-  &__body {
-    display: flex;
-    flex-direction: column;
-    gap: 1px;
-    min-width: 0;
-
-    strong {
-      font-size: 0.95rem;
-      line-height: 1.25;
-    }
-
-    small {
-      font-size: 0.82rem;
-      color: $text-muted;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-  }
-
-  &__meta {
+  &__profile {
+    position: absolute;
+    top: $space-3;
+    left: $space-3;
     display: inline-flex;
     align-items: center;
     gap: 5px;
-    margin-top: 2px;
-    font-size: 0.74rem;
-    color: $accent-text;
+    padding: 0.3rem 0.7rem;
+    font-size: 0.7rem;
+    font-weight: $fw-bold;
+    color: $navy;
+    background: rgba($white, 0.92);
+    border-radius: $radius-pill;
 
-    .icon {
-      flex-shrink: 0;
+    // Dans la fiche, la pastille suit le texte
+    &--static {
+      position: static;
+      margin-bottom: $space-3;
+      color: $navy;
     }
   }
 
-  &__you {
+  &__you,
+  &__example {
     position: absolute;
-    top: -9px;
+    top: $space-3;
     right: $space-3;
-    padding: 2px 9px;
+    padding: 0.28rem 0.6rem;
     font-size: 0.64rem;
     font-weight: $fw-bold;
     letter-spacing: 0.08em;
     text-transform: uppercase;
+    border-radius: $radius-pill;
+  }
+
+  &__you {
     color: $navy;
     background: $teal;
-    border-radius: $radius-pill;
+  }
+
+  &__example {
+    color: $navy;
+    background: rgba($white, 0.86);
+  }
+
+  &__example--inline {
+    position: static;
+    margin-left: $space-2;
+  }
+
+  &__body {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: $space-2;
+    padding: $space-4;
+  }
+
+  &__name {
+    font-size: 1.05rem;
+    line-height: 1.25;
+  }
+
+  &__role {
+    font-size: 0.85rem;
+    line-height: 1.4;
+    color: $text-muted;
+
+    span {
+      font-weight: $fw-semibold;
+      color: $accent-text;
+    }
+  }
+
+  &__motivation {
+    font-size: 0.86rem;
+    line-height: 1.55;
+    color: $text-soft;
+    // Trois lignes au plus : les cartes gardent la même hauteur
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  &__meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: $space-2 $space-4;
+    margin-top: auto;
+    padding-top: $space-2;
+    font-size: 0.76rem;
+    color: $text-muted;
+
+    span {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .icon {
+      flex-shrink: 0;
+      color: var(--cat);
+    }
+  }
+
+  // Le bouton couvre toute la carte : une seule cible cliquable
+  &__open {
+    display: inline-flex;
+    align-items: center;
+    gap: $space-2;
+    margin-top: $space-2;
+    font-size: 0.84rem;
+    font-weight: $fw-semibold;
+    color: $accent-text;
+
+    &::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: $radius-lg;
+    }
+
+    &:focus-visible {
+      outline: none;
+
+      &::after {
+        @include focus-ring(var(--cat));
+      }
+    }
+
+    .icon {
+      transition: transform $duration $ease-out;
+    }
+
+    &:hover .icon {
+      transform: translateX(4px);
+    }
+  }
+}
+
+// =============================================================================
+// FICHE DÉTAILLÉE (fenêtre modale)
+// =============================================================================
+.attendee-dialog {
+  width: min(760px, calc(100% - 2rem));
+  max-height: calc(100dvh - 2rem);
+  margin: auto;
+  padding: 0;
+  color: $text;
+  background: $bg-elevated;
+  border: 0;
+  border-radius: $radius-xl;
+  box-shadow: $shadow-lg;
+  animation: attendee-in 320ms $ease-out both;
+
+  &::backdrop {
+    background: rgba($navy-900, 0.72);
+    backdrop-filter: blur(6px);
+  }
+
+  // Téléphone : feuille plein écran depuis le bas
+  @include mq-down('md') {
+    width: 100%;
+    max-width: none;
+    max-height: 94dvh;
+    margin: auto 0 0;
+    border-radius: $radius-xl $radius-xl 0 0;
+  }
+
+  &__box {
+    position: relative;
+    display: grid;
+
+    @include mq('md') {
+      grid-template-columns: 260px 1fr;
+    }
+  }
+
+  &__photo {
+    position: relative;
+    overflow: hidden;
+    background: $navy;
+    border-radius: $radius-xl 0 0 $radius-xl;
+
+    @include mq-down('md') {
+      aspect-ratio: 16 / 9;
+      border-radius: $radius-xl $radius-xl 0 0;
+    }
+
+    .attendee-card__avatar {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+  }
+
+  &__content {
+    padding: $space-5;
+
+    @include mq('md') {
+      padding: $space-6;
+    }
+
+    h2 {
+      font-size: clamp(1.25rem, 2.6vw, 1.6rem);
+      line-height: 1.2;
+    }
+  }
+
+  &__facts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: $space-4 $space-6;
+    margin: $space-4 0;
+    padding: $space-3 0;
+    border-block: 1px solid $border;
+
+    dt {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 0.7rem;
+      font-weight: $fw-bold;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: $text-muted;
+
+      .icon {
+        color: var(--cat);
+      }
+    }
+
+    dd {
+      margin-top: 2px;
+      font-size: 0.95rem;
+      font-weight: $fw-semibold;
+    }
+  }
+
+  &__label {
+    margin-top: $space-4;
+    font-size: 0.7rem;
+    font-weight: $fw-bold;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: $accent-text;
+  }
+
+  &__motivation {
+    margin-top: $space-2;
+    font-size: 0.95rem;
+    line-height: 1.6;
+    color: $text-soft;
+  }
+
+  &__interests {
+    display: flex;
+    flex-wrap: wrap;
+    gap: $space-2;
+    margin-top: $space-3;
+
+    li {
+      padding: 5px 12px;
+      font-size: 0.8rem;
+      font-weight: $fw-medium;
+      background: fg(0.06);
+      border: 1px solid $border;
+      border-radius: $radius-pill;
+    }
+  }
+
+  &__privacy {
+    display: flex;
+    align-items: flex-start;
+    gap: $space-2;
+    margin-top: $space-5;
+    font-size: 0.78rem;
+    line-height: 1.5;
+    color: $text-muted;
+
+    .icon {
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+  }
+
+  &__close {
+    position: absolute;
+    top: $space-3;
+    right: $space-3;
+    z-index: 1;
+    display: grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    color: $text;
+    background: $surface;
+    border-radius: 50%;
+    box-shadow: $shadow-sm;
+
+    &:hover {
+      background: $bg-alt;
+    }
   }
 }

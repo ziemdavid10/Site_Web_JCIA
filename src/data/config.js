@@ -150,11 +150,20 @@ export const CONFIG = {
     apiUrl: import.meta.env.VITE_PAYMENT_API_URL || '',
     /**
      * Cartes bancaires acceptées.
-     * ⚠️ Le site n'affiche JAMAIS de formulaire de carte : le paiement se
-     * déroule sur la page sécurisée (3-D Secure) de la banque, vers laquelle
-     * le serveur de billetterie redirige. Aucun numéro de carte ne transite
-     * donc par ce site — c'est l'exigence PCI-DSS et cela évite toute
-     * responsabilité de stockage.
+     *
+     * Le visiteur saisit ses coordonnées dans le formulaire de la page de
+     * paiement (nom, numéro, expiration, CVC). Elles sont envoyées en HTTPS au
+     * serveur de billetterie, qui les transmet au prestataire bancaire ; elles
+     * ne sont NI journalisées, NI conservées, et la commande enregistrée ne
+     * garde que le réseau (« visa ») et les quatre derniers chiffres. Si la
+     * banque exige une authentification forte (3-D Secure), le serveur renvoie
+     * une adresse de redirection, vérifiée avant usage.
+     *
+     * ⚠️ Conformité : dès que le numéro traverse nos pages, le commerçant relève
+     * du questionnaire PCI-DSS le plus exigeant (SAQ D). Le jour où le
+     * prestataire fournira ses champs hébergés, basculer `CARD_FIELDS_MODE` sur
+     * 'hosted' dans src/services/payment.js : seul un jeton sera alors transmis.
+     *
      * Les logos officiels Visa / Mastercard doivent être obtenus auprès des
      * réseaux (kits de marque) et déposés dans public/images/ ; en attendant,
      * une pastille typographique est affichée, comme pour les opérateurs.

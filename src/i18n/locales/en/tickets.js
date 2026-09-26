@@ -137,7 +137,16 @@ export default {
         momo: { name: 'Mobile Money', detail: 'MTN Mobile Money or Orange Money' },
         card: { name: 'Bank card', detail: 'Visa or Mastercard' },
       },
-      cardInfo: 'You will be redirected to the bank’s secure page to enter your card details. No card data goes through this site.',
+      card: {
+        name: 'Cardholder name *',
+        namePlaceholder: 'As printed on the card',
+        number: 'Card number *',
+        numberHint: 'Visa or Mastercard, 16 digits.',
+        exp: 'Expiry *',
+        cvc: 'CVC *',
+        cvcHint: 'The 3 digits on the back of the card.',
+      },
+      cardInfo: 'Encrypted connection (HTTPS). Your card details are sent to the banking provider for this transaction only: they are never displayed, stored or kept on this device. Only the network and the last 4 digits appear on your receipt.',
       operatorLabel: 'Choose your operator',
       payPhone: 'Mobile Money number to charge *',
       samePhone: 'Use my phone number',
@@ -167,6 +176,10 @@ export default {
         email: 'Invalid e-mail address.',
         phone: 'Invalid Cameroonian number (9 digits starting with 6).',
         school: 'Please enter your school or university.',
+        cardName: 'Please enter the name printed on the card.',
+        cardNumber: 'Invalid card number (Visa or Mastercard).',
+        cardExp: 'Invalid or past expiry date.',
+        cardCvc: 'Invalid CVC (3 digits).',
         operator: 'Please choose your operator.',
         payPhone: 'Invalid Mobile Money number.',
         attendee: 'Please enter this attendee’s name.',
@@ -184,6 +197,13 @@ export default {
         awaiting: 'Approval on your phone',
         confirming: 'Confirmation and ticket issuance',
       },
+      // Same steps, seen from the card side
+      cardSteps: {
+        initiating: 'Checking the card',
+        awaiting: 'Bank authentication',
+        confirming: 'Confirmation and ticket issuance',
+      },
+      cardAwaiting: 'A payment of **{amount}** is being authorised by your bank on card **{card}**. If your bank asks for it, confirm the operation (code by SMS or app).',
       awaiting: 'A payment request of **{amount}** has been sent to **{phone}**. Approve it by entering your {op} PIN.',
       noPrompt: 'No notification? Dial {ussd} and check your pending approvals.',
       ussd: { mtn: '*126#', orange: '#150#' },
@@ -199,7 +219,7 @@ export default {
     confirmation: {
       title: 'Confirmation',
       heading: 'It’s confirmed, *you’ll be there*!',
-      lead: 'Thank you {name}. Your order is confirmed; a summary will be sent to {email}.',
+      lead: 'Thank you {name}. Your order is confirmed.',
       order: 'Order',
       date: 'Date',
       paidWith: 'Paid with',
@@ -218,6 +238,16 @@ export default {
       notFoundTitle: 'Order not found',
       notFoundText: 'This order does not exist on this device. If you have already paid, check your confirmation e-mail or contact the secretariat.',
       demo: 'Demo order — this ticket is not valid for entry.',
+      // E-mail receipt (see src/services/email.js)
+      receipt: {
+        sending: 'Sending your receipt…',
+        sent: 'Receipt sent to {email}. Do check your spam folder.',
+        queued: 'Your receipt is on its way to {email}.',
+        failed: 'We could not send your receipt. Write to us and we will send it again.',
+        demo: 'Demo mode: no e-mail is sent.',
+        retry: 'Try again',
+        contact: 'Contact us',
+      },
     },
 
     // ----------------------------------------------------------------------- Flyer

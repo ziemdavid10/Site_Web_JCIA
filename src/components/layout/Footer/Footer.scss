@@ -27,7 +27,9 @@
     }
   }
 
-  &__brand img {
+  // Le logo JCIA, enfant direct du bloc identité (la règle ne doit pas
+  // s'appliquer aux autres images du bloc, comme le logo de l'organisateur)
+  &__brand > img {
     width: 200px;
     height: auto;
     margin-bottom: $space-5;
@@ -63,17 +65,22 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 92px;
-    height: 58px;
-    padding: 6px;
-    background: $white;
+    width: 112px;
+    height: 68px;
+    padding: 8px;
+    background: none;
     border-radius: $radius-sm;
     box-shadow: inset 0 0 0 1px rgba($navy, 0.08);
 
     img {
       display: block;
+      // Dimensions et marges forcées : l'image reste entièrement dans la
+      // pastille, quelles que soient les règles voisines.
       width: 100%;
       height: 100%;
+      max-width: 100%;
+      max-height: 100%;
+      margin: 0;
       object-fit: contain;
     }
   }

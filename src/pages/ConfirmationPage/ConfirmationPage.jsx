@@ -11,6 +11,7 @@ import { formatXAF } from '@/utils/money'
 import { formatCmPhone } from '@/utils/phone'
 import { buildEventIcsHref } from '@/utils/calendar'
 import { canGenerateFlyer, getOrder, isConfirmed } from '@/services/orders'
+import { receiptFallbackHref, requestOrderReceipt } from '@/services/email'
 import useDocumentMeta from '@/hooks/useDocumentMeta'
 import logoWhite from '@/assets/images/brand/logo-jcia-white-sm.webp'
 import './ConfirmationPage.scss'
@@ -46,6 +47,49 @@ function useTicketQrCodes(order) {
 }
 
 /**
+ * Demande au serveur de billetterie l'envoi du récapitulatif, une seule fois
+ * par commande et par session : si le visiteur revient sur cette page (retour
+ * arrière, lien gardé), aucun second e-mail n'est demandé. Le serveur reçoit
+ * en plus une clé d'idempotence, ce qui garantit l'absence de doublon même
+ * depuis un autre appareil.
+ */
+const receiptRequests = new Map()
+
+/** Icône associée à chaque état de l'envoi */
+const RECEIPT_ICON = { sending: 'clock', sent: 'mail', queued: 'mail', demo: 'info', failed: 'alert' }
+
+function useOrderReceipt(order) {
+  const [state, setState] = useState('sending')
+  const [attempt, setAttempt] = useState(0)
+
+  useEffect(() => {
+    if (!order) return undefined
+    let cancelled = false
+    // On garde la PROMESSE, pas seulement son résultat : deux affichages
+    // simultanés de la page partagent ainsi le même et unique appel.
+    let request = receiptRequests.get(order.id)
+    if (!request) {
+      request = requestOrderReceipt(order)
+      receiptRequests.set(order.id, request)
+    }
+    request.then((result) => !cancelled && setState(result))
+    return () => {
+      cancelled = true
+    }
+  }, [order, attempt])
+
+  // Nouvelle tentative après un échec : le visiteur garde la main
+  const retry = () => {
+    if (!order) return
+    receiptRequests.delete(order.id)
+    setState('sending')
+    setAttempt((n) => n + 1)
+  }
+
+  return [state, retry]
+}
+
+/**
  * <ConfirmationPage /> — commande confirmée : billets électroniques (QR code),
  * détails du paiement, ajout à l'agenda, impression, et accès au générateur de
  * flyer « J'y serai ».
@@ -56,6 +100,7 @@ export default function ConfirmationPage() {
   const { orderId } = useParams()
   const order = useMemo(() => getOrder(orderId), [orderId])
   const codes = useTicketQrCodes(isConfirmed(order) ? order : null)
+  const [receipt, retryReceipt] = useOrderReceipt(isConfirmed(order) ? order : null)
   const { routes, payment } = CONFIG
   useDocumentMeta(`${c.title} | ${t.event.shortName}`, { noindex: true })
 
@@ -108,6 +153,31 @@ export default function ConfirmationPage() {
               <Icon name="info" size={16} /> {c.demo}
             </p>
           )}
+
+          {/* État réel de l'envoi du récapitulatif : on n'annonce « envoyé »
+              que lorsque le serveur l'a confirmé. */}
+          <p className={`confirmation__receipt is-${receipt ?? 'sending'}`} aria-live="polite">
+            <Icon name={RECEIPT_ICON[receipt] ?? 'clock'} size={16} />
+            <span>
+              {receipt === 'demo'
+                ? c.receipt.demo
+                : receipt === 'failed'
+                  ? c.receipt.failed
+                  : receipt === 'sending'
+                    ? c.receipt.sending
+                    : fill(c.receipt[receipt] ?? c.receipt.sent, { email: order.customer.email })}
+            </span>
+            {receipt === 'failed' && (
+              <span className="confirmation__receipt-actions">
+                <button type="button" className="confirmation__receipt-retry" onClick={retryReceipt}>
+                  <Icon name="refresh" size={15} /> {c.receipt.retry}
+                </button>
+                <a href={receiptFallbackHref(order, c.title)}>
+                  <Icon name="mail" size={15} /> {c.receipt.contact}
+                </a>
+              </span>
+            )}
+          </p>
         </div>
         <Frise height={12} />
       </header>
@@ -181,7 +251,9 @@ export default function ConfirmationPage() {
                           <OperatorBadge id={operator.id} size="sm" /> {formatCmPhone(order.payment.phone)}
                         </>
                       ) : (
-                        t.tickets.checkout.methods.card.name
+                        `${payment.cards.find((x) => x.id === order.payment.brand)?.name ?? t.tickets.checkout.methods.card.name}${
+                          order.payment.last4 ? ` •••• ${order.payment.last4}` : ''
+                        }`
                       )}
                     </dd>
                   </div>

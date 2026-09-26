@@ -329,7 +329,7 @@ export default {
       },
       governance: {
         title: 'Égide, organisation & *jury*',
-        egide: 'Le **Bureau Régional de l’UNESCO pour l’Afrique centrale** veille à la conformité du processus avec la Recommandation sur l’éthique de l’IA, participe au jury et attribue la mention « UNESCO Award Winner ». Le **Haut-Commissariat britannique** accueille la soirée de gala dans sa Résidence.',
+        egide: 'Le **Bureau Régional de l’UNESCO pour l’Afrique centrale** veille à la conformité du processus avec la Recommandation sur l’éthique de l’IA, participe au jury et attribue la mention « UNESCO Award Winner ». ',
         organisation: 'La Commission Awards et Gala du Comité d’Organisation (IAC/CAIPI) assure le secrétariat, sous la supervision du Comité Scientifique, garant de la rigueur méthodologique.',
         juryTitle: 'Un jury de 8 membres indépendants',
         jury: [

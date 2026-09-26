@@ -10,6 +10,16 @@ import { CONFIG } from '@/data/config'
 import { formatXAF } from '@/utils/money'
 import { formatSeats, isSoldOut, maxQuantity } from '@/utils/tickets'
 import { detectOperator, formatCmPhone, isValidCmPhone, normalizePhone } from '@/utils/phone'
+import {
+  digitsOnly,
+  detectBrand,
+  formatCardNumber,
+  formatExpiry,
+  isValidCardNumber,
+  isValidCvc,
+  isValidExpiry,
+  last4,
+} from '@/utils/card'
 import { newOrderId, saveOrder } from '@/services/orders'
 import { cleanText, isValidEmail, isValidPersonName } from '@/security/sanitize'
 import { PAYMENT_MODE, processPayment } from '@/services/payment'
@@ -18,7 +28,7 @@ import logoColor from '@/assets/images/brand/logo-jcia-sm.webp'
 import './CheckoutPage.scss'
 
 // Sécurité : longueurs maximales des champs (limitent les abus et les erreurs)
-const MAX = { name: 80, email: 254, phone: 20, org: 120 }
+const MAX = { name: 80, email: 254, phone: 20, org: 120, cardName: 80, cardNumber: 23, exp: 5, cvc: 4 }
 // Après 3 paiements échoués, pause de 60 s avant un nouvel essai (anti-abus)
 const MAX_FAILURES = 3
 const COOLDOWN_MS = 60_000
@@ -97,6 +107,12 @@ export default function CheckoutPage() {
   const [operatorId, setOperatorId] = useState(null) // choix explicite de l'utilisateur
   const [samePhone, setSamePhone] = useState(true)
   const [payPhone, setPayPhone] = useState('')
+  /**
+   * Coordonnées de carte : elles ne vivent que dans cet état, le temps du
+   * paiement. Rien n'est écrit dans le stockage de l'appareil, rien n'est
+   * journalisé ; la commande ne garde que le réseau et les 4 derniers chiffres.
+   */
+  const [card, setCard] = useState({ name: '', number: '', exp: '', cvc: '' })
   const [terms, setTerms] = useState(false)
   const [listed, setListed] = useState(false) // accord pour la liste publique des participants
   const [errors, setErrors] = useState({})
@@ -119,7 +135,8 @@ export default function CheckoutPage() {
   const maxQty = tier ? maxQuantity(tier) : 1 // plafond par commande ET stock restant
   const qty = tier ? Math.min(quantity, maxQty) : 1
   const isFree = tier?.price === 0
-  const isCard = method === 'card' // carte : saisie sur la page sécurisée de la banque
+  const isCard = method === 'card'
+  const cardBrand = detectBrand(card.number)
   const isStudent = tier?.id === 'etudiant'
   const total = tier ? tier.price * qty : 0
   const amount = formatXAF(total, locale)
@@ -132,6 +149,14 @@ export default function CheckoutPage() {
   const setField = (key) => (e) => {
     setValues((v) => ({ ...v, [key]: e.target.value }))
     if (errors[key]) setErrors((errs) => omit(errs, key))
+  }
+
+  /** Saisie d'un champ de carte, remise en forme au fil de la frappe */
+  const setCardField = (key) => (e) => {
+    const raw = e.target.value
+    const value = key === 'number' ? formatCardNumber(raw) : key === 'exp' ? formatExpiry(raw) : key === 'cvc' ? digitsOnly(raw).slice(0, 4) : raw
+    setCard((c) => ({ ...c, [key]: value }))
+    if (errors[`card-${key}`]) setErrors((errs) => omit(errs, `card-${key}`))
   }
 
   const changeTier = (id) => {
@@ -154,12 +179,22 @@ export default function CheckoutPage() {
       if (!operator) e.operator = c.errors.operator
       if (!samePhone && !isValidCmPhone(payPhone)) e.payPhone = c.errors.payPhone
     }
+    if (!isFree && isCard) {
+      if (!isValidPersonName(card.name)) e['card-name'] = c.errors.cardName
+      if (!isValidCardNumber(card.number)) e['card-number'] = c.errors.cardNumber
+      if (!isValidExpiry(card.exp)) e['card-exp'] = c.errors.cardExp
+      if (!isValidCvc(card.cvc, cardBrand ?? 'visa')) e['card-cvc'] = c.errors.cardCvc
+    }
     if (!terms) e.terms = c.errors.terms
     return e
   }
 
   // --- Paiement -----------------------------------------------------------------------------
-  const runPayment = async (order) => {
+  /**
+   * Lance le paiement. Les coordonnées de carte sont passées séparément de la
+   * commande : elles servent à l'appel, puis disparaissent avec le composant.
+   */
+  const runPayment = async (order, cardData) => {
     setPay({ order, status: 'running', step: 'initiating' })
     let result
     try {
@@ -171,6 +206,7 @@ export default function CheckoutPage() {
           method: order.payment.method,
           operator: order.payment.operator,
           phone: order.payment.phone,
+          card: cardData,
           customer: order.customer,
           description: `JCIA 2027 — ${order.tierId} × ${order.quantity}`,
         },
@@ -242,7 +278,7 @@ export default function CheckoutPage() {
       payment: isFree
         ? { status: 'free', method, mode: PAYMENT_MODE }
         : isCard
-          ? { status: 'pending', method: 'card', mode: PAYMENT_MODE }
+          ? { status: 'pending', method: 'card', mode: PAYMENT_MODE, brand: cardBrand, last4: last4(card.number) }
           : {
               status: 'pending',
               method: 'momo',
@@ -257,7 +293,7 @@ export default function CheckoutPage() {
       saveOrder(order)
       navigate(`${routes.confirmation}/${order.id}`)
     } else {
-      runPayment(order)
+      runPayment(order, isCard ? card : undefined)
     }
   }
 
@@ -609,11 +645,79 @@ export default function CheckoutPage() {
                   ))}
                 </div>
 
-                {/* Carte : aucune saisie ici — redirection vers la page de la banque */}
+                {/* --- Carte bancaire : saisie guidée ------------------------- */}
                 {isCard && (
-                  <p className="co-secure co-secure--card">
-                    <Icon name="lock" size={16} /> {c.cardInfo}
-                  </p>
+                  <div className="co-card">
+                    <Field id={`${uid}-cardname`} label={c.card.name} error={errors['card-name']}>
+                      <input
+                        id={`${uid}-cardname`}
+                        type="text"
+                        autoComplete="cc-name"
+                        maxLength={MAX.cardName}
+                        placeholder={c.card.namePlaceholder}
+                        value={card.name}
+                        onChange={setCardField('name')}
+                        {...aria(`${uid}-cardname`, errors['card-name'])}
+                      />
+                    </Field>
+
+                    <Field
+                      id={`${uid}-cardnumber`}
+                      label={c.card.number}
+                      hint={c.card.numberHint}
+                      error={errors['card-number']}
+                      className="co-card__number"
+                    >
+                      <div className="co-card__input">
+                        <input
+                          id={`${uid}-cardnumber`}
+                          type="text"
+                          inputMode="numeric"
+                          autoComplete="cc-number"
+                          maxLength={MAX.cardNumber}
+                          placeholder="4242 4242 4242 4242"
+                          value={card.number}
+                          onChange={setCardField('number')}
+                          {...aria(`${uid}-cardnumber`, errors['card-number'], true)}
+                        />
+                        {/* Réseau reconnu en direct */}
+                        {cardBrand && <OperatorBadge id={cardBrand} size="sm" className="co-card__brand" />}
+                      </div>
+                    </Field>
+
+                    <div className="co-row co-row--tight">
+                      <Field id={`${uid}-cardexp`} label={c.card.exp} error={errors['card-exp']}>
+                        <input
+                          id={`${uid}-cardexp`}
+                          type="text"
+                          inputMode="numeric"
+                          autoComplete="cc-exp"
+                          maxLength={MAX.exp}
+                          placeholder="MM/AA"
+                          value={card.exp}
+                          onChange={setCardField('exp')}
+                          {...aria(`${uid}-cardexp`, errors['card-exp'])}
+                        />
+                      </Field>
+                      <Field id={`${uid}-cardcvc`} label={c.card.cvc} hint={c.card.cvcHint} error={errors['card-cvc']}>
+                        <input
+                          id={`${uid}-cardcvc`}
+                          type="text"
+                          inputMode="numeric"
+                          autoComplete="cc-csc"
+                          maxLength={MAX.cvc}
+                          placeholder="123"
+                          value={card.cvc}
+                          onChange={setCardField('cvc')}
+                          {...aria(`${uid}-cardcvc`, errors['card-cvc'], true)}
+                        />
+                      </Field>
+                    </div>
+
+                    <p className="co-secure co-secure--card">
+                      <Icon name="lock" size={16} /> {c.cardInfo}
+                    </p>
+                  </div>
                 )}
 
                 {!isCard && (
@@ -756,7 +860,7 @@ export default function CheckoutPage() {
               <dd>{isFree ? t.tickets.page.free : amount}</dd>
             </div>
           </dl>
-          <Button type="submit" form="checkout-form" size="lg" icon={isFree ? 'check' : 'lock'} className="co-summary__submit">
+          <Button type="submit" form="checkout-form" size="lg" icon={isFree ? 'check' : 'lock'} className="co-summary__submit" disabled>
             {submitLabel}
           </Button>
           {!isFree && (
@@ -785,8 +889,14 @@ export default function CheckoutPage() {
           status={pay.status}
           step={pay.step}
           amount={formatXAF(pay.order.total, locale)}
-          phone={formatCmPhone(pay.order.payment.phone)}
+          phone={pay.order.payment.phone ? formatCmPhone(pay.order.payment.phone) : ''}
           operator={payment.operators.find((o) => o.id === pay.order.payment.operator)}
+          method={pay.order.payment.method}
+          cardLabel={
+            pay.order.payment.method === 'card'
+              ? `${payment.cards.find((x) => x.id === pay.order.payment.brand)?.name ?? ''} •••• ${pay.order.payment.last4 ?? ''}`.trim()
+              : undefined
+          }
           demo={pay.order.payment.mode === 'demo'}
           onRetry={() => {
             // Trop d'échecs : on referme et on affiche le délai d'attente
@@ -796,7 +906,10 @@ export default function CheckoutPage() {
               setErrors({ summary: fill(c.errors.tooMany, { s: left }) })
               return
             }
-            runPayment({ ...pay.order, payment: { ...pay.order.payment, status: 'pending' } })
+            runPayment(
+              { ...pay.order, payment: { ...pay.order.payment, status: 'pending' } },
+              pay.order.payment.method === 'card' ? card : undefined,
+            )
           }}
           onClose={() => setPay(null)}
         />

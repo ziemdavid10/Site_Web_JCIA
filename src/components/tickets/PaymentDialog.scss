@@ -271,3 +271,13 @@
     animation: none !important;
   }
 }
+
+// Paiement par carte : réseau et 4 derniers chiffres dans l'en-tête
+.pay-dialog__card {
+  padding: 4px 12px;
+  font-size: 0.85rem;
+  font-weight: $fw-semibold;
+  font-variant-numeric: tabular-nums;
+  background: fg(0.08);
+  border-radius: $radius-pill;
+}
