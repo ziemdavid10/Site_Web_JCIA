@@ -65,7 +65,8 @@ export default function SpeakerDialog({ speaker, category, categoryLabel, onClos
           <h3>{sp.abstractLabel}</h3>
           <p>{d.abstract}</p>
           <h3>{sp.bioLabel}</h3>
-          <p>{d.bio}</p>
+          {/* <p>{d.bio}</p> */}
+          <a href={d.bio} target="_blank" rel="noopener noreferrer">{d.bio}</a>
 
           <p className="speaker-dialog__session">
             <Icon name="calendar" size={16} />
