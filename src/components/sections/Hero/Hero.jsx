@@ -47,12 +47,12 @@ export default function Hero() {
              {/* le nom de l'événement */}
             <span className="hero__title-main">
               {h.titleStart}
-              <span className="hero__title-accent">{h.titleAccent} 2027</span>
+              <span className="hero__title-accent">{h.titleAccent}</span>
               {h.titleEnd}
             </span>
           </h1>
 
-          <p className="hero__theme">Thème:{rich(h.theme)}</p>
+          <p className="hero__theme">{rich(h.theme)}</p>
 
           <ul className="hero__meta">
             <li>

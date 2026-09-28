@@ -10,7 +10,7 @@ export default {
   // ---------------------------------------------------------------------------
   event: {
     shortName: 'JCIA 2027',
-    name: "Journées Camerounaises de l'Intelligence Artificielle",
+    name: "Journées Camerounaises de l'Intelligence Artificielle 2027",
     edition: '3e édition',
     tagline: "L'IA Made in Cameroun",
     theme: "Penser l'Intelligence Artificielle au Cameroun, pour le Cameroun",
@@ -25,10 +25,10 @@ export default {
     badgeStrong: 'AI for Good Global Summit',
     // Titre principal : le nom complet de l'événement ; sous-titre : l'organisateur
     titleStart: 'Journées Camerounaises de l’',
-    titleAccent: 'Intelligence Artificielle',
+    titleAccent: 'Intelligence Artificielle 2027',
     titleEnd: '',
     kicker: 'Intelligence Artificielle Cameroun — Cameroon AI Policy Institute',
-    theme: '« Penser l’Intelligence Artificielle **au Cameroun**, **pour le Cameroun** »',
+    theme: 'Thème: « Penser l’Intelligence Artificielle **au Cameroun**, **pour le Cameroun** »',
     ctaRegister: 'Réserver ma place',
     ctaAwards: 'Candidater aux CAIA 2027',
     countdown: 'Ouverture des JCIA dans',

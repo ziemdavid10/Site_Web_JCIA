@@ -10,7 +10,7 @@ export default {
   // ---------------------------------------------------------------------------
   event: {
     shortName: 'JCIA 2027',
-    name: 'Cameroon Artificial Intelligence Days',
+    name: 'Cameroon Artificial Intelligence Days 2027',
     edition: '3rd edition',
     tagline: 'AI Made in Cameroon',
     theme: 'Thinking Artificial Intelligence in Cameroon, for Cameroon',
@@ -26,9 +26,9 @@ export default {
     // Main title: the full event name; second line: the organiser
     titleStart: 'Cameroon ',
     titleAccent: 'Artificial Intelligence',
-    titleEnd: ' Days',
+    titleEnd: ' Days 2027',
     kicker: 'Intelligence Artificielle Cameroun — Cameroon AI Policy Institute',
-    theme: '“Thinking Artificial Intelligence **in Cameroon**, **for Cameroon**”',
+    theme: 'Theme: “Thinking Artificial Intelligence **in Cameroon**, **for Cameroon**”',
     ctaRegister: 'Book my seat',
     ctaAwards: 'Apply for CAIA 2027',
     countdown: 'JCIA opens in',
