@@ -151,7 +151,7 @@ export default function Header() {
             {t.header.donate}
           </Button>
           <Button as={Link} to={routes.tickets} size="sm" icon="ticket" className="header__cta">
-            {t.header.cta}
+            {t.header.cta}  
           </Button>
           <button
             type="button"

@@ -179,8 +179,9 @@
   // navigation complète occupe déjà la barre : le bouton se réduit alors à son
   // cœur (libellé accessible conservé), puis retrouve son texte au-delà.
   &__donate {
-    display: none;
+    display: none; // pour 
     white-space: nowrap;
+    width: 150px;
 
     @include mq('md') {
       display: inline-flex;
