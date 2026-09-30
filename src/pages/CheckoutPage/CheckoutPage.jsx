@@ -860,7 +860,8 @@ export default function CheckoutPage() {
               <dd>{isFree ? t.tickets.page.free : amount}</dd>
             </div>
           </dl>
-          <Button type="submit" form="checkout-form" size="lg" icon={isFree ? 'check' : 'lock'} className="co-summary__submit" disabled>
+          {/* Bouton pour finaliser le paiement */}
+          <Button type="submit" form="checkout-form" size="lg" icon={isFree ? 'check' : 'lock'} className="co-summary__submit" disabled >
             {submitLabel}
           </Button>
           {!isFree && (

@@ -21,8 +21,8 @@ export default {
 
   // ---------------------------------------------------------------------------
   hero: {
-    badgeLead: 'Side event préparatoire au',
-    badgeStrong: 'AI for Good Global Summit',
+    badgeLead: '',
+    badgeStrong: 'Geneva AI summit - Road to Geneva',
     // Titre principal : le nom complet de l'événement ; sous-titre : l'organisateur
     titleStart: 'Journées Camerounaises de l’',
     titleAccent: 'Intelligence Artificielle 2027',
@@ -432,7 +432,7 @@ export default {
     featuredLabel: 'Organisateur & label international',
     featured: [
       { id: 'iac-caipi', name: 'IAC – CAIPI', role: 'Organisateur', detail: 'Intelligence Artificielle Cameroun – Cameroon AI Policy Institute' },
-      { id: 'road-to-geneva', name: 'Road to Geneva AI Summit', role: 'Label international', detail: 'Étape camerounaise vers le AI for Good Global Summit (Genève, 21–22 juin 2027)' },
+      { id: 'road-to-geneva', name: 'Geneva AI summit', role: 'Label international', detail: 'Étape camerounaise vers le AI for Good Global Summit (Genève, 21–22 juin 2027)' },
     ],
     pastLabel: 'Partenaires des éditions précédentes',
     past: [
