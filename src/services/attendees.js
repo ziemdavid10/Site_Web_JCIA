@@ -21,7 +21,7 @@ import { cleanText } from '@/security/sanitize'
 function profileOfTier(tierId) {
   if (tierId === 'etudiant') return 'etudiant'
   if (tierId === 'en-ligne') return 'enLigne'
-  if (tierId === 'professionnel') return 'entreprise'
+  if (tierId === 'vip') return 'entreprise'
   return 'entreprise'
 }
 

@@ -8,7 +8,7 @@ import { rich } from '@/i18n/rich'
 import { fill } from '@/i18n/format'
 import { CONFIG } from '@/data/config'
 import { formatXAF } from '@/utils/money'
-import { formatSeats, isSoldOut, maxQuantity } from '@/utils/tickets'
+import { formatSeats, getTicketPricing, isSoldOut, isUnlimitedQuota, maxQuantity } from '@/utils/tickets'
 import { detectOperator, formatCmPhone, isValidCmPhone, normalizePhone } from '@/utils/phone'
 import {
   digitsOnly,
@@ -94,7 +94,8 @@ export default function CheckoutPage() {
   const navigate = useNavigate()
   const { tierId = 'standard' } = useParams()
   const { tickets, routes, payment } = CONFIG
-  const tier = tickets.tiers.find((x) => x.id === tierId)
+  const requestedTierId = tierId === 'professionnel' ? 'vip' : tierId // compatibilité avec les anciens liens
+  const tier = tickets.tiers.find((x) => x.id === requestedTierId)
   const uid = useId()
   const formRef = useRef(null)
   const alive = useRef(true)
@@ -134,11 +135,13 @@ export default function CheckoutPage() {
   // --- Valeurs dérivées -----------------------------------------------------------------
   const maxQty = tier ? maxQuantity(tier) : 1 // plafond par commande ET stock restant
   const qty = tier ? Math.min(quantity, maxQty) : 1
-  const isFree = tier?.price === 0
+  const pricing = tier ? getTicketPricing(tier) : { originalPrice: 0, price: 0, discounted: false, discountPercent: 0 }
+  const unitPrice = pricing.price
+  const isFree = unitPrice === 0
   const isCard = method === 'card'
   const cardBrand = detectBrand(card.number)
   const isStudent = tier?.id === 'etudiant'
-  const total = tier ? tier.price * qty : 0
+  const total = unitPrice * qty
   const amount = formatXAF(total, locale)
   const effectivePayPhone = samePhone ? values.phone : payPhone
   const detected = detectOperator(effectivePayPhone)
@@ -263,7 +266,7 @@ export default function CheckoutPage() {
       lang,
       tierId: tier.id,
       quantity: qty,
-      unitPrice: tier.price,
+      unitPrice,
       total,
       currency: tickets.currency,
       // Textes nettoyés (caractères invisibles retirés, longueur limitée)
@@ -451,7 +454,7 @@ export default function CheckoutPage() {
                       <small>{t.tickets.tiers[x.id].tagline}</small>
                     </span>
                     <span className="co-tier__price">
-                      {out ? t.tickets.page.soldOut : formatXAF(x.price, locale)}
+                      {out ? t.tickets.page.soldOut : getTicketPricing(x).price === 0 ? t.tickets.page.free : formatXAF(getTicketPricing(x).price, locale)}
                     </span>
                   </label>
                 )
@@ -488,7 +491,7 @@ export default function CheckoutPage() {
               {qty >= maxQty && maxQty > 1 && <small>{c.maxReached}</small>}
               <small className="co-qty__stock">
                 <Icon name="ticket" size={14} />
-                {fill(t.tickets.page.quota, { n: formatSeats(tier.quota, locale) })}
+                {isUnlimitedQuota(tier) ? t.tickets.page.unlimitedQuota : fill(t.tickets.page.quota, { n: formatSeats(tier.quota, locale) })}
               </small>
             </div>
           </fieldset>
@@ -842,10 +845,16 @@ export default function CheckoutPage() {
             <div>
               <strong>{tt.name}</strong>
               <small>
-                {qty} × {isFree ? t.tickets.page.free : formatXAF(tier.price, locale)}
+                {qty} × {isFree ? t.tickets.page.free : formatXAF(unitPrice, locale)}
               </small>
             </div>
           </div>
+          {!isFree && pricing.discounted && (
+            <p className="co-summary__discount">
+              <span>{formatXAF(pricing.originalPrice * qty, locale)}</span>
+              <strong>{c.discount} -{pricing.discountPercent}%</strong>
+            </p>
+          )}
           <dl>
             <div>
               <dt>{c.subtotal}</dt>

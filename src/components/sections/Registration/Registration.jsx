@@ -5,7 +5,7 @@ import { useI18n } from '@/i18n/context'
 import { useConsent } from '@/consent/context'
 import { CONFIG } from '@/data/config'
 import { formatXAF } from '@/utils/money'
-import { formatSeats, isLowStock, isSoldOut, remainingSeats } from '@/utils/tickets'
+import { formatSeats, getTicketPricing, isLowStock, isSoldOut, isUnlimitedQuota, remainingSeats } from '@/utils/tickets'
 import { fill } from '@/i18n/format'
 import './Registration.scss'
 
@@ -80,12 +80,14 @@ function TicketsTeaser() {
                   <small>
                     {out
                       ? t.tickets.page.soldOutCta
-                      : fill(low ? t.tickets.page.remaining : t.tickets.page.seatsLeftShort, {
-                          n: formatSeats(remainingSeats(tier), locale),
-                        })}
+                      : isUnlimitedQuota(tier)
+                        ? t.tickets.page.unlimitedQuota
+                        : fill(low ? t.tickets.page.remaining : t.tickets.page.seatsLeftShort, {
+                            n: formatSeats(remainingSeats(tier), locale),
+                          })}
                   </small>
                 </span>
-                <span className="tickets-teaser__price">{tier.price === 0 ? r.from : formatXAF(tier.price, locale)}</span>
+                <span className="tickets-teaser__price">{tier.price === 0 ? r.from : formatXAF(getTicketPricing(tier).price, locale)}</span>
                 <Icon name="chevron-right" size={20} className="tickets-teaser__chevron" />
               </Link>
             </li>

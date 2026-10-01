@@ -1,4 +1,5 @@
 import { CONFIG } from '@/data/config'
+import { getTicketPrice } from '@/utils/tickets'
 import { storage } from '@/utils/storage'
 import { ORDER_ID_RE, cleanText } from '@/security/sanitize'
 
@@ -44,10 +45,11 @@ function sanitizeOrder(o) {
   const tier = CONFIG.tickets.tiers.find((t) => t.id === o.tierId)
   const quantity = Number(o.quantity)
   if (!Number.isInteger(quantity) || quantity < 1 || quantity > tier.maxQty) return null
-  if (Number(o.total) !== tier.price * quantity) return null // montant falsifié
+  const unitPrice = getTicketPrice(tier, o.createdAt)
+  if (Number(o.total) !== unitPrice * quantity) return null // montant falsifié
   const p = o.payment ?? {}
   if (!STATUSES.includes(p.status)) return null
-  if (p.status === 'free' && tier.price !== 0) return null
+  if (p.status === 'free' && unitPrice !== 0) return null
   if (p.operator && !OPERATORS.includes(p.operator)) return null
   if (p.method && !METHODS.includes(p.method)) return null
   const attendees = Array.isArray(o.attendees) ? o.attendees.slice(0, quantity).map((a) => cleanText(a, 80)) : []
@@ -58,8 +60,8 @@ function sanitizeOrder(o) {
     lang: o.lang === 'en' ? 'en' : 'fr',
     tierId: o.tierId,
     quantity,
-    unitPrice: tier.price,
-    total: tier.price * quantity,
+    unitPrice,
+    total: unitPrice * quantity,
     currency: CONFIG.tickets.currency,
     customer: {
       name: cleanText(o.customer?.name, 80),

@@ -20,6 +20,7 @@ export default {
       ],
       tiersTitle: 'Nos billets',
       quota: 'Quota : {n} billets',
+      unlimitedQuota: 'Sans limite',
       seatsLeft: '{n} places restantes sur {total}',
       seatsLeftShort: '{n} places restantes',
       remaining: 'Plus que {n} places',
@@ -36,6 +37,7 @@ export default {
         subject: 'Réservation JCIA 2027 — avant l’ouverture de la billetterie',
       },
       free: 'Gratuit',
+      promotion: { tag: 'Offre de lancement', text: '-30 % du 1er octobre au 31 décembre 2026 inclus' },
       choose: 'Choisir ce billet',
       chooseClosed: 'Bientôt disponible',
       chooseFree: 'Réserver gratuitement',
@@ -46,19 +48,21 @@ export default {
         title: 'Comparer les billets',
         feature: 'Inclus',
         // Une valeur par tarif, dans l'ordre de CONFIG.tickets.tiers :
-        // Étudiant · Standard · En ligne · Professionnel
+        // Gratuit · Étudiant · Standard · En ligne · VIP
         rows: [
-          { label: 'Retransmission en direct (plénières, pitch, Awards)', values: [true, true, true, true] },
-          { label: 'Accès au Hilton les 27 & 28 avril', values: [true, true, false, true] },
-          { label: 'Cérémonie d’ouverture et conférences plénières', values: [true, true, true, true] },
-          { label: 'Salon National 100 % IA & AI Career Fair', values: [true, true, false, true] },
-          { label: 'Forums (Women in AI, Young AI Leaders) & Startup Pitch', values: [true, true, true, true] },
-          { label: 'Une masterclass avec attestation', values: [true, true, true, true] },
-          { label: 'Replay des sessions pendant 30 jours', values: [false, false, true, true] },
-          { label: 'Rendez-vous B2B / B2G via l’application', values: [false, true, true, true] },
-          { label: 'Déjeuners de réseautage', values: [false, false, false, true] },
-          { label: 'Kit participant premium', values: [false, false, false, true] },
-          { label: 'Flyer personnalisé « J’y serai »', values: [true, true, true, true] },
+          { label: 'Visite des stands & Salon 100 % IA', values: [true, true, true, false, true] },
+          { label: 'Accès aux 2 journées', values: [false, true, true, false, true] },
+          { label: 'Young AI Leaders', values: [false, true, true, false, true] },
+          { label: 'Salon de l’emploi / AI Career Fair', values: [false, true, true, false, true] },
+          { label: 'Apéro au Hilton', values: [false, false, true, false, true] },
+          { label: 'Retransmission en direct', values: [false, false, true, true, true] },
+          { label: 'Conférence plénière', values: [false, false, true, false, true] },
+          { label: 'Forum Women in AI', values: [false, false, true, false, true] },
+          { label: 'Masterclass avec attestation', values: [false, false, false, true, true] },
+          { label: 'Certificat / attestation de participation', values: [false, false, true, true, true] },
+          { label: 'Replay des sessions pendant 30 jours', values: [false, false, true, true, true] },
+          { label: 'Rendez-vous B2B / B2G', values: [false, false, true, false, true] },
+          { label: 'Déjeuner de réseautage de CAIA', values: [false, false, false, false, true] },
         ],
       },
       groups: {
@@ -84,30 +88,34 @@ export default {
 
     // ----------------------------------------------------------------------- Billets
     tiers: {
-      'en-ligne': {
-        name: 'En ligne',
-        tagline: 'Suivez l’intégralité des travaux en direct, où que vous soyez.',
-        features: ['Plénières et forums en direct', 'Une masterclass avec attestation', 'Replay des sessions pendant 30 jours', 'Rendez-vous B2B / B2G via l’application'],
-        note: 'Le lien de connexion est envoyé par e-mail la veille de l’événement.',
+      gratuit: {
+        name: 'Gratuit',
+        tagline: 'Découvrez les stands et le Salon 100 % IA.',
+        features: ['Visite des stands', 'Accès au Salon 100 % IA'],
       },
       etudiant: {
         name: 'Étudiant',
-        tagline: 'Pour les étudiants et jeunes chercheurs.',
-        features: ['Accès aux 2 journées', 'Plénières, Salon & forums', 'Young AI Leaders Forum', 'Une masterclass avec attestation'],
+        tagline: 'Le pass 2 jours dédié aux étudiants.',
+        features: ['Accès aux 2 journées', 'Salon 100 % IA', 'Young AI Leaders', 'Salon de l’emploi'],
         note: 'Carte d’étudiant en cours de validité exigée à l’accueil.',
       },
       standard: {
         name: 'Standard',
         tagline: 'L’expérience complète des JCIA.',
-        features: ['Accès aux 2 journées', 'Plénières, Salon & forums', 'Une masterclass avec attestation', 'Rendez-vous B2B / B2G'],
+        features: ['Tout le billet Étudiant', 'Apéro au Hilton', 'Retransmission', 'Conférence plénière', 'Forum Women in AI', 'Certificat de participation', 'Replay pendant 30 jours', 'RDV B2B et B2G'],
       },
-      professionnel: {
-        name: 'Professionnel',
-        tagline: 'Pour les décideurs, entreprises et investisseurs.',
-        features: ['Tout le billet Standard', 'Déjeuners de réseautage', 'Places réservées aux plénières', 'Kit participant premium'],
+      'en-ligne': {
+        name: 'En ligne',
+        tagline: 'Suivez les sessions à distance.',
+        features: ['Retransmission', 'Masterclass avec attestation', 'Replay des sessions pendant 30 jours'],
+        note: 'Le lien de connexion est envoyé par e-mail avant l’événement.',
+      },
+      vip: {
+        name: 'VIP',
+        tagline: 'Tous les avantages Standard et En ligne, avec un déjeuner de réseautage CAIA.',
+        features: ['Tous les avantages Standard et En ligne', 'Déjeuner de réseautage de CAIA'],
       },
     },
-
     // ----------------------------------------------------------------------- Commande
     checkout: {
       title: 'Commande',
@@ -158,6 +166,7 @@ export default {
       terms: 'J’accepte les [conditions d’utilisation](/conditions-utilisation) et la [politique de confidentialité](/confidentialite). *',
       summaryTitle: 'Récapitulatif',
       subtotal: 'Sous-total',
+      discount: 'Promotion',
       fees: 'Frais de service',
       feesValue: 'Inclus',
       total: 'Total',

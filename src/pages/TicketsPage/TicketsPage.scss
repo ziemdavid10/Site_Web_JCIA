@@ -56,6 +56,31 @@
   }
 }
 
+.tickets-promo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: $space-2 $space-3;
+  margin: 0 auto $space-6;
+  padding: $space-3 $space-4;
+  border: 1px solid $orange;
+  border-radius: $radius-lg;
+  background: rgba($orange, 0.1);
+
+  strong {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: $rust;
+  }
+
+  span {
+    font-size: 0.9rem;
+    font-weight: $fw-semibold;
+  }
+}
+
 .tier-card {
   --tier: #{$orange};
   position: relative;
@@ -241,6 +266,25 @@
     span {
       font-size: 0.8rem;
       color: $text-muted;
+    }
+
+    .tier-card__price-old {
+      font-size: 0.85rem;
+      text-decoration: line-through;
+      opacity: 0.65;
+    }
+
+    .tier-card__discount {
+      align-self: flex-start;
+      margin-top: 2px;
+      padding: 0.18rem 0.45rem;
+      font-size: 0.68rem;
+      font-style: normal;
+      font-weight: $fw-bold;
+      letter-spacing: 0.04em;
+      color: $navy;
+      background: $orange;
+      border-radius: $radius-pill;
     }
   }
 

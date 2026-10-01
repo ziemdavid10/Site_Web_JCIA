@@ -354,6 +354,24 @@
   }
 }
 
+.co-summary__discount {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: $space-2;
+  margin: 0 0 $space-3;
+  font-size: 0.82rem;
+
+  span {
+    color: $text-muted;
+    text-decoration: line-through;
+  }
+
+  strong {
+    color: $rust;
+  }
+}
+
 .co-note {
   display: flex;
   align-items: center;

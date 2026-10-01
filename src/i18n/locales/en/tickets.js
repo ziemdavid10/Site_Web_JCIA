@@ -20,6 +20,7 @@ export default {
       ],
       tiersTitle: 'Our tickets',
       quota: 'Quota: {n} tickets',
+      unlimitedQuota: 'No limit',
       seatsLeft: '{n} of {total} seats left',
       seatsLeftShort: '{n} seats left',
       remaining: 'Only {n} seats left',
@@ -36,6 +37,7 @@ export default {
         subject: 'JCIA 2027 booking — before ticketing opens',
       },
       free: 'Free',
+      promotion: { tag: 'Launch offer', text: '30% off from 1 October through 31 December 2026 inclusive' },
       choose: 'Choose this ticket',
       chooseClosed: 'Coming soon',
       chooseFree: 'Book for free',
@@ -46,19 +48,21 @@ export default {
         title: 'Compare tickets',
         feature: 'Included',
         // One value per ticket, in the order of CONFIG.tickets.tiers:
-        // Student · Standard · Online · Professional
+        // Free · Student · Standard · Online · VIP
         rows: [
-          { label: 'Live stream (plenaries, pitch, Awards)', values: [true, true, true, true] },
-          { label: 'Access to the Hilton on 27 & 28 April', values: [true, true, false, true] },
-          { label: 'Opening ceremony and plenary conferences', values: [true, true, true, true] },
-          { label: 'National 100% AI Expo & AI Career Fair', values: [true, true, false, true] },
-          { label: 'Forums (Women in AI, Young AI Leaders) & Startup Pitch', values: [true, true, true, true] },
-          { label: 'One masterclass with certificate', values: [true, true, true, true] },
-          { label: 'Session replays for 30 days', values: [false, false, true, true] },
-          { label: 'B2B / B2G meetings via the app', values: [false, true, true, true] },
-          { label: 'Networking lunches', values: [false, false, false, true] },
-          { label: 'Premium attendee kit', values: [false, false, false, true] },
-          { label: 'Personalised “I’ll be there” flyer', values: [true, true, true, true] },
+          { label: 'Stands & 100% AI Expo access', values: [true, true, true, false, true] },
+          { label: 'Access to both days', values: [false, true, true, false, true] },
+          { label: 'Young AI Leaders', values: [false, true, true, false, true] },
+          { label: 'AI Career Fair', values: [false, true, true, false, true] },
+          { label: 'Hilton networking reception', values: [false, false, true, false, true] },
+          { label: 'Live stream', values: [false, false, true, true, true] },
+          { label: 'Plenary conference', values: [false, false, true, false, true] },
+          { label: 'Women in AI Forum', values: [false, false, true, false, true] },
+          { label: 'Masterclass with attendance certificate', values: [false, false, false, true, true] },
+          { label: 'Participation certificate / attendance certificate', values: [false, false, true, true, true] },
+          { label: 'Session replays for 30 days', values: [false, false, true, true, true] },
+          { label: 'B2B / B2G meetings', values: [false, false, true, false, true] },
+          { label: 'CAIA networking lunch', values: [false, false, false, false, true] },
         ],
       },
       groups: {
@@ -84,30 +88,34 @@ export default {
 
     // ----------------------------------------------------------------------- Tickets
     tiers: {
-      'en-ligne': {
-        name: 'Online',
-        tagline: 'Follow the whole programme live, wherever you are.',
-        features: ['Plenaries and forums live', 'One masterclass with certificate', 'Session replays for 30 days', 'B2B / B2G meetings via the app'],
-        note: 'The connection link is emailed the day before the event.',
+      gratuit: {
+        name: 'Free',
+        tagline: 'Discover the stands and the 100% AI Expo.',
+        features: ['Stand visits', '100% AI Expo access'],
       },
       etudiant: {
         name: 'Student',
-        tagline: 'For students and young researchers.',
-        features: ['Access to both days', 'Plenaries, Expo & forums', 'Young AI Leaders Forum', 'One masterclass with certificate'],
+        tagline: 'A two-day pass dedicated to students.',
+        features: ['Access to both days', '100% AI Expo', 'Young AI Leaders', 'AI Career Fair'],
         note: 'A valid student card is required at the entrance.',
       },
       standard: {
         name: 'Standard',
         tagline: 'The full JCIA experience.',
-        features: ['Access to both days', 'Plenaries, Expo & forums', 'One masterclass with certificate', 'B2B / B2G meetings'],
+        features: ['Everything in Student', 'Hilton networking reception', 'Live stream', 'Plenary conference', 'Women in AI Forum', 'Participation certificate', '30-day replay', 'B2B and B2G meetings'],
       },
-      professionnel: {
-        name: 'Professional',
-        tagline: 'For decision-makers, companies and investors.',
-        features: ['Everything in Standard', 'Networking lunches', 'Reserved plenary seating', 'Premium attendee kit'],
+      'en-ligne': {
+        name: 'Online',
+        tagline: 'Follow the sessions remotely.',
+        features: ['Live stream', 'Masterclass with attendance certificate', '30-day session replay'],
+        note: 'The connection link is emailed before the event.',
+      },
+      vip: {
+        name: 'VIP',
+        tagline: 'All Standard and Online benefits, with a CAIA networking lunch.',
+        features: ['All Standard and Online benefits', 'CAIA networking lunch'],
       },
     },
-
     // ----------------------------------------------------------------------- Checkout
     checkout: {
       title: 'Checkout',
@@ -158,6 +166,7 @@ export default {
       terms: 'I accept the [terms of use](/conditions-utilisation) and the [privacy policy](/confidentialite). *',
       summaryTitle: 'Order summary',
       subtotal: 'Subtotal',
+      discount: 'Promotion',
       fees: 'Service fee',
       feesValue: 'Included',
       total: 'Total',

@@ -103,42 +103,26 @@ export const CONFIG = {
   },
 
   /**
-   * Billetterie — tarifs en francs CFA (XAF).
-   * ⚠️ Montants INDICATIFS à valider par le Comité d'Organisation.
-   * Les libellés et avantages de chaque billet sont dans les fichiers de langue
-   * (t.tickets.tiers[id]) ; ici uniquement les données « techniques ».
-   *
-   *  id        identifiant (utilisé dans l'URL /billetterie/commande/:id)
-   *  price     prix unitaire (0 = gratuit, aucun paiement)
-   *  maxQty    quantité maximale par commande
-   *  color     accent visuel de la carte
-   *  featured  mis en avant (« le plus choisi »)
-   *  onsite    donne accès au Hilton (false = streaming uniquement)
-   */
-  /**
-   * Billetterie.
-   *
-   * Chaque tarif a :
-   *   price   prix unitaire en FCFA (à faire valider par le Comité d'Organisation) ;
-   *   quota   nombre de billets mis en vente pour ce tarif ;
-   *   sold    billets déjà vendus — 0 ici ; en production, cette valeur vient du
-   *           serveur de billetterie (GET /tickets/availability) : le navigateur
-   *           ne doit jamais faire foi sur les stocks ;
-   *   maxQty  nombre maximum de billets par commande.
-   *
-   * Quatre tarifs validés par l'organisateur : trois sur place (Hilton) et un
-   * « En ligne » qui donne accès à la retransmission des travaux.
-   * Il n'y a plus d'option gratuite : le flyer « J'y serai » est donc ouvert à
-   * tous les billets confirmés.
+   * Billetterie — tarifs de base en francs CFA (XAF).
+   * Les prix affichés et facturés passent par getTicketPrice(), afin que la
+   * promotion soit appliquée de façon identique dans la page tarifs et au checkout.
    */
   tickets: {
     currency: 'XAF',
     tiers: [
-      { id: 'etudiant', price: 2500, quota: 1500, sold: 0, maxQty: 5, color: 'purple', icon: 'book', onsite: true },
-      { id: 'standard', price: 5000, quota: 3000, sold: 0, maxQty: 10, color: 'orange', icon: 'ticket', onsite: true },
-      { id: 'en-ligne', price: 15000, quota: 5000, sold: 0, maxQty: 5, color: 'teal', icon: 'play', onsite: false },
-      { id: 'professionnel', price: 25000, quota: 500, sold: 0, maxQty: 10, color: 'rust', icon: 'star', onsite: true },
+      { id: 'gratuit', price: 0, quota: null, sold: 0, maxQty: 10, color: 'teal', icon: 'ticket', onsite: true },
+      { id: 'etudiant', price: 5000, quota: 100, sold: 0, maxQty: 5, color: 'purple', icon: 'book', onsite: true },
+      { id: 'standard', price: 10000, quota: 250, sold: 0, maxQty: 10, color: 'orange', icon: 'ticket', onsite: true },
+      { id: 'en-ligne', price: 15000, quota: null, sold: 0, maxQty: 10, color: 'teal', icon: 'play', onsite: false },
+      { id: 'vip', price: 25000, quota: 150, sold: 0, maxQty: 10, color: 'rust', icon: 'star', onsite: true },
     ],
+  },
+
+  /** Promotion de lancement, active du 1er octobre au 31 décembre 2026 inclus. */
+  promotion: {
+    discountPercent: 30,
+    startDate: '2026-10-01T00:00:00+01:00',
+    endDate: '2026-12-31T23:59:59+01:00',
   },
 
   /**

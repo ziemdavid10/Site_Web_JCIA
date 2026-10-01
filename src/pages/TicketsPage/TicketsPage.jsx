@@ -7,7 +7,7 @@ import { rich } from '@/i18n/rich'
 import { fill } from '@/i18n/format'
 import { CONFIG } from '@/data/config'
 import { formatXAF } from '@/utils/money'
-import { formatSeats, isLowStock, isSoldOut, remainingSeats } from '@/utils/tickets'
+import { formatSeats, getTicketPricing, isLowStock, isPromotionActive, isSoldOut, isUnlimitedQuota, remainingSeats } from '@/utils/tickets'
 import useDocumentMeta from '@/hooks/useDocumentMeta'
 import './TicketsPage.scss'
 
@@ -27,9 +27,15 @@ export default function TicketsPage() {
   // Paiement en ligne pas encore branché : les tarifs restent consultables,
   // mais aucune commande ne peut être lancée (CONFIG.features.payment).
   const open = features.payment
-  const price = (tier) => (tier.price === 0 ? tp.free : formatXAF(tier.price, locale))
+  const pricing = (tier) => getTicketPricing(tier)
+  const price = (tier) => {
+    const p = pricing(tier)
+    return p.price === 0 ? tp.free : formatXAF(p.price, locale)
+  }
   const seats = (tier) =>
-    fill(tp.seatsLeft, { n: formatSeats(remainingSeats(tier), locale), total: formatSeats(tier.quota, locale) })
+    isUnlimitedQuota(tier)
+      ? tp.unlimitedQuota
+      : fill(tp.seatsLeft, { n: formatSeats(remainingSeats(tier), locale), total: formatSeats(tier.quota, locale) })
   const faqItems = t.pages.faq.items.filter((i) => i.cat === 'tickets')
   useDocumentMeta(`${tp.title} | ${t.event.shortName}`)
 
@@ -56,6 +62,12 @@ export default function TicketsPage() {
 
       {/* --- Cartes tarifaires --------------------------------------------------- */}
       <PageSection id="tarifs" tone="sand" title={tp.tiersTitle} align="center">
+        {isPromotionActive() && (
+          <Reveal className="tickets-promo">
+            <strong>{tp.promotion.tag}</strong>
+            <span>{tp.promotion.text}</span>
+          </Reveal>
+        )}
         {/* Billetterie en ligne fermée : on l'annonce avant les tarifs */}
         {!open && (
           <Reveal className="tickets-closed">
@@ -99,8 +111,10 @@ export default function TicketsPage() {
                 <h3 className="tier-card__name">{tt.name}</h3>
                 <p className="tier-card__tagline">{tt.tagline}</p>
                 <p className="tier-card__price">
+                  {pricing(tier).discounted && <span className="tier-card__price-old">{formatXAF(pricing(tier).originalPrice, locale)}</span>}
                   <strong>{price(tier)}</strong>
                   {tier.price > 0 && <span>{tp.perPerson}</span>}
+                  {pricing(tier).discounted && <em className="tier-card__discount">-{pricing(tier).discountPercent}%</em>}
                 </p>
                 {/* Places restantes sur le quota — affichées en permanence */}
                 <p
@@ -177,7 +191,9 @@ export default function TicketsPage() {
                     <small className={`compare__quota ${isSoldOut(tier) ? 'is-out' : ''}`}>
                       {isSoldOut(tier)
                         ? tp.soldOutCta
-                        : fill(tp.seatsLeftShort, { n: formatSeats(remainingSeats(tier), locale) })}
+                        : isUnlimitedQuota(tier)
+                          ? tp.unlimitedQuota
+                          : fill(tp.seatsLeftShort, { n: formatSeats(remainingSeats(tier), locale) })}
                     </small>
                   </th>
                 ))}
