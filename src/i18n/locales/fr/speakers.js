@@ -64,6 +64,12 @@ export default {
       talk: 'Bientôt',
       abstract: 'Bientôt',
       bio: 'https://www.linkedin.com/in/habib-iya-32044782/',
+    },
+    'lorem-ipsum11': {
+      role: 'Chercheur en IA',
+      talk: 'Bientôt',
+      abstract: 'Bientôt',
+      bio: 'https://www.linkedin.com/in/armel-fameni-32044782/',
     }
   }
 }

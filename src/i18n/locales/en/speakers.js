@@ -21,7 +21,7 @@ export default {
       role: 'Research Associate',
       talk: 'Soon',
       abstract: 'Soon',
-      bio: '',
+      bio: 'https://www.linkedin.com/in/eddy-damaris-nono-defo-360125177/',
     },
     'lorem-ipsum4': {
       role: 'Director of GAIGI',
@@ -64,6 +64,12 @@ export default {
       talk: 'Soon',
       abstract: 'Soon',
       bio: 'https://www.linkedin.com/in/habib-iya-32044782/',
+    },
+    'lorem-ipsum11': {
+      role: 'AI Researcher',
+      talk: 'Soon',
+      abstract: 'Soon',
+      bio: 'https://www.linkedin.com/in/armel-fameni/',
     }
   }
 }

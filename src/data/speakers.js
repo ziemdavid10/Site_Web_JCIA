@@ -22,6 +22,19 @@
  *   links     { linkedin?, x?, website? } — adresses https uniquement
  */
 
+// Import des photos (carrées, 600×600, WebP) des intervenants confirmés.
+import photoBorisKouekam from '../assets/images/People/boris-kouekam.webp'
+import photoNatalieDelatte from '../assets/images/People/natalie-delatte.webp'
+import photoEddyNonoDefo from '../assets/images/People/eddy-nono-defo.jpeg'
+import photoAxelMazolo from '../assets/images/People/axel-mazolo.webp'
+import photoGuillaumeSoto from '../assets/images/People/guillaume-soto.png'
+import photoDestinKouam from '../assets/images/People/destin-kouam.webp'
+import photoVolvianeMfogo from '../assets/images/People/volviane-mfogo.jpeg'
+import photoDavidKenfack from '../assets/images/People/david-kenfack.jpeg'
+import photoFredericNgaba from '../assets/images/People/frederic-ngaba.webp'
+import photoHabibIya from '../assets/images/People/habib-iya.webp'
+// import photoArmelFameni from '../assets/images/People/armel-fameni.webp'
+
 /** Catégories (ordre d'affichage) : clé → icône et couleur d'accent */
 export const SPEAKER_CATEGORIES = [
   { id: 'gouvernement', icon: 'building', color: 'orange' },
@@ -39,7 +52,7 @@ export const SPEAKERS = [
     name: 'Boris Landry KOUEKAM', 
     category: 'industrie', 
     org: 'Intelligence Artificielle Cameroun - IAC', 
-    photo: null, 
+    photo: photoBorisKouekam, 
     example: false, 
     session: { day: '28', time: '11:00', format: 'talk' }, 
     links: {} 
@@ -48,7 +61,7 @@ export const SPEAKERS = [
     name: 'Natalie DELATTE', 
     category: 'diaspora', 
     org: 'Intelligence Artificielle Cameroun - IAC & Pictet Asset Management', 
-    photo: null, 
+    photo: photoNatalieDelatte, 
     example: false, 
     session: { day: '28', time: '09:00', format: 'masterclass' }, 
     links: {} 
@@ -57,7 +70,7 @@ export const SPEAKERS = [
     name: 'Eddy Damaris NONO DEFO', 
     category: 'recherche', 
     org: 'Chaire Unesco en paysage urbain universite de Montreal', 
-    photo: null, 
+    photo: photoEddyNonoDefo, 
     example: false, 
     session: { day: '27', time: '12:00', format: 'panel' }, 
     links: {} 
@@ -67,7 +80,7 @@ export const SPEAKERS = [
     name: 'Dr. Axel MAZOLO', 
     category: 'industrie', 
     org: 'GAIGI', 
-    photo: null, 
+    photo: photoAxelMazolo, 
     example: false, 
     session: { day: '27', time: '12:00', format: 'keynote' }, 
     links: {} 
@@ -76,7 +89,7 @@ export const SPEAKERS = [
     name: 'Guillaume SOTO', 
     category: 'onu', 
     org: 'SHAURI & Maitrise AI', 
-    photo: null, 
+    photo: photoGuillaumeSoto, 
     example: false, 
     session: { day: '27', time: '13:00', format: 'keynote' }, 
     links: {} 
@@ -85,7 +98,7 @@ export const SPEAKERS = [
     name: 'Destin KOUAM', 
     category: 'startups', 
     org: 'Intelligence Artificielle Cameroun - IAC', 
-    photo: null, 
+    photo: photoDestinKouam, 
     example: false, 
     session: { day: '28', time: '15:00', format: 'panel' }, 
     links: {} 
@@ -94,7 +107,7 @@ export const SPEAKERS = [
     name: 'Dr. Volviane Saphir MFOGO', 
     category: 'recherche', 
     org: 'Open African Innovation Research (Open AIR)', 
-    photo: null, 
+    photo: photoVolvianeMfogo, 
     example: false, 
     session: { day: '27', time: '12:00', format: 'panel' }, 
     links: {} 
@@ -103,7 +116,7 @@ export const SPEAKERS = [
     name: 'David KENFACK', 
     category: 'recherche', 
     org: 'Université', 
-    photo: null, 
+    photo: photoDavidKenfack, 
     example: false, 
     session: { day: '28', time: '09:00', format: 'masterclass' }, 
     links: {} 
@@ -112,7 +125,7 @@ export const SPEAKERS = [
     name: 'Dr. Frederic NGABA', 
     category: 'industrie', 
     org: 'OSIA Technologies ', 
-    photo: null, 
+    photo: photoFredericNgaba, 
     example: false, 
     session: { day: '27', time: '13:00', format: 'panel' }, 
     links: {} 
@@ -121,7 +134,16 @@ export const SPEAKERS = [
     name: 'Habib IYA', 
     category: 'industrie', 
     org: 'Inlab', 
-    photo: null, 
+    photo: photoHabibIya, 
+    example: false, 
+    session: { day: '28', time: '09:00', format: 'masterclass' }, 
+    links: {} 
+  },
+  { id: 'lorem-ipsum11', 
+    name: 'Armel FAMENI', 
+    category: 'industrie', 
+    org: 'Intelligence Artificielle Cameroun - IAC', 
+    photo: photoArmelFameni, 
     example: false, 
     session: { day: '28', time: '09:00', format: 'masterclass' }, 
     links: {} 
