@@ -143,7 +143,7 @@ export const SPEAKERS = [
     name: 'Armel FAMENI', 
     category: 'industrie', 
     org: 'Intelligence Artificielle Cameroun - IAC', 
-    photo: photoArmelFameni, 
+    photo: null, 
     example: false, 
     session: { day: '28', time: '09:00', format: 'masterclass' }, 
     links: {} 

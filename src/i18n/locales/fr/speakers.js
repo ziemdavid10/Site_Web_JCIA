@@ -66,7 +66,7 @@ export default {
       bio: 'https://www.linkedin.com/in/habib-iya-32044782/',
     },
     'lorem-ipsum11': {
-      role: 'Chercheur en IA',
+      role: 'Analyste géospatial | Télédétection et SIG | Robotique | IA',
       talk: 'Bientôt',
       abstract: 'Bientôt',
       bio: 'https://www.linkedin.com/in/armel-fameni-32044782/',

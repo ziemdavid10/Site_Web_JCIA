@@ -66,7 +66,7 @@ export default {
       bio: 'https://www.linkedin.com/in/habib-iya-32044782/',
     },
     'lorem-ipsum11': {
-      role: 'AI Researcher',
+      role: 'Geospatial analyst | Remote sensing & GIS | Robotics | AI',
       talk: 'Soon',
       abstract: 'Soon',
       bio: 'https://www.linkedin.com/in/armel-fameni/',

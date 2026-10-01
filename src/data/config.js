@@ -20,7 +20,7 @@ export const CONFIG = {
   },
 
   links: {
-    awards: 'https://awards.jcia.cm',
+    awards: 'https://docs.google.com/forms/d/1P9zgsLj3eXfalLEO1MZiaB6jsRMPiLvZvIp2ZKTdAFw/preview',
     iac: 'https://www.iacameroun.com',
     tdrPdf: '/documents/TDR-CAIA-2027.pdf',
     // Cagnotte de soutien (bouton « Donate » de la barre de navigation)
