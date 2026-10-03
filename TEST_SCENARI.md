@@ -94,3 +94,9 @@ Les tests locaux utilisent le mode `demo`. Les scénarios suivants nécessitent 
 - confirmation asynchrone après plusieurs interrogations
 
 Ils doivent être exécutés dans une suite d'intégration séparée afin de ne pas dépendre d'un compte marchand réel dans les tests unitaires.
+
+## Régression démarrage serveur
+
+- Importer `src/app.js` ne doit jamais ouvrir le port configuré dans `.env` (5000 par défaut).
+- Le serveur HTTP est démarré uniquement par `npm start` / `node src/app.js`.
+- Les tests d'intégration peuvent créer leur propre instance avec `app.listen(...)` sur leur port de test.

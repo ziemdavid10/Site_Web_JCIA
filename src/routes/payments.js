@@ -33,6 +33,11 @@ router.post('/', async (req, res) => {
     return res.status(400).json({ error: 'Identifiant de commande invalide' })
   }
 
+  // Un montant doit être explicitement fourni. Number(undefined) => NaN,
+  // mais on distingue volontairement les valeurs absentes des valeurs numériques.
+  if (amount === undefined || amount === null || amount === '') {
+    return res.status(400).json({ error: 'Montant obligatoire' })
+  }
   const numericAmount = Number(amount)
   if (!Number.isFinite(numericAmount) || numericAmount < 0) {
     return res.status(400).json({ error: 'Montant invalide' })

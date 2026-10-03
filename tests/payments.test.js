@@ -189,3 +189,10 @@ test('GET /payments/:id - un paiement PENDING passe à SUCCESSFUL en mode démo'
   const order = await get('SELECT status FROM orders WHERE id = ?', ['JCIA27-GET003'])
   assert.equal(order.status, 'paid')
 })
+
+test('POST /payments - rejette explicitement un montant absent ou nul', async () => {
+  for (const amount of [undefined, null, '']) {
+    const response = await create({ orderId: orderId(), amount })
+    assert.equal(response.status, 400)
+  }
+})
