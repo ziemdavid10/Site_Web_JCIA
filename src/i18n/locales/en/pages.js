@@ -189,7 +189,7 @@ export default {
         title: '*40+* voices to think AI',
         lead: 'Government, diplomatic corps, UN agencies, researchers, industry leaders, investors and startup founders: JCIA 2027 speakers will be revealed over the coming weeks.',
       },
-      profilesTitle: 'Speakers by category',
+      profilesTitle: ' All Speakers',
       call: {
         eyebrow: 'Call for speakers',
         title: 'Share your *expertise*',

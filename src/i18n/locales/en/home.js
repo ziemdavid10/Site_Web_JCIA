@@ -27,7 +27,7 @@ export default {
     titleStart: 'Cameroon ',
     titleAccent: 'Artificial Intelligence',
     titleEnd: ' Days 2027',
-    kicker: 'Intelligence Artificielle Cameroun — Cameroon AI Policy Institute',
+    kicker: 'Cameroon Artificial Intelligence Policy Institute — Intelligence Artificielle Cameroun (CAIPI/IAC) ',
     theme: 'Theme: “Thinking Artificial Intelligence **in Cameroon**, **for Cameroon**”',
     ctaRegister: 'Book my seat',
     ctaAwards: 'Apply for Cameroon AI Awards 2027',

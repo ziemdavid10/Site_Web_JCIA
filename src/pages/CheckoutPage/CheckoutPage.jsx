@@ -810,7 +810,7 @@ export default function CheckoutPage() {
 
             {/* Facultatif : figurer dans la liste publique des participants */}
             <label className="co-check">
-              <input type="checkbox" checked={listed} onChange={(ev) => setListed(ev.target.checked)} />
+              <input type="checkbox" checked={listed} onChange={(ev) => setListed(ev.target.checked)} checked />
               <span>
                 {c.publicListing}
                 <small>{c.publicListingHint}</small>

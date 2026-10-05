@@ -27,7 +27,7 @@ export default {
     titleStart: 'Journées Camerounaises de l’',
     titleAccent: 'Intelligence Artificielle 2027',
     titleEnd: '',
-    kicker: 'Intelligence Artificielle Cameroun — Cameroon AI Policy Institute',
+    kicker: 'Intelligence Artificielle Cameroun — Cameroon Artificial Intelligence Policy Institute (IAC/CAIPI)',
     theme: 'Thème: « Penser l’Intelligence Artificielle **au Cameroun**, **pour le Cameroun** »',
     ctaRegister: 'Réserver ma place',
     ctaAwards: 'Candidater aux Cameroon AI Awards 2027',

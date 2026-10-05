@@ -121,7 +121,7 @@ export const CONFIG = {
   /** Promotion de lancement, active du 1er octobre au 31 décembre 2026 inclus. */
   promotion: {
     discountPercent: 30,
-    startDate: '2026-10-01T00:00:00+01:00',
+    startDate: '2026-10-05T00:00:00+01:00',
     endDate: '2026-12-31T23:59:59+01:00',
   },
 

@@ -190,7 +190,7 @@ export default {
         title: '*40+* voix pour penser l’IA',
         lead: 'Gouvernement, corps diplomatique, agences des Nations Unies, chercheurs, capitaines d’industrie, investisseurs et fondateurs de startups : les intervenants des JCIA 2027 seront dévoilés au fil des semaines.',
       },
-      profilesTitle: 'Les intervenants par catégorie',
+      profilesTitle: 'Tous Les intervenants',
       call: {
         eyebrow: 'Appel à intervenants',
         title: 'Partagez votre *expertise*',
