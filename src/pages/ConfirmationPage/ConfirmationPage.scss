@@ -148,9 +148,12 @@
     flex-direction: column;
     gap: $space-5;
 
+    // Colonne collante seulement si elle tient dans l'écran (sinon son bas serait inaccessible)
     @include mq('lg') {
-      position: sticky;
-      top: calc(#{$header-height} + #{$space-4});
+      @media (min-height: 1000px) {
+        position: sticky;
+        top: calc(#{$header-height} + #{$space-4});
+      }
     }
   }
 
@@ -486,4 +489,19 @@
     print-color-adjust: exact;
     -webkit-print-color-adjust: exact;
   }
+}
+
+// Paiement en attente / refusé (mode réel)
+.confirmation__pending-id {
+  margin-top: 0.5rem;
+  font-size: 0.95rem;
+  opacity: 0.85;
+}
+
+// Mention « QR code officiel » sous le numéro de billet TIKORA
+.e-ticket__official {
+  margin: 0.15rem 0 0;
+  font-size: 0.7rem;
+  letter-spacing: 0.04em;
+  opacity: 0.75;
 }

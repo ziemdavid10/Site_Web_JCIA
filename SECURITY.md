@@ -46,7 +46,31 @@ npm run audit                             # failles connues des dépendances
 npm run test:email                        # envoi réel du récapitulatif : contenu, échappement, aucune donnée de carte
 ```
 
-## ⚠️ À faire côté serveur avant la vente réelle
+## Côté serveur — état (octobre 2026)
+
+Le serveur de billetterie (`../backend`, intégration TIKORA) applique désormais
+les points ci-dessous ; détail et preuves (tests) dans `../PROCEDURE.md`.
+
+| # | Exigence | État |
+|---|---|---|
+| 1 | Clés marchand côté serveur | ✅ `TIKORA_API_KEY` dans l'environnement du serveur uniquement |
+| 2 | Montant recalculé | ✅ grille JCIA + contrôle du sous-total TIKORA (`TIKORA_PRICE_CHECK`) |
+| 3 | Paiement vérifié auprès de l'opérateur | ✅ statut relu chez TIKORA (`GET /orders/{id}`) ; webhook = simple signal, signature HMAC vérifiée si configurée |
+| 4 | Idempotence | ✅ verrou par commande + `Idempotency-Key` TIKORA |
+| 5 | Limitation de débit IP **et** téléphone | ✅ |
+| 6 | CORS restreint | ✅ refus de démarrer en production avec `*` |
+| 7 | QR signés / billet utilisé | ✅ QR émis par TIKORA (statut `valid/used`) ; billets gratuits signés HMAC — ⚠️ application de contrôle d'accès hors périmètre |
+| 8 | Flyer contrôlé côté serveur | ⚠️ non (visuel sans valeur d'accès) |
+| 9 | Reçu envoyé par le serveur | ✅ automatique après paiement, renvoi limité |
+| 10 | Données personnelles | ✅ logs masqués, aucune carte ; ⚠️ chiffrement du disque à activer chez l'hébergeur |
+| 11 | CSP | ✅ `npm run sync:vercel` / `check:vercel` (CI) |
+
+> **Cartes bancaires** : TIKORA n'encaisse que Mobile Money. En mode réel, le
+> choix « carte » est masqué et le serveur refuse toute donnée de carte
+> (`CARD_NOT_SUPPORTED`). Les protections « carte » ci-dessus ne concernent plus
+> que le mode démonstration.
+
+## Rappel historique — exigences serveur fixées avant la vente réelle
 
 Le navigateur de l'utilisateur ne doit **jamais** être cru sur parole. Le serveur de
 billetterie (appelé par `VITE_PAYMENT_API_URL`) doit :

@@ -13,8 +13,10 @@ import { CONFIG } from '@/data/config'
  *        corps : { email, lang }
  *
  * Le serveur retrouve la commande par son identifiant, vérifie qu'elle est
- * bien payée, construit le message (scripts/email/receipt-template.mjs, repris
- * tel quel côté serveur) et l'envoie (scripts/email/send-receipt.mjs).
+ * bien payée, construit le message (backend/src/services/receiptTemplate.js,
+ * repris de scripts/email/receipt-template.mjs) et l'envoie. En mode réel, il
+ * l'envoie déjà AUTOMATIQUEMENT dès la confirmation TIKORA : cette demande
+ * sert alors de filet de sécurité (le serveur répond 429 si c'est déjà fait).
  * C'est pour cela que le corps de la requête ne contient ni montant, ni tarif,
  * ni participants : un visiteur ne doit pas pouvoir dicter le contenu d'un
  * e-mail parti de notre nom de domaine.
@@ -70,6 +72,9 @@ export async function requestOrderReceipt(order) {
       },
       body: JSON.stringify({ email: order.customer.email, lang: order.lang === 'en' ? 'en' : 'fr' }),
     })
+    // 429 RECEIPT_TOO_SOON : le serveur vient déjà d'envoyer le reçu
+    // (envoi automatique dès la confirmation du paiement) — rien à refaire.
+    if (res.status === 429) return 'sent'
     if (!res.ok) return 'failed'
     const data = (await res.json().catch(() => null)) ?? {}
     return data.status === 'queued' ? 'queued' : 'sent'

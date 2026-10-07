@@ -6,7 +6,7 @@ import { useI18n } from '@/i18n/context'
 import { fill } from '@/i18n/format'
 import { rich } from '@/i18n/rich'
 import { CONFIG } from '@/data/config'
-import { ATTENDEES_TOTAL } from '@/data/attendees'
+import useAttendees from '@/hooks/useAttendees'
 import useDocumentMeta from '@/hooks/useDocumentMeta'
 import mascot from '@/assets/images/brand/mascot.webp'
 import mascotWhite from '@/assets/images/brand/mascot-white.webp'
@@ -26,6 +26,7 @@ export default function AttendeesPage() {
   const p = t.pages.attendees
   const { routes } = CONFIG
   useDocumentMeta(`${p.title} | ${t.event.shortName}`)
+  const attendeesCount = useAttendees().length
 
   return (
     <div className="detail-page attendees-page">
@@ -35,7 +36,7 @@ export default function AttendeesPage() {
         title={p.hero.title}
         lead={p.hero.lead}
         stats={[
-          { value: String(ATTENDEES_TOTAL), label: p.hero.statAttendees },
+          { value: String(attendeesCount), label: p.hero.statAttendees },
           { value: '4', label: p.hero.statTiers },
         ]}
         art={<ThemeImg light={mascot} dark={mascotWhite} alt="" width="240" height="316" />}

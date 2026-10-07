@@ -453,10 +453,10 @@ export default {
       hero: {
         eyebrow: 'Frequently asked questions',
         title: 'All the *answers*',
-        lead: 'Attending, booking, paying with Mobile Money, applying, exhibiting, partnering, generating your flyer: everything you need to know.',
+        lead: 'Attending, booking, paying with Mobile Money, applying, exhibiting, partnering, creating your “I’ll be there” visual: everything you need to know.',
       },
       searchLabel: 'Search a question',
-      searchPlaceholder: 'E.g. payment, stand, flyer…',
+      searchPlaceholder: 'E.g. payment, stand, visual…',
       all: 'All',
       noResults: 'No question matches your search.',
       categories: [
@@ -475,7 +475,7 @@ export default {
         { top: true, cat: 'tickets', q: 'How will payment work?', a: 'With Mobile Money: you enter your MTN or Orange number, a payment request arrives on your phone and you approve it with your PIN — which we will never ask for. With a Visa or Mastercard: you will be redirected to the bank’s secure page; no card data goes through this site.' },
         { cat: 'tickets', q: 'Can I follow the event remotely?', a: 'Yes. The “Online” ticket (15,000 FCFA) gives access to the whole programme live, one masterclass with certificate, B2B / B2G meetings via the app and session replays for 30 days.' },
         { cat: 'tickets', q: 'Are there conditions for the student rate?', a: 'Yes: it is reserved for students and a valid student card will be requested at the entrance.' },
-        { cat: 'tickets', q: 'What is the “I’ll be there” flyer?', a: 'Once your ticket is confirmed, you can generate a personalised visual with your photo, your name and the event details to share on social media. Your photo is processed only in your browser.' },
+        { cat: 'tickets', q: 'What is the “I’ll be there” visual?', a: 'As soon as your ticket is confirmed — free or paid —, you create a personalised visual in your ticket’s colours, with the photo from your attendee profile, your name and the event details, to share on social media. Your photo only appears in the public attendee list if you agreed to be listed, and you can remove it at any time.' },
         { cat: 'tickets', q: 'Can I buy several tickets?', a: 'Yes: up to 5 Student tickets and 10 tickets for the other tiers per order, within the seats left. For groups and institutions, contact the secretariat.' },
         { top: true, cat: 'awards', q: 'How do I apply for the Cameroon AI Awards (CAIA 2027)?', a: 'Only through the online form (awards.jcia.cm or iacameroun.com), from 15 November 2026 to 28 February 2027 at 23:59. The competition is open and completely free.' },
         { cat: 'awards', q: 'Do I need to live in Cameroon to apply?', a: 'No. Any Cameroonian national aged 18 or over may apply, whether living in Cameroon or in the diaspora.' },

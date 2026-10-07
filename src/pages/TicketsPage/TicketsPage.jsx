@@ -9,6 +9,7 @@ import { CONFIG } from '@/data/config'
 import { formatXAF } from '@/utils/money'
 import { formatSeats, getTicketPricing, isLowStock, isPromotionActive, isSoldOut, isUnlimitedQuota, remainingSeats } from '@/utils/tickets'
 import useDocumentMeta from '@/hooks/useDocumentMeta'
+import useTicketCatalog from '@/hooks/useTicketCatalog'
 import './TicketsPage.scss'
 
 /**
@@ -23,7 +24,9 @@ import './TicketsPage.scss'
 export default function TicketsPage() {
   const { t, locale } = useI18n()
   const tp = t.tickets.page
-  const { routes, tickets, payment, contact, features } = CONFIG
+  const { routes, payment, contact, features } = CONFIG
+  // Tarifs + stock réel (TIKORA) quand le serveur de billetterie est branché
+  const tickets = { ...CONFIG.tickets, tiers: useTicketCatalog().tiers }
   // Paiement en ligne pas encore branché : les tarifs restent consultables,
   // mais aucune commande ne peut être lancée (CONFIG.features.payment).
   const open = features.payment

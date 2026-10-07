@@ -17,7 +17,7 @@ export default function PartnersPage() {
   const { t } = useI18n()
   const p = t.pages.partners
   const b = t.partners.become
-  const { links, contact } = CONFIG
+  const { contact } = CONFIG
   const contactHref = `mailto:${contact.emails[0]}?subject=${encodeURIComponent(b.subject)}`
   useDocumentMeta(`${p.title} | ${t.event.shortName}`)
 

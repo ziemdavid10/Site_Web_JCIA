@@ -65,7 +65,7 @@ export default {
   footer: {
     organizedBy: 'Organised by',
     eventTitle: 'The event',
-    extra: { attendees: 'Attendees', speakers: 'Speakers', tickets: 'Tickets', flyer: 'My “I’ll be there” flyer' },
+    extra: { attendees: 'Attendees', speakers: 'Speakers', tickets: 'Tickets', flyer: 'My “I’ll be there” visual' },
     docsTitle: 'Documents',
     docs: {
       tdr: 'CAIA call for applications — ToR (FR)',

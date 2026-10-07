@@ -26,7 +26,6 @@ import './Awards.scss'
 export default function Awards() {
   const { t } = useI18n()
   const aw = t.awards
-  const downloads = CONFIG.features.documentDownloads
 
   return (
     <section className="section awards" id="awards" aria-labelledby="awards-title">

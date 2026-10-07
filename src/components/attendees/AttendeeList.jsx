@@ -4,7 +4,7 @@ import { Icon, Reveal } from '@/components/ui'
 import { useI18n } from '@/i18n/context'
 import { fill } from '@/i18n/format'
 import { ATTENDEE_PROFILES } from '@/data/attendees'
-import { allAttendees } from '@/services/attendees'
+import useAttendees from '@/hooks/useAttendees'
 import AttendeeCard from './AttendeeCard'
 import AttendeeDialog from './AttendeeDialog'
 import './Attendees.scss'
@@ -41,7 +41,7 @@ export default function AttendeeList({ mode = 'home', limit = 8 }) {
   const [localOpen, setLocalOpen] = useState(null)
   const [query, setQuery] = useState('')
 
-  const people = useMemo(() => allAttendees(), [])
+  const people = useAttendees()
 
   // Sur la page, le filtre et la fiche ouverte vivent dans l'URL (lien partageable)
   const urlProfile = params.get('profil')

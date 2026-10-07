@@ -454,10 +454,10 @@ export default {
       hero: {
         eyebrow: 'Questions fréquentes',
         title: 'Toutes les *réponses*',
-        lead: 'Participer, réserver, payer par Mobile Money, candidater, exposer, devenir partenaire, générer votre flyer : tout ce qu’il faut savoir.',
+        lead: 'Participer, réserver, payer par Mobile Money, candidater, exposer, devenir partenaire, créer votre visuel « J’y serai » : tout ce qu’il faut savoir.',
       },
       searchLabel: 'Rechercher une question',
-      searchPlaceholder: 'Ex. : paiement, stand, flyer…',
+      searchPlaceholder: 'Ex. : paiement, stand, visuel…',
       all: 'Toutes',
       noResults: 'Aucune question ne correspond à votre recherche.',
       categories: [
@@ -476,7 +476,7 @@ export default {
         { cat: 'tickets', top: true, q: 'Comment fonctionnera le paiement ?', a: 'Par Mobile Money : vous saisissez votre numéro MTN ou Orange, une demande de paiement arrive sur votre téléphone et vous la validez avec votre code secret — que nous ne vous demanderons jamais. Par carte Visa ou Mastercard : vous serez redirigé vers la page sécurisée de la banque ; aucune donnée bancaire ne transite par ce site.' },
         { cat: 'tickets', q: 'Puis-je suivre l’événement à distance ?', a: 'Oui. Le billet « En ligne » donne accès à la retransmission, à une masterclass avec attestation et au replay des sessions pendant 30 jours.' },
         { cat: 'tickets', q: 'Le tarif étudiant est-il soumis à conditions ?', a: 'Oui : il est réservé aux étudiants et une carte d’étudiant en cours de validité sera demandée à l’accueil.' },
-        { cat: 'tickets', q: 'Qu’est-ce que le flyer « J’y serai » ?', a: 'Une fois votre billet confirmé, vous pouvez générer un visuel personnalisé avec votre photo, votre nom et les informations de l’événement, à partager sur vos réseaux. Votre photo est traitée uniquement dans votre navigateur.' },
+        { cat: 'tickets', q: 'Qu’est-ce que le visuel « J’y serai » ?', a: 'Dès que votre billet est confirmé — gratuit ou payant —, vous créez un visuel personnalisé aux couleurs de votre billet, avec la photo de votre fiche participant, votre nom et les informations de l’événement, à partager sur vos réseaux. Votre photo n’apparaît dans la liste publique des participants que si vous avez accepté d’y figurer, et vous pouvez la retirer à tout moment.' },
         { cat: 'tickets', q: 'Puis-je acheter plusieurs billets ?', a: 'Oui : jusqu’à 5 billets Étudiant et 10 billets pour les autres tarifs par commande, dans la limite des places restantes. Pour les groupes et institutions, contactez le secrétariat.' },
         { cat: 'awards', top: true, q: 'Comment candidater aux Cameroon AI Awards (CAIA 2027) ?', a: 'Exclusivement via le formulaire en ligne (awards.jcia.cm ou iacameroun.com), du 15 novembre 2026 au 28 février 2027 à 23h59. Le concours est ouvert et entièrement gratuit.' },
         { cat: 'awards', q: 'Faut-il être au Cameroun pour candidater ?', a: 'Non. Toute personne de nationalité camerounaise âgée d’au moins 18 ans peut candidater, qu’elle réside au Cameroun ou dans la diaspora.' },

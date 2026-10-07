@@ -14,7 +14,10 @@
     "figma:export": "node scripts/figma-export.mjs",
     "test:email": "node --test scripts/email/test-receipt.mjs",
     "email:send": "node scripts/email/send-receipt.mjs",
-    "email:preview": "node scripts/email/send-receipt.mjs --demo --dry-run"
+    "email:preview": "node scripts/email/send-receipt.mjs --demo --dry-run",
+    "sync:vercel": "node scripts/sync-vercel-headers.mjs",
+    "check:vercel": "node scripts/sync-vercel-headers.mjs --check",
+    "test:e2e": "node --test --test-concurrency=1 tests/e2e/checkout.e2e.test.mjs"
   },
   "dependencies": {
     "@fontsource-variable/sora": "^5.3.0",

@@ -1004,3 +1004,11 @@
   height: 1px;
   overflow: hidden;
 }
+
+// Explication des frais de service TIKORA sous le total
+.co-summary__fees-note {
+  margin: 0.25rem 0 0.75rem;
+  font-size: 0.78rem;
+  line-height: 1.45;
+  opacity: 0.75;
+}

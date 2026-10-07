@@ -23,8 +23,9 @@ const STEPS = ['initiating', 'awaiting', 'confirming']
  * @param {'momo'|'card'} method  Moyen de paiement
  * @param {string} cardLabel Réseau et 4 derniers chiffres (paiement par carte)
  * @param {boolean} demo     Paiement simulé
+ * @param {string} reason    Code de refus renvoyé par le serveur (INSUFFICIENT_BALANCE…)
  */
-export default function PaymentDialog({ status, step, amount, phone, operator, method = 'momo', cardLabel, demo, onRetry, onClose }) {
+export default function PaymentDialog({ status, step, amount, phone, operator, method = 'momo', cardLabel, demo, reason, onRetry, onClose }) {
   const { t } = useI18n()
   const p = t.tickets.payment
   const isCard = method === 'card'
@@ -77,7 +78,8 @@ export default function PaymentDialog({ status, step, amount, phone, operator, m
               <Icon name="alert" size={32} />
             </span>
             <h2 id="pay-dialog-title">{p.failedTitle}</h2>
-            <p id="pay-dialog-desc">{p.failedText}</p>
+            {/* Motif précis quand le serveur le connaît (liste blanche de libellés traduits) */}
+            <p id="pay-dialog-desc">{(reason && p.reasons[reason]) || p.failedText}</p>
             <div className="pay-dialog__actions">
               <Button onClick={onRetry} iconLeft="refresh">
                 {p.retry}

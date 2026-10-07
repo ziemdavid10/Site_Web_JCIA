@@ -1,0 +1,343 @@
+@use '@/styles/abstracts' as *;
+
+// =============================================================================
+// PHOTO DE PARTICIPANT — fenêtre de choix et de recadrage
+// Ordinateur : fenêtre centrée. Téléphone : feuille qui monte depuis le bas.
+// =============================================================================
+.photo-dialog {
+  width: min(480px, calc(100% - 2rem));
+  max-height: calc(100dvh - 2rem);
+  margin: auto;
+  padding: 0;
+  color: $text;
+  background: $bg-elevated;
+  border: 0;
+  border-radius: $radius-xl;
+  box-shadow: $shadow-lg;
+  animation: photo-dialog-in 320ms $ease-out both;
+
+  &::backdrop {
+    background: rgba($navy-900, 0.72);
+    backdrop-filter: blur(6px);
+  }
+
+  @include mq-down('md') {
+    width: 100%;
+    max-width: none;
+    max-height: 96dvh;
+    margin: auto 0 0;
+    border-radius: $radius-xl $radius-xl 0 0;
+  }
+
+  @include reduced-motion {
+    animation: none;
+  }
+
+  &__box {
+    display: flex;
+    flex-direction: column;
+    max-height: inherit;
+  }
+
+  &__head {
+    display: flex;
+    align-items: center;
+    gap: $space-3;
+    padding: $space-5 $space-5 $space-3;
+
+    > div {
+      flex: 1;
+      min-width: 0;
+    }
+
+    h2 {
+      font-size: 1.15rem;
+      line-height: 1.25;
+    }
+
+    p {
+      overflow: hidden;
+      font-size: 0.85rem;
+      color: $text-muted;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  }
+
+  &__icon {
+    flex-shrink: 0;
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    color: $navy;
+    background: $orange;
+    border-radius: 50%;
+  }
+
+  &__close {
+    flex-shrink: 0;
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    color: $text-soft;
+    border-radius: 50%;
+    transition: background $duration-fast;
+
+    &:hover {
+      background: $surface-muted;
+    }
+
+    &:focus-visible {
+      @include focus-ring($teal);
+    }
+  }
+
+  &__body {
+    overflow-y: auto;
+    padding: $space-2 $space-5 $space-4;
+    overscroll-behavior: contain;
+  }
+
+  &__file {
+    @include visually-hidden;
+  }
+
+  &__error {
+    display: flex;
+    align-items: flex-start;
+    gap: $space-2;
+    margin-top: $space-4;
+    padding: $space-3;
+    font-size: 0.85rem;
+    line-height: 1.45;
+    color: $flag-red;
+    background: rgba($flag-red, 0.08);
+    border-radius: $radius-sm;
+
+    .icon {
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+  }
+
+  &__visibility {
+    display: flex;
+    align-items: flex-start;
+    gap: $space-2;
+    margin-top: $space-4;
+    padding: $space-2 $space-3;
+    font-size: 0.82rem;
+    font-weight: $fw-semibold;
+    line-height: 1.45;
+    color: $text-soft;
+    background: $surface-muted;
+    border-radius: $radius-sm;
+
+    .icon {
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    &.is-public .icon {
+      color: $teal-text;
+    }
+  }
+
+  &__note {
+    display: flex;
+    gap: $space-2;
+    margin-top: $space-3;
+    font-size: 0.76rem;
+    line-height: 1.5;
+    color: $text-muted;
+
+    .icon {
+      flex-shrink: 0;
+      margin-top: 2px;
+      color: $flag-green;
+    }
+  }
+
+  &__foot {
+    display: flex;
+    justify-content: flex-end;
+    gap: $space-2;
+    padding: $space-4 $space-5 max(#{$space-5}, env(safe-area-inset-bottom));
+    border-top: 1px solid $border;
+
+    // Téléphone : « Enregistrer » prend toute la place disponible, sur une ligne
+    @include mq-down('sm') {
+      .btn:last-child {
+        flex: 1;
+      }
+    }
+  }
+}
+
+// --- Choix du fichier ------------------------------------------------------------------------
+.photo-drop {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: $space-2;
+  padding: $space-6 $space-4;
+  text-align: center;
+  border: 2px dashed $border-strong;
+  border-radius: $radius-lg;
+  cursor: pointer;
+  transition:
+    border-color $duration-fast,
+    background $duration-fast;
+
+  input {
+    @include visually-hidden;
+  }
+
+  &:hover,
+  &.is-over {
+    border-color: $orange;
+    background: rgba($orange, 0.07);
+  }
+
+  &:focus-within {
+    @include focus-ring($teal);
+  }
+
+  &__circle {
+    display: grid;
+    place-items: center;
+    width: 96px;
+    height: 96px;
+    margin-bottom: $space-2;
+    color: $navy;
+    background: radial-gradient(circle at 30% 30%, #ffc782, $orange);
+    border-radius: 50%;
+    box-shadow: $shadow-glow-orange;
+  }
+
+  strong {
+    font-size: 1rem;
+  }
+
+  span {
+    font-size: 0.85rem;
+    color: $text-soft;
+  }
+
+  small {
+    font-size: 0.76rem;
+    color: $text-muted;
+  }
+}
+
+// --- Recadrage -----------------------------------------------------------------------------
+.photo-crop {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  &__stage {
+    width: min(100%, 300px);
+    aspect-ratio: 1;
+    overflow: hidden;
+    background: $surface-muted;
+    border-radius: $radius-md;
+    box-shadow: $shadow-md;
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      cursor: grab;
+      touch-action: none;
+
+      &:active {
+        cursor: grabbing;
+      }
+
+      &:focus-visible {
+        outline: 3px solid $teal;
+        outline-offset: -3px;
+      }
+    }
+  }
+
+  &__hint {
+    display: flex;
+    align-items: center;
+    gap: $space-2;
+    margin-top: $space-3;
+    font-size: 0.78rem;
+    color: $text-muted;
+    text-align: center;
+  }
+
+  &__zoom {
+    display: flex;
+    align-items: center;
+    gap: $space-2;
+    width: min(100%, 320px);
+    margin-top: $space-3;
+    font-size: 0.85rem;
+    font-weight: $fw-semibold;
+
+    label {
+      margin-right: $space-1;
+    }
+
+    button {
+      flex-shrink: 0;
+      display: grid;
+      place-items: center;
+      width: 36px;
+      height: 36px;
+      color: $text-soft;
+      border: 1.5px solid $border-strong;
+      border-radius: 50%;
+
+      &:hover {
+        border-color: $orange;
+      }
+
+      &:focus-visible {
+        @include focus-ring($teal);
+      }
+    }
+
+    input {
+      flex: 1;
+      min-width: 0;
+      height: 28px;
+      accent-color: $orange;
+    }
+  }
+
+  &__other {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: $space-3;
+    padding: $space-2 $space-3;
+    font-size: 0.85rem;
+    font-weight: $fw-semibold;
+    color: $teal-text;
+    border-radius: $radius-pill;
+
+    &:hover {
+      background: rgba($teal, 0.1);
+    }
+
+    &:focus-visible {
+      @include focus-ring($teal);
+    }
+  }
+}
+
+@keyframes photo-dialog-in {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+}

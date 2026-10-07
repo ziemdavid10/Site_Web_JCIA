@@ -8,7 +8,7 @@ import { rich } from '@/i18n/rich'
 import { fill } from '@/i18n/format'
 import { CONFIG } from '@/data/config'
 import { formatXAF } from '@/utils/money'
-import { formatSeats, getTicketPricing, isSoldOut, isUnlimitedQuota, maxQuantity } from '@/utils/tickets'
+import { estimateFees, formatSeats, getTicketPricing, isSoldOut, isUnlimitedQuota, maxQuantity } from '@/utils/tickets'
 import { detectOperator, formatCmPhone, isValidCmPhone, normalizePhone } from '@/utils/phone'
 import {
   digitsOnly,
@@ -22,7 +22,8 @@ import {
 } from '@/utils/card'
 import { newOrderId, saveOrder } from '@/services/orders'
 import { cleanText, isValidEmail, isValidPersonName } from '@/security/sanitize'
-import { PAYMENT_MODE, processPayment } from '@/services/payment'
+import { PAYMENT_MODE, processPayment, registerFreeOrder } from '@/services/payment'
+import useTicketCatalog from '@/hooks/useTicketCatalog'
 import useDocumentMeta from '@/hooks/useDocumentMeta'
 import logoColor from '@/assets/images/brand/logo-jcia-sm.webp'
 import './CheckoutPage.scss'
@@ -94,8 +95,11 @@ export default function CheckoutPage() {
   const navigate = useNavigate()
   const { tierId = 'standard' } = useParams()
   const { tickets, routes, payment } = CONFIG
+  // Tarifs locaux + stock réel, frais et moyens acceptés renvoyés par le serveur
+  const catalog = useTicketCatalog()
+  const tiersList = catalog.tiers
   const requestedTierId = tierId === 'professionnel' ? 'vip' : tierId // compatibilité avec les anciens liens
-  const tier = tickets.tiers.find((x) => x.id === requestedTierId)
+  const tier = tiersList.find((x) => x.id === requestedTierId)
   const uid = useId()
   const formRef = useRef(null)
   const alive = useRef(true)
@@ -138,11 +142,16 @@ export default function CheckoutPage() {
   const pricing = tier ? getTicketPricing(tier) : { originalPrice: 0, price: 0, discounted: false, discountPercent: 0 }
   const unitPrice = pricing.price
   const isFree = unitPrice === 0
-  const isCard = method === 'card'
+  // Carte : uniquement si le serveur l'accepte (TIKORA = Mobile Money seulement)
+  const cardAllowed = catalog.methods.includes('card')
+  const isCard = method === 'card' && cardAllowed
   const cardBrand = detectBrand(card.number)
   const isStudent = tier?.id === 'etudiant'
-  const total = unitPrice * qty
+  const total = unitPrice * qty // sous-total (grille JCIA)
+  const fees = isFree ? 0 : estimateFees(total, catalog.buyerFee) // frais de service TIKORA
+  const grandTotal = total + fees
   const amount = formatXAF(total, locale)
+  const grandAmount = formatXAF(grandTotal, locale)
   const effectivePayPhone = samePhone ? values.phone : payPhone
   const detected = detectOperator(effectivePayPhone)
   const operator = payment.operators.find((o) => o.id === (operatorId ?? detected?.id)) ?? null
@@ -163,7 +172,7 @@ export default function CheckoutPage() {
   }
 
   const changeTier = (id) => {
-    const next = tickets.tiers.find((x) => x.id === id)
+    const next = tiersList.find((x) => x.id === id)
     if (next) setQuantity((q) => Math.min(q, maxQuantity(next)))
     navigate(`${routes.checkout}/${id}`, { replace: true })
   }
@@ -209,11 +218,18 @@ export default function CheckoutPage() {
           method: order.payment.method,
           operator: order.payment.operator,
           phone: order.payment.phone,
+          tierId: order.tierId,
+          quantity: order.quantity,
+          attendees: order.attendees,
+          publicListing: order.publicListing,
+          lang: order.lang,
           card: cardData,
           customer: order.customer,
           description: `JCIA 2027 — ${order.tierId} × ${order.quantity}`,
         },
-        (step) => alive.current && setPay((p) => (p ? { ...p, step } : p)),
+        (step, info) =>
+          alive.current &&
+          setPay((p) => (p ? { ...p, step, ...(Number.isFinite(info?.amount) ? { amountPaid: info.amount } : {}) } : p)),
       )
     } catch {
       result = { status: 'FAILED', reason: 'network' }
@@ -221,16 +237,28 @@ export default function CheckoutPage() {
     if (!alive.current) return
 
     submitting.current = false
+    // Jeton d'accès et montant réellement débité (frais TIKORA inclus) — mode réel
+    const serverInfo = {
+      ...(result.accessToken ? { accessToken: result.accessToken } : {}),
+    }
+    const paidInfo = { fees: result.fees, amountPaid: result.amount, mode: result.mode }
     if (result.status === 'SUCCESSFUL') {
       failures.current = 0
       const paid = saveOrder({
         ...order,
-        payment: { ...order.payment, status: 'paid', transactionId: result.transactionId, paidAt: new Date().toISOString(), mode: result.mode },
+        ...serverInfo,
+        payment: { ...order.payment, ...paidInfo, status: 'paid', transactionId: result.transactionId, paidAt: new Date().toISOString() },
       })
       navigate(`${routes.confirmation}/${paid.id}`)
+    } else if (result.status === 'PENDING') {
+      // Pas de réponse définitive dans le délai : le serveur continue le suivi,
+      // la page de confirmation affichera le résultat (et l'e-mail suivra).
+      failures.current = 0
+      const pending = saveOrder({ ...order, ...serverInfo, payment: { ...order.payment, ...paidInfo, status: 'pending' } })
+      navigate(`${routes.confirmation}/${pending.id}`)
     } else {
-      saveOrder({ ...order, payment: { ...order.payment, status: 'failed', reason: result.reason } })
-      setPay((p) => ({ ...p, status: 'failed' }))
+      saveOrder({ ...order, ...serverInfo, payment: { ...order.payment, status: 'failed', reason: result.reason } })
+      setPay((p) => ({ ...p, status: 'failed', reason: result.reason }))
       failures.current += 1
       if (failures.current >= MAX_FAILURES) {
         failures.current = 0
@@ -293,8 +321,18 @@ export default function CheckoutPage() {
 
     submitting.current = true
     if (isFree) {
-      saveOrder(order)
-      navigate(`${routes.confirmation}/${order.id}`)
+      // Inscription gratuite : enregistrée par le serveur (liste des participants,
+      // e-mail, QR signé), localement seulement en démonstration
+      registerFreeOrder(order).then((res) => {
+        submitting.current = false
+        if (!alive.current) return
+        if (res.status !== 'free') {
+          setErrors({ summary: t.tickets.payment.reasons[res.reason] ?? t.tickets.payment.reasons.init })
+          return
+        }
+        const saved = saveOrder({ ...order, ...(res.accessToken ? { accessToken: res.accessToken } : {}), payment: { ...order.payment, mode: res.mode } })
+        navigate(`${routes.confirmation}/${saved.id}`)
+      })
     } else {
       runPayment(order, isCard ? card : undefined)
     }
@@ -349,7 +387,7 @@ export default function CheckoutPage() {
   const tt = t.tickets.tiers[tier.id]
   const errorCount = Object.keys(errors).length
   const e = t.event
-  const submitLabel = isFree ? c.confirmFree : fill(c.pay, { amount })
+  const submitLabel = isFree ? c.confirmFree : fill(c.pay, { amount: grandAmount })
   const buyerDone = isValidPersonName(values.name) && isValidEmail(values.email) && isValidCmPhone(values.phone)
   const stepState = (i) => (i === 0 || (i === 1 && buyerDone) ? 'done' : (i === 1 && !buyerDone) || (i === 2 && buyerDone) ? 'active' : 'todo')
 
@@ -399,7 +437,7 @@ export default function CheckoutPage() {
 
       <div className="container checkout__grid">
         <form id="checkout-form" ref={formRef} className="checkout__form" onSubmit={onSubmit} noValidate>
-          {PAYMENT_MODE === 'demo' && !isFree && (
+          {catalog.demo && !isFree && (
             <p className="co-demo">
               <Icon name="info" size={18} />
               <span>{rich(c.demo)}</span>
@@ -432,7 +470,7 @@ export default function CheckoutPage() {
               <span>1</span> {c.ticketTitle}
             </legend>
             <div className="co-tiers" role="radiogroup" aria-label={c.ticketTitle}>
-              {tickets.tiers.map((x) => {
+              {tiersList.map((x) => {
                 const checked = x.id === tier.id
                 const out = isSoldOut(x)
                 return (
@@ -619,13 +657,15 @@ export default function CheckoutPage() {
                   {[
                     { id: 'momo', icon: 'smartphone', badges: payment.operators },
                     { id: 'card', icon: 'coins', badges: payment.cards },
-                  ].map((m) => (
-                    <label key={m.id} className={`co-method ${method === m.id ? 'is-checked' : ''}`}>
+                  ]
+                    .filter((m) => catalog.methods.includes(m.id))
+                    .map((m) => (
+                    <label key={m.id} className={`co-method ${(m.id === 'card') === isCard ? 'is-checked' : ''}`}>
                       <input
                         type="radio"
                         name="method"
                         value={m.id}
-                        checked={method === m.id}
+                        checked={(m.id === 'card') === isCard}
                         onChange={() => {
                           setMethod(m.id)
                           setErrors((errs) => omit(omit(errs, 'operator'), 'payPhone'))
@@ -810,7 +850,7 @@ export default function CheckoutPage() {
 
             {/* Facultatif : figurer dans la liste publique des participants */}
             <label className="co-check">
-              <input type="checkbox" checked={listed} onChange={(ev) => setListed(ev.target.checked)} checked />
+              <input type="checkbox" checked={listed} onChange={(ev) => setListed(ev.target.checked)} />
               <span>
                 {c.publicListing}
                 <small>{c.publicListingHint}</small>
@@ -862,15 +902,16 @@ export default function CheckoutPage() {
             </div>
             <div>
               <dt>{c.fees}</dt>
-              <dd>{c.feesValue}</dd>
+              <dd>{fees ? formatXAF(fees, locale) : c.feesValue}</dd>
             </div>
             <div className="co-summary__total">
               <dt>{c.total}</dt>
-              <dd>{isFree ? t.tickets.page.free : amount}</dd>
+              <dd>{isFree ? t.tickets.page.free : grandAmount}</dd>
             </div>
+            {fees > 0 && <p className="co-summary__fees-note">{c.feesNote}</p>}
           </dl>
           {/* Bouton pour finaliser le paiement */}
-          <Button type="submit" form="checkout-form" size="lg" icon={isFree ? 'check' : 'lock'} className="co-summary__submit" disabled >
+          <Button type="submit" form="checkout-form" size="lg" icon={isFree ? 'check' : 'lock'} className="co-summary__submit">
             {submitLabel}
           </Button>
           {!isFree && (
@@ -887,7 +928,7 @@ export default function CheckoutPage() {
       <div className="co-bar">
         <div>
           <small>{c.total}</small>
-          <strong>{isFree ? t.tickets.page.free : amount}</strong>
+          <strong>{isFree ? t.tickets.page.free : grandAmount}</strong>
         </div>
         <Button type="submit" form="checkout-form" icon={isFree ? 'check' : 'lock'}>
           {isFree ? c.confirmFree : fill(c.pay, { amount: '' }).trim()}
@@ -898,7 +939,8 @@ export default function CheckoutPage() {
         <PaymentDialog
           status={pay.status}
           step={pay.step}
-          amount={formatXAF(pay.order.total, locale)}
+          reason={pay.reason}
+          amount={formatXAF(pay.amountPaid ?? pay.order.total + estimateFees(pay.order.total, catalog.buyerFee), locale)}
           phone={pay.order.payment.phone ? formatCmPhone(pay.order.payment.phone) : ''}
           operator={payment.operators.find((o) => o.id === pay.order.payment.operator)}
           method={pay.order.payment.method}

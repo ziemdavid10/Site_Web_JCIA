@@ -65,7 +65,7 @@ export default {
   footer: {
     organizedBy: 'Organisé par',
     eventTitle: 'L’événement',
-    extra: { attendees: 'Participants', speakers: 'Intervenants', tickets: 'Billetterie', flyer: 'Mon flyer « J’y serai »' },
+    extra: { attendees: 'Participants', speakers: 'Intervenants', tickets: 'Billetterie', flyer: 'Mon visuel « J’y serai »' },
     docsTitle: 'Documents',
     docs: {
       tdr: 'TDR — Appel à candidatures CAIA',

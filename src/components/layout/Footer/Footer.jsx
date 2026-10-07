@@ -15,8 +15,7 @@ import './Footer.scss'
 export default function Footer() {
   const { t } = useI18n()
   const { openPanel } = useConsent()
-  const { contact, links, routes, features } = CONFIG
-  const downloads = features.documentDownloads
+  const { contact, links, routes } = CONFIG
   const f = t.footer
   const year = new Date().getFullYear()
 

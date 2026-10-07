@@ -24,9 +24,9 @@ export default {
     badgeLead: '',
     badgeStrong: 'Preparatory side event for the Geneva AI Summit 2027',
     // Main title: the full event name; second line: the organiser
-    titleStart: 'Cameroon ',
+    titleStart: 'Cameroon Days of ',
     titleAccent: 'Artificial Intelligence',
-    titleEnd: ' Days 2027',
+    titleEnd: ' 2027',
     kicker: 'Cameroon Artificial Intelligence Policy Institute — Intelligence Artificielle Cameroun (CAIPI/IAC) ',
     theme: 'Theme: “Thinking Artificial Intelligence **in Cameroon**, **for Cameroon**”',
     ctaRegister: 'Book my seat',
@@ -498,7 +498,7 @@ export default {
   registration: {
     eyebrow: 'Tickets',
     title: 'Join *7,000* AI players',
-    lead: 'Choose your ticket — on site at the Hilton or online. Payment by MTN Mobile Money, Orange Money, Visa or Mastercard opens very soon. Your ticket also unlocks the personalised “I’ll be there” flyer.',
+    lead: 'Choose your ticket — on site at the Hilton or online. Payment by MTN Mobile Money, Orange Money, Visa or Mastercard opens very soon. Every ticket, even a free one, unlocks the personalised “I’ll be there” visual in your ticket’s colours.',
     tiersTitle: 'Our tickets',
     from: 'Free',
     allTickets: 'See all tickets',

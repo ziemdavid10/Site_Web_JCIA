@@ -55,20 +55,6 @@
       display: block;
       width: 100%;
       height: 100%;
-
-      &.is-draggable {
-        cursor: grab;
-        touch-action: none;
-
-        &:active {
-          cursor: grabbing;
-        }
-      }
-
-      &:focus-visible {
-        outline: 3px solid $teal;
-        outline-offset: -3px;
-      }
     }
   }
 
@@ -78,17 +64,6 @@
     background: linear-gradient(100deg, transparent 30%, fg(0.08) 50%, transparent 70%) $surface-muted;
     background-size: 200% 100%;
     animation: fx-shimmer 1.2s linear infinite;
-  }
-
-  &__hint {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: $space-2;
-    margin-top: $space-3;
-    font-size: 0.8rem;
-    color: $text-muted;
-    text-align: center;
   }
 
   &__controls {
@@ -130,51 +105,79 @@
   }
 }
 
-// Zone de dépôt de la photo
-.fx-drop {
+// Participant (commande de plusieurs billets)
+.fx-who {
+  margin-bottom: $space-4;
+
+  .fx-label {
+    margin-top: 0;
+  }
+
+  &__list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: $space-2;
+
+    label {
+      display: inline-flex;
+      align-items: center;
+      gap: $space-2;
+      max-width: 100%;
+      padding: 4px $space-3 4px 4px;
+      font-size: 0.82rem;
+      font-weight: $fw-semibold;
+      border: 1.5px solid $border-strong;
+      border-radius: $radius-pill;
+      cursor: pointer;
+      transition:
+        border-color $duration-fast,
+        background $duration-fast;
+
+      span {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      &.is-checked {
+        border-color: $orange;
+        background: rgba($orange, 0.1);
+      }
+
+      &:focus-within {
+        @include focus-ring($teal);
+      }
+    }
+
+    input {
+      @include visually-hidden;
+    }
+  }
+
+  &__avatar {
+    flex-shrink: 0;
+    width: 30px;
+    height: 30px;
+    object-fit: cover;
+    border-radius: 50%;
+  }
+}
+
+// Photo de la fiche participant
+.fx-photo {
   display: flex;
   align-items: center;
   gap: $space-4;
-  padding: $space-4;
-  border: 2px dashed $border-strong;
-  border-radius: $radius-md;
-  cursor: pointer;
-  transition:
-    border-color $duration-fast,
-    background $duration-fast;
 
-  input {
-    @include visually-hidden;
-  }
-
-  &:hover,
-  &.is-over {
-    border-color: $orange;
-    background: rgba($orange, 0.08);
-  }
-
-  &:focus-within {
-    @include focus-ring($teal);
-  }
-
-  &__icon {
+  &__avatar {
     flex-shrink: 0;
-    display: grid;
-    place-items: center;
-    width: 56px;
-    height: 56px;
-    color: $navy;
-    background: $orange;
-    border-radius: 50%;
-  }
-
-  &__thumb {
-    flex-shrink: 0;
-    width: 56px;
-    height: 56px;
+    width: 72px;
+    height: 72px;
     object-fit: cover;
     border-radius: 50%;
-    box-shadow: 0 0 0 3px $orange;
+    box-shadow:
+      0 0 0 3px $surface,
+      0 0 0 6px var(--tier-b, #{$orange});
   }
 
   &__text {
@@ -186,54 +189,53 @@
     }
 
     small {
+      display: block;
+      margin-top: 2px;
       font-size: 0.78rem;
+      line-height: 1.45;
       color: $text-muted;
+    }
+  }
+
+  &.has-photo &__text small {
+    color: $flag-green;
+  }
+
+  &__actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: $space-2 $space-4;
+    margin-top: $space-4;
+  }
+
+  &__remove {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: $space-2;
+    font-size: 0.85rem;
+    font-weight: $fw-semibold;
+    color: $text-muted;
+    border-radius: $radius-sm;
+
+    &:hover {
+      color: $flag-red;
+    }
+
+    &:focus-visible {
+      @include focus-ring($teal);
     }
   }
 }
 
-.fx-error {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  margin-top: $space-2;
-  font-size: 0.78rem;
-  color: $flag-red;
-}
-
-.fx-zoom {
-  display: flex;
-  align-items: center;
-  gap: $space-3;
-  margin-top: $space-4;
-  font-size: 0.85rem;
-  font-weight: $fw-semibold;
-
-  .icon {
-    flex-shrink: 0;
-    color: $text-muted;
-  }
-
-  input {
-    flex: 1;
-    min-width: 0;
-    accent-color: $orange;
-    height: 28px; // cible tactile
-  }
-}
-
-.fx-privacy {
-  display: flex;
-  gap: $space-2;
-  margin-top: $space-4;
-  font-size: 0.78rem;
-  line-height: 1.5;
+.fx-status {
+  margin-top: $space-3;
+  font-size: 0.8rem;
   color: $text-muted;
 
-  .icon {
-    flex-shrink: 0;
-    margin-top: 2px;
-    color: $flag-green;
+  &:empty {
+    display: none;
   }
 }
 
@@ -329,44 +331,71 @@
   font-weight: $fw-semibold;
 }
 
-// Ambiances : pastilles de couleur
-.fx-styles {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: $space-2;
-
-  label {
-    display: flex;
-    align-items: center;
-    gap: $space-2;
-    padding: $space-2 $space-3;
-    font-size: 0.8rem;
-    font-weight: $fw-semibold;
-    border: 1.5px solid $border-strong;
-    border-radius: $radius-pill;
-    cursor: pointer;
-
-    &.is-checked {
-      border-color: $orange;
-      background: rgba($orange, 0.1);
-    }
-
-    &:focus-within {
-      @include focus-ring($teal);
-    }
-  }
-
-  input {
-    @include visually-hidden;
-  }
+// Charte imposée par le billet
+.fx-charter {
+  display: flex;
+  align-items: center;
+  gap: $space-3;
+  margin-top: $space-5;
+  padding: $space-3;
+  background: $surface-muted;
+  border-radius: $radius-md;
 
   &__swatch {
     flex-shrink: 0;
-    width: 22px;
-    height: 22px;
+    width: 40px;
+    height: 40px;
     border-radius: 50%;
-    background: linear-gradient(135deg, var(--sw-a) 50%, var(--sw-b) 50%);
+    background: linear-gradient(135deg, var(--tier-a) 50%, var(--tier-b) 50%);
     box-shadow: inset 0 0 0 1px fg(0.2);
+  }
+
+  strong {
+    display: block;
+    font-size: 0.9rem;
+  }
+
+  small {
+    display: block;
+    margin-top: 2px;
+    font-size: 0.76rem;
+    line-height: 1.45;
+    color: $text-muted;
+  }
+}
+
+// Légende des chartes : celle du billet est mise en avant
+.fx-charters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $space-2 $space-3;
+  margin-top: $space-3;
+
+  li {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.74rem;
+    color: $text-muted;
+
+    span {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--sw-a) 50%, var(--sw-b) 50%);
+      box-shadow: inset 0 0 0 1px fg(0.2);
+    }
+
+    &.is-current {
+      font-weight: $fw-bold;
+      color: $text;
+
+      span {
+        box-shadow:
+          0 0 0 2px $surface,
+          0 0 0 3.5px var(--sw-b);
+      }
+    }
   }
 }
 

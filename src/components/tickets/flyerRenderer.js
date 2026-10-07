@@ -1,12 +1,14 @@
 /**
- * Moteur de rendu du flyer « J'y serai » (Canvas 2D, 100 % dans le navigateur).
+ * Moteur de rendu du visuel « J'y serai » (Canvas 2D, 100 % dans le navigateur).
  *
- * Le flyer est dessiné en haute définition (1080 px de large) :
+ * Le visuel est dessiné en haute définition (1080 px de large) :
  *   logo JCIA → « J'Y SERAI ! » → photo ronde cerclée aux couleurs de la marque
- *   → nom & titre → date, lieu, nom de l'événement, thème → hashtag → frise.
+ *   → badge du billet → nom & titre → date, lieu, nom de l'événement, thème
+ *   → hashtag → frise.
  *
- * La photo n'est jamais envoyée sur un serveur : elle est lue localement
- * (URL d'objet) et dessinée sur le canevas.
+ * La CHARTE (fond, dégradés, couleurs d'accent, badge) dépend du billet du
+ * participant : chaque tarif a la sienne (TIER_STYLES). La photo est celle de la
+ * fiche participant (déjà recadrée au carré) : src/services/photos.js.
  */
 
 // --- Formats de sortie (px) ---------------------------------------------------------
@@ -64,33 +66,41 @@ const LAYOUTS = {
 
 export const getLayout = (format) => LAYOUTS[format] ?? LAYOUTS.portrait
 
-// --- Ambiances ----------------------------------------------------------------------------
-export const FLYER_STYLES = {
-  nuit: {
-    bg: ['#0e1326', '#19203a', '#232b4d'],
-    glowA: 'rgba(246,163,67,0.38)',
-    glowB: 'rgba(45,184,189,0.32)',
+// --- Chartes par billet ------------------------------------------------------------------------
+/**
+ * Une charte par tarif, toutes tirées de la palette JCIA (orange, sarcelle,
+ * latérite, violet, nuit, jaune du drapeau) :
+ *   gratuit  → Sarcelle          étudiant → Violet & orange
+ *   standard → Soleil (clair)    en ligne → Nuit & sarcelle      VIP → Latérite & or
+ */
+export const TIER_STYLES = {
+  gratuit: {
+    bg: ['#062f31', '#0b4e51', '#147a7e'],
+    glowA: 'rgba(127,227,224,0.30)',
+    glowB: 'rgba(246,163,67,0.22)',
     text: '#ffffff',
-    soft: 'rgba(255,255,255,0.78)',
-    headline: ['#f6a343', '#cd6035'],
-    accent: '#f6a343',
+    soft: 'rgba(255,255,255,0.82)',
+    headline: ['#ffffff', '#a8f0ed'],
+    accent: '#8ce6e2',
+    badge: { bg: '#2db8bd', text: '#062f31' },
     logo: 'white',
     map: 'dark',
-    swatch: ['#19203a', '#f6a343'],
+    swatch: ['#0b4e51', '#2db8bd'],
   },
-  laterite: {
-    bg: ['#6e2412', '#a4462a', '#cd6035'],
-    glowA: 'rgba(252,209,22,0.35)',
-    glowB: 'rgba(25,32,58,0.45)',
+  etudiant: {
+    bg: ['#1c1338', '#30225e', '#5d4696'],
+    glowA: 'rgba(246,163,67,0.34)',
+    glowB: 'rgba(45,184,189,0.26)',
     text: '#ffffff',
-    soft: 'rgba(255,255,255,0.85)',
-    headline: ['#ffe08a', '#fcd116'],
-    accent: '#ffd27a',
+    soft: 'rgba(255,255,255,0.8)',
+    headline: ['#f6a343', '#ffd08a'],
+    accent: '#ffc477',
+    badge: { bg: '#f6a343', text: '#1c1338' },
     logo: 'white',
     map: 'dark',
-    swatch: ['#a4462a', '#fcd116'],
+    swatch: ['#30225e', '#f6a343'],
   },
-  soleil: {
+  standard: {
     bg: ['#fff6e8', '#fde3bd', '#f7c27d'],
     glowA: 'rgba(205,96,53,0.28)',
     glowB: 'rgba(45,184,189,0.25)',
@@ -98,11 +108,41 @@ export const FLYER_STYLES = {
     soft: 'rgba(25,32,58,0.78)',
     headline: ['#cd6035', '#a4462a'],
     accent: '#a4462a',
+    badge: { bg: '#19203a', text: '#f6a343' },
     logo: 'color',
     map: 'light',
-    swatch: ['#fde3bd', '#cd6035'],
+    swatch: ['#fde3bd', '#f6a343'],
+  },
+  'en-ligne': {
+    bg: ['#0e1326', '#19203a', '#232b4d'],
+    glowA: 'rgba(45,184,189,0.42)',
+    glowB: 'rgba(93,70,150,0.38)',
+    text: '#ffffff',
+    soft: 'rgba(255,255,255,0.78)',
+    headline: ['#2db8bd', '#8ce6e2'],
+    accent: '#5fd3d7',
+    badge: { bg: '#2db8bd', text: '#0e1326' },
+    logo: 'white',
+    map: 'dark',
+    swatch: ['#19203a', '#2db8bd'],
+  },
+  vip: {
+    bg: ['#3b1007', '#7a2c15', '#b4502c'],
+    glowA: 'rgba(252,209,22,0.36)',
+    glowB: 'rgba(14,19,38,0.5)',
+    text: '#ffffff',
+    soft: 'rgba(255,255,255,0.85)',
+    headline: ['#fff0b8', '#fcd116'],
+    accent: '#ffd36b',
+    badge: { bg: '#fcd116', text: '#3b1007' },
+    logo: 'white',
+    map: 'dark',
+    swatch: ['#7a2c15', '#fcd116'],
   },
 }
+
+/** Charte du billet (Standard si le tarif est inconnu). */
+export const styleForTier = (tierId) => TIER_STYLES[tierId] ?? TIER_STYLES.standard
 
 const BRAND = ['#f6a343', '#2db8bd', '#cd6035', '#5d4696']
 export const FLYER_FONT = "'Sora Variable', 'Sora', system-ui, sans-serif"
@@ -122,22 +162,6 @@ export function loadImage(src) {
     img.onerror = reject
     img.src = src
   })
-}
-
-// --- Photo : cadrage ------------------------------------------------------------------------
-/**
- * Le décalage de la photo est exprimé en « rayons » (indépendant du format).
- * Cette fonction le limite pour que la photo couvre toujours tout le cercle.
- */
-export function clampOffset(photo, zoom, offset) {
-  if (!photo) return { x: 0, y: 0 }
-  const scale = Math.max(2 / photo.naturalWidth, 2 / photo.naturalHeight) * zoom
-  const maxX = (photo.naturalWidth * scale - 2) / 2
-  const maxY = (photo.naturalHeight * scale - 2) / 2
-  return {
-    x: Math.max(-maxX, Math.min(maxX, offset.x)),
-    y: Math.max(-maxY, Math.min(maxY, offset.y)),
-  }
 }
 
 // --- Outils de dessin -------------------------------------------------------------------------
@@ -319,7 +343,7 @@ function drawFrise(ctx, w, h, height) {
 }
 
 /** Photo ronde + anneau segmenté aux quatre couleurs de la marque. */
-function drawPhoto(ctx, cx, cy, r, st, photo, zoom, offset, placeholderText) {
+function drawPhoto(ctx, cx, cy, r, st, photo, placeholderText, withBadge = false) {
   // Anneau extérieur segmenté
   const ringR = r + r * 0.12
   const seg = (Math.PI * 2) / 4
@@ -331,8 +355,9 @@ function drawPhoto(ctx, cx, cy, r, st, photo, zoom, offset, placeholderText) {
     ctx.arc(cx, cy, ringR, -Math.PI / 2 + i * seg + 0.09, -Math.PI / 2 + (i + 1) * seg - 0.09)
     ctx.stroke()
   })
-  // Losanges aux jonctions de l'anneau
+  // Losanges aux jonctions de l'anneau (celui du bas est caché par le badge du billet)
   for (let i = 0; i < 4; i += 1) {
+    if (withBadge && i === 2) continue
     const a = -Math.PI / 2 + i * seg
     diamond(ctx, cx + Math.cos(a) * ringR, cy + Math.sin(a) * ringR, r * 0.055, st.text)
   }
@@ -349,11 +374,11 @@ function drawPhoto(ctx, cx, cy, r, st, photo, zoom, offset, placeholderText) {
   ctx.clip()
 
   if (photo) {
-    const o = clampOffset(photo, zoom, offset)
-    const scale = Math.max((2 * r) / photo.naturalWidth, (2 * r) / photo.naturalHeight) * zoom
+    // Photo carrée (recadrée par le participant) : couvre exactement le cercle
+    const scale = Math.max((2 * r) / photo.naturalWidth, (2 * r) / photo.naturalHeight)
     const dw = photo.naturalWidth * scale
     const dh = photo.naturalHeight * scale
-    ctx.drawImage(photo, cx - dw / 2 + o.x * r, cy - dh / 2 + o.y * r, dw, dh)
+    ctx.drawImage(photo, cx - dw / 2, cy - dh / 2, dw, dh)
   } else {
     // Emplacement vide : silhouette + invitation
     ctx.fillStyle = 'rgba(255,255,255,0.12)'
@@ -374,18 +399,15 @@ function drawPhoto(ctx, cx, cy, r, st, photo, zoom, offset, placeholderText) {
 }
 
 /**
- * Dessine le flyer complet sur le canevas.
+ * Dessine le visuel complet sur le canevas.
  *
  * @param {HTMLCanvasElement} canvas
  * @param {object} o
  * @param {'portrait'|'story'|'square'} o.format
- * @param {'nuit'|'laterite'|'soleil'} o.style
- * @param {HTMLImageElement|null} o.photo
- * @param {number} o.zoom       1 à 3
- * @param {{x:number,y:number}} o.offset  décalage en rayons
+ * @param {string} o.tier       identifiant du billet (charte et badge)
+ * @param {HTMLImageElement|null} o.photo  photo de la fiche participant (carrée)
  * @param {string} o.name
  * @param {string} o.role
- * @param {boolean} o.online    billet « En ligne » : ajoute un badge
  * @param {object} o.text       textes traduits (t.tickets.flyer.art)
  * @param {object} o.assets     images préchargées { logoWhite, logoColor, mapDark, mapLight }
  * @param {string} o.placeholder texte affiché sans photo
@@ -393,7 +415,7 @@ function drawPhoto(ctx, cx, cy, r, st, photo, zoom, offset, placeholderText) {
 export function drawFlyer(canvas, o) {
   const { w, h } = FLYER_FORMATS[o.format]
   const L = getLayout(o.format)
-  const st = FLYER_STYLES[o.style]
+  const st = styleForTier(o.tier)
   if (canvas.width !== w) canvas.width = w
   if (canvas.height !== h) canvas.height = h
   const ctx = canvas.getContext('2d')
@@ -439,22 +461,30 @@ export function drawFlyer(canvas, o) {
   ctx.restore()
 
   // Photo
-  drawPhoto(ctx, cx, L.photo.cy, L.photo.r, st, o.photo, o.zoom, o.offset, o.placeholder)
+  // Badge du billet (VISITEUR, ÉTUDIANT, PARTICIPANT, EN LIGNE, VIP), à cheval sur l'anneau
+  const badge = o.text.badges?.[o.tier]
+  drawPhoto(ctx, cx, L.photo.cy, L.photo.r, st, o.photo, o.placeholder, Boolean(badge))
 
-  // Badge « EN LIGNE »
-  if (o.online) {
-    const by = L.photo.cy + L.photo.r * 0.98
+  if (badge) {
+    const by = L.photo.cy + L.photo.r * 1.02
     ctx.font = font(800, L.role.size * 0.85)
-    const bw = ctx.measureText(o.text.online).width + L.role.size * 1.6
+    ctx.letterSpacing = `${Math.round(L.role.size * 0.08)}px`
+    const bw = ctx.measureText(badge).width + L.role.size * 1.7
     const bh = L.role.size * 1.5
-    ctx.fillStyle = '#2db8bd'
+    ctx.save()
+    ctx.shadowColor = 'rgba(0,0,0,0.25)'
+    ctx.shadowBlur = bh * 0.4
+    ctx.shadowOffsetY = bh * 0.12
+    ctx.fillStyle = st.badge.bg
     ctx.beginPath()
     ctx.roundRect(cx - bw / 2, by - bh / 2, bw, bh, bh / 2)
     ctx.fill()
-    ctx.fillStyle = '#ffffff'
+    ctx.restore()
+    ctx.fillStyle = st.badge.text
     ctx.textBaseline = 'middle'
-    ctx.fillText(o.text.online, cx, by + 2)
+    ctx.fillText(badge, cx, by + 2)
     ctx.textBaseline = 'alphabetic'
+    ctx.letterSpacing = '0px'
   }
 
   // Nom & titre
@@ -475,11 +505,4 @@ export function drawFlyer(canvas, o) {
   fitText(ctx, o.text.hashtag, cx, L.hashtag.y, { weight: 800, size: L.hashtag.size, maxWidth: maxW, color: st.accent })
 
   drawFrise(ctx, w, h, L.frise)
-}
-
-/** Le point (en px du canevas) est-il dans le cercle de la photo ? */
-export function isInPhoto(format, x, y) {
-  const { w } = FLYER_FORMATS[format]
-  const { photo } = getLayout(format)
-  return Math.hypot(x - w / 2, y - photo.cy) <= photo.r
 }

@@ -72,9 +72,6 @@ export default function SpeakersExplorer({ mode = 'home' }) {
   // Métadonnées des catégories
   // ---------------------------------------------------------------------------
 
-  const labelOf = (id) =>
-    sp.profiles.find((p) => p.id === id)?.label ?? id
-
   const catOf = (id) =>
     SPEAKER_CATEGORIES.find((c) => c.id === id)
 

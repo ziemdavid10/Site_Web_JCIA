@@ -35,8 +35,9 @@ export function buildCsp({ paymentApiUrl = '' } = {}) {
     // Styles : 'unsafe-inline' requis par l'écran de chargement d'index.html et les
     // attributs style dynamiques ; sans risque d'exécution de code.
     'style-src': ["'self'", "'unsafe-inline'"],
-    // data: → QR codes et petites images ; blob: → photo du flyer (reste sur l'appareil)
-    'img-src': ["'self'", 'data:', 'blob:'],
+    // data: → QR codes, photos de participant gardées sur l'appareil ; blob: → aperçus ;
+    // API de billetterie → photos de la liste publique des participants
+    'img-src': ["'self'", 'data:', 'blob:', paymentOrigin].filter(Boolean),
     'font-src': ["'self'", 'data:'],
     'connect-src': ["'self'", paymentOrigin].filter(Boolean),
     'frame-src': [MAP_ORIGIN],

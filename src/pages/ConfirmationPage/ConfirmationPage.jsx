@@ -1,8 +1,9 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router'
 import QRCode from 'qrcode'
 import { Button, Frise, Icon, PatternBg, Reveal } from '@/components/ui'
 import OperatorBadge from '@/components/tickets/OperatorBadge'
+import ParticipantPhotos from '@/components/tickets/ParticipantPhotos'
 import { useI18n } from '@/i18n/context'
 import { rich } from '@/i18n/rich'
 import { fill } from '@/i18n/format'
@@ -10,18 +11,26 @@ import { CONFIG } from '@/data/config'
 import { formatXAF } from '@/utils/money'
 import { formatCmPhone } from '@/utils/phone'
 import { buildEventIcsHref } from '@/utils/calendar'
-import { canGenerateFlyer, getOrder, isConfirmed } from '@/services/orders'
+import { canGenerateFlyer, getOrder, isConfirmed, saveServerOrder } from '@/services/orders'
 import { receiptFallbackHref, requestOrderReceipt } from '@/services/email'
+import { fetchServerOrder, PAYMENT_MODE } from '@/services/payment'
 import useDocumentMeta from '@/hooks/useDocumentMeta'
 import logoWhite from '@/assets/images/brand/logo-jcia-white-sm.webp'
 import './ConfirmationPage.scss'
 
 /**
  * Génère les QR codes des billets (un par participant).
- * ⚠️ Démonstration : le contenu est lisible (n° de commande + participant).
- * En production, le QR code contiendra un jeton signé émis par le serveur de
- * billetterie et vérifié au contrôle d'accès.
+ *  • mode réel : le QR encode le jeton officiel émis par TIKORA (ou, pour un
+ *    billet gratuit, le jeton signé par le serveur JCIA) — c'est lui qui est
+ *    vérifié au contrôle d'accès ;
+ *  • démonstration : contenu lisible (n° de commande + participant), sans valeur.
+ * Le QR est dessiné dans le navigateur (data:), aucune image externe chargée.
  */
+function qrPayloads(order) {
+  if (order.payment.mode !== 'demo') return order.tickets?.length ? order.tickets.map((t) => t.qrToken) : []
+  return order.attendees.map((name, i) => `JCIA2027|${order.id}|${i + 1}/${order.attendees.length}|${order.tierId}|${name}`)
+}
+
 function useTicketQrCodes(order) {
   const [codes, setCodes] = useState([])
 
@@ -29,8 +38,8 @@ function useTicketQrCodes(order) {
     if (!order) return undefined
     let cancelled = false
     Promise.all(
-      order.attendees.map((name, i) =>
-        QRCode.toDataURL(`JCIA2027|${order.id}|${i + 1}/${order.attendees.length}|${order.tierId}|${name}`, {
+      qrPayloads(order).map((payload) =>
+        QRCode.toDataURL(payload, {
           errorCorrectionLevel: 'M',
           margin: 1,
           width: 280,
@@ -90,19 +99,103 @@ function useOrderReceipt(order) {
 }
 
 /**
+ * Mode réel : relit la commande sur le serveur (statut, frais, billets
+ * officiels) grâce au jeton d'accès — celui gardé sur l'appareil, ou celui du
+ * lien reçu par e-mail (#t=…, retiré aussitôt de la barre d'adresse). Tant que
+ * le paiement est en attente de confirmation, la lecture est répétée.
+ */
+const hashToken = () => new URLSearchParams(window.location.hash.slice(1)).get('t') || ''
+
+function useServerOrder(orderId) {
+  const [order, setOrder] = useState(() => getOrder(orderId))
+  // Jeton du lien e-mail lu UNE fois (le fragment est ensuite effacé de l'URL)
+  const [linkToken] = useState(hashToken)
+  const [loading, setLoading] = useState(() => PAYMENT_MODE === 'live' && Boolean(linkToken))
+
+  useEffect(() => {
+    if (PAYMENT_MODE !== 'live') return undefined
+    if (hashToken()) window.history.replaceState(window.history.state, '', window.location.pathname + window.location.search)
+    const token = linkToken || getOrder(orderId)?.accessToken
+    if (!token) return undefined
+
+    let alive = true
+    let timer
+    const deadline = Date.now() + 15 * 60 * 1000
+    const tick = async () => {
+      const server = await fetchServerOrder(orderId, token)
+      if (!alive) return
+      const saved = server ? saveServerOrder(server, token) : null
+      if (saved) setOrder(saved)
+      setLoading(false)
+      const status = saved?.payment.status ?? getOrder(orderId)?.payment.status
+      const needsTickets = saved && isConfirmed(saved) && saved.payment.mode !== 'demo' && !saved.tickets.length
+      if ((status === 'pending' || needsTickets) && Date.now() < deadline) timer = setTimeout(tick, 5000)
+    }
+    tick()
+    return () => {
+      alive = false
+      clearTimeout(timer)
+    }
+  }, [orderId, linkToken])
+
+  return [order, loading]
+}
+
+/**
  * <ConfirmationPage /> — commande confirmée : billets électroniques (QR code),
- * détails du paiement, ajout à l'agenda, impression, et accès au générateur de
- * flyer « J'y serai ».
+ * détails du paiement, ajout à l'agenda, impression, photo de participant et
+ * accès au visuel « J'y serai » (tous billets, gratuits compris).
  */
 export default function ConfirmationPage() {
   const { t, locale } = useI18n()
   const c = t.tickets.confirmation
   const { orderId } = useParams()
-  const order = useMemo(() => getOrder(orderId), [orderId])
+  const [order, loading] = useServerOrder(orderId)
   const codes = useTicketQrCodes(isConfirmed(order) ? order : null)
   const [receipt, retryReceipt] = useOrderReceipt(isConfirmed(order) ? order : null)
   const { routes, payment } = CONFIG
   useDocumentMeta(`${c.title} | ${t.event.shortName}`, { noindex: true })
+
+  // --- Lecture en cours depuis le lien du reçu ----------------------------------------
+  if (!order && loading) {
+    return (
+      <div className="confirmation confirmation--missing">
+        <div className="container confirmation__missing">
+          <span className="confirmation__missing-icon">
+            <Icon name="clock" size={34} />
+          </span>
+          <h1>{c.receipt.sending}</h1>
+        </div>
+      </div>
+    )
+  }
+
+  // --- Paiement en attente de confirmation ou refusé (mode réel) ------------------------
+  if (order && !isConfirmed(order) && ['pending', 'failed'].includes(order.payment.status)) {
+    const pending = order.payment.status === 'pending'
+    return (
+      <div className="confirmation confirmation--missing">
+        <div className="container confirmation__missing" aria-live="polite">
+          <span className="confirmation__missing-icon">
+            <Icon name={pending ? 'clock' : 'alert'} size={34} />
+          </span>
+          <h1>{pending ? c.pendingTitle : c.failedTitle}</h1>
+          <p>{pending ? c.pendingText : (t.tickets.payment.reasons[order.payment.reason] ?? c.failedText)}</p>
+          <p className="confirmation__pending-id">
+            {c.order} : <strong>{order.id}</strong>
+          </p>
+          <div className="confirmation__missing-actions">
+            <Button as={Link} to={routes.tickets} iconLeft="ticket" variant={pending ? 'outline' : undefined}>
+              {t.tickets.checkout.back}
+            </Button>
+            <Button href={`mailto:${CONFIG.contact.emails[0]}?subject=${encodeURIComponent(order.id)}`} variant="outline" iconLeft="mail">
+              {CONFIG.contact.emails[0]}
+            </Button>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   // --- Commande introuvable (autre appareil, lien erroné, paiement non abouti) -----------
   if (!isConfirmed(order)) {
@@ -218,7 +311,8 @@ export default function ConfirmationPage() {
                 ) : (
                   <span className="e-ticket__qr e-ticket__qr--loading" aria-hidden="true" />
                 )}
-                <p className="e-ticket__id">{order.id}</p>
+                <p className="e-ticket__id">{order.tickets?.[i]?.code || order.id}</p>
+                {order.tickets?.[i] && <p className="e-ticket__official">{c.official}</p>}
                 <p className="e-ticket__scan">{tier?.onsite ? c.scan : c.onlineAccess}</p>
               </div>
             </Reveal>
@@ -237,9 +331,15 @@ export default function ConfirmationPage() {
                 <dt>{c.date}</dt>
                 <dd>{date}</dd>
               </div>
+              {order.payment.fees > 0 && (
+                <div>
+                  <dt>{c.fees}</dt>
+                  <dd>{formatXAF(order.payment.fees, locale)}</dd>
+                </div>
+              )}
               <div>
                 <dt>{t.tickets.checkout.total}</dt>
-                <dd>{order.total === 0 ? c.free : formatXAF(order.total, locale)}</dd>
+                <dd>{order.total === 0 ? c.free : formatXAF(order.payment.amountPaid ?? order.total, locale)}</dd>
               </div>
               {(operator || order.payment.method === 'card') && (
                 <>
@@ -248,7 +348,7 @@ export default function ConfirmationPage() {
                     <dd>
                       {operator ? (
                         <>
-                          <OperatorBadge id={operator.id} size="sm" /> {formatCmPhone(order.payment.phone)}
+                          <OperatorBadge id={operator.id} size="sm" /> {order.payment.phone ? formatCmPhone(order.payment.phone) : ''}
                         </>
                       ) : (
                         `${payment.cards.find((x) => x.id === order.payment.brand)?.name ?? t.tickets.checkout.methods.card.name}${
@@ -274,7 +374,12 @@ export default function ConfirmationPage() {
             </div>
           </Reveal>
 
-          {/* Accès au générateur de flyer — billets payants uniquement */}
+          {/* Photo(s) de participant : fiche de la liste publique et visuel « J'y serai » */}
+          <Reveal delay={60}>
+            <ParticipantPhotos order={order} />
+          </Reveal>
+
+          {/* Visuel « J'y serai » — tous les billets confirmés, gratuits compris */}
           {canGenerateFlyer(order) && (
             <Reveal className="flyer-cta" delay={120}>
               <span className="flyer-cta__badge" aria-hidden="true">

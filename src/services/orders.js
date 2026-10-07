@@ -6,10 +6,10 @@ import { ORDER_ID_RE, cleanText } from '@/security/sanitize'
 /**
  * Commandes de billets.
  *
- * ⚠️ Démonstration : les commandes sont conservées sur l'appareil du visiteur
- * (localStorage). En production, elles seront créées et vérifiées par le
- * serveur de billetterie (voir src/services/payment.js) ; l'accès au
- * générateur de flyer devra alors être contrôlé côté serveur.
+ * Copie locale (localStorage) des commandes passées sur cet appareil : elle
+ * sert à l'affichage hors ligne. En mode réel, la commande fait foi sur le
+ * SERVEUR : la page de confirmation la relit (GET /orders/:id + jeton d'accès)
+ * pour obtenir le statut et les QR codes officiels émis par TIKORA.
  *
  * Structure d'une commande :
  * {
@@ -19,7 +19,12 @@ import { ORDER_ID_RE, cleanText } from '@/security/sanitize'
  *   attendees: [ 'Nom 1', 'Nom 2', … ],
  *   publicListing: true | false,   // accord pour figurer dans la liste publique
  *   payment: { method: 'momo'|'card', operator, phone, brand, last4,
- *              status: 'free'|'pending'|'paid'|'failed', transactionId, paidAt, mode },
+ *              status: 'free'|'pending'|'paid'|'failed', transactionId, paidAt, mode,
+ *              fees, amountPaid },
+ *   accessToken: jeton remis par le serveur (consultation des billets),
+ *   tickets: [{ code, qrToken, holder, status }]  billets officiels (mode réel),
+ *   photos: [{ position, version }]  photos des participants connues du serveur
+ *           (la photo elle-même est gardée à part : src/services/photos.js),
  *   ⚠️ Aucun numéro de carte, aucun CVC : seuls le réseau (« visa ») et les
  *      quatre derniers chiffres sont conservés, pour le reçu.
  * }
@@ -32,6 +37,10 @@ const STATUSES = ['free', 'pending', 'paid', 'failed']
 const OPERATORS = CONFIG.payment.operators.map((o) => o.id)
 const METHODS = ['momo', 'card'] // Mobile Money ou carte bancaire
 const BRANDS = ['visa', 'mastercard']
+const TOKEN_RE = /^[\w-]{20,100}$/
+const TICKET_STATUSES = ['valid', 'used', 'cancelled', 'expired']
+const VERSION_RE = /^[\w-]{1,40}$/
+const amountOrUndefined = (v) => (Number.isFinite(Number(v)) && v !== null && v !== '' ? Math.max(0, Math.round(Number(v))) : undefined)
 
 /**
  * Sécurité : le stockage local peut être modifié à la main par n'importe qui.
@@ -54,6 +63,14 @@ function sanitizeOrder(o) {
   if (p.method && !METHODS.includes(p.method)) return null
   const attendees = Array.isArray(o.attendees) ? o.attendees.slice(0, quantity).map((a) => cleanText(a, 80)) : []
   if (attendees.length !== quantity) return null
+  const tickets = Array.isArray(o.tickets)
+    ? o.tickets.slice(0, 50).map((t) => ({
+        code: cleanText(t?.code, 60),
+        qrToken: cleanText(t?.qrToken, 300),
+        holder: cleanText(t?.holder, 80),
+        status: TICKET_STATUSES.includes(t?.status) ? t.status : 'valid',
+      })).filter((t) => t.qrToken)
+    : []
   return {
     id: o.id,
     createdAt: cleanText(o.createdAt, 40),
@@ -72,6 +89,13 @@ function sanitizeOrder(o) {
     attendees,
     // Consentement explicite pour apparaître dans la liste publique des participants
     publicListing: o.publicListing === true,
+    accessToken: TOKEN_RE.test(String(o.accessToken ?? '')) ? o.accessToken : undefined,
+    tickets,
+    photos: Array.isArray(o.photos)
+      ? o.photos
+          .filter((p) => Number.isInteger(p?.position) && p.position >= 1 && p.position <= quantity && VERSION_RE.test(p?.version ?? ''))
+          .map((p) => ({ position: p.position, version: p.version }))
+      : [],
     payment: {
       status: p.status,
       method: METHODS.includes(p.method) ? p.method : 'momo',
@@ -83,7 +107,57 @@ function sanitizeOrder(o) {
       transactionId: p.transactionId ? cleanText(p.transactionId, 80) : undefined,
       paidAt: p.paidAt ? cleanText(p.paidAt, 40) : undefined,
       reason: p.reason ? cleanText(p.reason, 40) : undefined,
+      // Frais de service TIKORA et montant réellement débité (mode réel)
+      fees: amountOrUndefined(p.fees),
+      amountPaid: amountOrUndefined(p.amountPaid),
     },
+  }
+}
+
+const SERVER_STATUS = { paid: 'paid', free: 'free', pending: 'pending', failed: 'failed', expired: 'failed', cancelled: 'failed' }
+
+/**
+ * Convertit la commande renvoyée par le serveur (GET /orders/:id) au format
+ * local, puis l'enregistre sur l'appareil. Sert aussi à retrouver une
+ * commande depuis le lien du reçu e-mail (autre appareil).
+ */
+export function saveServerOrder(server, accessToken) {
+  if (!server || !ORDER_ID_RE.test(server.id ?? '')) return null
+  const created = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/.test(server.createdAt ?? '')
+    ? `${server.createdAt.replace(' ', 'T')}Z`
+    : server.createdAt
+  const status = SERVER_STATUS[server.status] ?? 'pending'
+  // Données connues seulement de cet appareil (numéro complet, carte simulée) : conservées
+  const local = getOrder(server.id)
+  try {
+    return saveOrder({
+      id: server.id,
+      createdAt: created,
+      lang: server.lang,
+      tierId: server.tierId,
+      quantity: server.quantity,
+      total: Number(server.unitPrice) * Number(server.quantity),
+      customer: { ...server.customer, phone: local?.customer?.phone ?? '' },
+      attendees: server.attendees?.length === server.quantity ? server.attendees : Array.from({ length: server.quantity }, () => server.customer?.name ?? ''),
+      publicListing: server.publicListing === true,
+      accessToken,
+      tickets: server.tickets,
+      photos: server.photos,
+      payment: {
+        status,
+        method: 'momo',
+        operator: server.payment?.operator ?? local?.payment?.operator,
+        phone: local?.payment?.phone,
+        transactionId: server.payment?.transactionId,
+        paidAt: server.payment?.paidAt,
+        reason: server.payment?.reason,
+        mode: 'live',
+        fees: server.fees,
+        amountPaid: server.total,
+      },
+    })
+  } catch {
+    return null
   }
 }
 
@@ -111,15 +185,14 @@ export function isConfirmed(order) {
 }
 
 /**
- * Le flyer « J'y serai » est réservé aux billets payants : une commande gratuite
- * (statut 'free') donne accès à l'événement mais pas au générateur de flyer.
- * Règle ré-appliquée côté serveur le jour où la billetterie sera en ligne.
+ * Le visuel « J'y serai » est ouvert à TOUS les participants confirmés : billet
+ * payant validé ou inscription gratuite. Sa couleur dépend du tarif choisi.
  */
 export function canGenerateFlyer(order) {
-  return order?.payment?.status === 'paid'
+  return isConfirmed(order)
 }
 
-/** Dernière commande donnant droit au flyer (billet payant confirmé) */
+/** Dernière commande donnant droit au visuel (billet confirmé, gratuit ou payant) */
 export function latestConfirmedOrder() {
   return listOrders().find(canGenerateFlyer) ?? null
 }
@@ -129,4 +202,13 @@ export function newOrderId() {
   const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789' // sans caractères ambigus (0/O, 1/I)
   const rand = crypto.getRandomValues(new Uint8Array(6))
   return `JCIA27-${[...rand].map((n) => alphabet[n % alphabet.length]).join('')}`
+}
+
+/** Met à jour, sur l'appareil, la version de la photo d'un participant (null = retirée). */
+export function setOrderPhoto(orderId, position, version) {
+  const order = getOrder(orderId)
+  if (!order) return null
+  const photos = order.photos.filter((p) => p.position !== position)
+  if (version) photos.push({ position, version })
+  return saveOrder({ ...order, photos: photos.sort((a, b) => a.position - b.position) })
 }

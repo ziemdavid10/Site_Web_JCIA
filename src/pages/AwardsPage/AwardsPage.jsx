@@ -25,7 +25,7 @@ export default function AwardsPage() {
   const { t } = useI18n()
   const a = t.pages.awards
   const aw = t.awards
-  const { links, features } = CONFIG
+  const { links } = CONFIG
   useDocumentMeta(`${a.title} | ${t.event.shortName}`)
 
   return (

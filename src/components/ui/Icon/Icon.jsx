@@ -22,6 +22,14 @@ const PATHS = {
   'arrow-left': <path d="M19 12H5M11 6l-6 6 6 6" />,
   'chevron-right': <path d="M9 6l6 6-6 6" />,
   upload: <path d="M12 16V5M7 10l5-5 5 5M5 20h14" />,
+  edit: <path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16v4zM13.5 6.5l4 4" />,
+  trash: <path d="M4.5 7h15M9.5 7V4.5h5V7M6.5 7l1 12.5h9L17.5 7M10 11v5M14 11v5" />,
+  camera: (
+    <>
+      <path d="M4 8.5h3.2L9 6h6l1.8 2.5H20v10.5H4z" />
+      <circle cx="12" cy="13.5" r="3.4" />
+    </>
+  ),
   image: (
     <>
       <rect x="3.5" y="4.5" width="17" height="15" rx="2.5" />

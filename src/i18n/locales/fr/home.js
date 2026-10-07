@@ -498,7 +498,7 @@ export default {
   registration: {
     eyebrow: 'Billetterie',
     title: 'Rejoignez *7 000* acteurs de l’IA',
-    lead: 'Choisissez votre billet — sur place au Hilton ou en ligne. Le paiement par MTN Mobile Money, Orange Money, Visa ou Mastercard ouvre très bientôt. Votre billet donne aussi accès au flyer personnalisé « J’y serai ».',
+    lead: 'Choisissez votre billet — sur place au Hilton ou en ligne. Le paiement par MTN Mobile Money, Orange Money, Visa ou Mastercard ouvre très bientôt. Chaque billet, même gratuit, donne accès au visuel personnalisé « J’y serai », aux couleurs de votre billet.',
     tiersTitle: 'Nos billets',
     from: 'Gratuit',
     allTickets: 'Voir tous les billets',

@@ -38,21 +38,6 @@ export const ATTENDEE_PROFILES = [
 
 export const ATTENDEES = [
   { id: 'lorem-ipsum-1', name: 'Lorem Ipsum', org: 'Lorem University', city: 'Yaoundé', profile: 'etudiant', photo: null, tier: 'etudiant', example: true },
-  { id: 'dolor-sit-2', name: 'Dolor Sit', org: 'Amet Consulting', city: 'Douala', profile: 'entreprise', photo: null, tier: 'vip', example: true },
-  { id: 'consectetur-3', name: 'Consectetur Adipiscing', org: 'Laboratoire Elit', city: 'Buea', profile: 'recherche', photo: null, tier: 'standard', example: true },
-  { id: 'sed-do-4', name: 'Sed Do Eiusmod', org: 'Tempor Labs', city: 'Yaoundé', profile: 'startup', photo: null, tier: 'standard', example: true },
-  { id: 'incididunt-5', name: 'Incididunt Ut', org: 'Labore Institute', city: 'Garoua', profile: 'institution', photo: null, tier: 'vip', example: true },
-  { id: 'magna-6', name: 'Magna Aliqua', org: 'Ut Enim SARL', city: 'Bafoussam', profile: 'entreprise', photo: null, tier: 'standard', example: true },
-  { id: 'veniam-7', name: 'Ad Minim Veniam', org: 'Quis Nostrud School', city: 'Dschang', profile: 'etudiant', photo: null, tier: 'etudiant', example: true },
-  { id: 'exercitation-8', name: 'Exercitation Ullamco', org: 'Laboris Nisi', city: 'Kribi', profile: 'startup', photo: null, tier: 'standard', example: true },
-  { id: 'aliquip-9', name: 'Aliquip Ex Ea', org: 'Commodo Research', city: 'Ngaoundéré', profile: 'recherche', photo: null, tier: 'standard', example: true },
-  { id: 'duis-aute-10', name: 'Duis Aute Irure', org: 'Dolor Agency', city: 'Paris (diaspora)', profile: 'enLigne', photo: null, tier: 'en-ligne', example: true },
-  { id: 'reprehenderit-11', name: 'Reprehenderit In', org: 'Voluptate Velit', city: 'Bamenda', profile: 'entreprise', photo: null, tier: 'vip', example: true },
-  { id: 'esse-cillum-12', name: 'Esse Cillum', org: 'Fugiat Nulla', city: 'Yaoundé', profile: 'etudiant', photo: null, tier: 'etudiant', example: true },
-  { id: 'pariatur-13', name: 'Excepteur Sint', org: 'Occaecat Cupidatat', city: 'Montréal (diaspora)', profile: 'enLigne', photo: null, tier: 'en-ligne', example: true },
-  { id: 'proident-14', name: 'Non Proident', org: 'Sunt In Culpa', city: 'Douala', profile: 'institution', photo: null, tier: 'vip', example: true },
-  { id: 'officia-15', name: 'Officia Deserunt', org: 'Mollit Anim', city: 'Limbe', profile: 'startup', photo: null, tier: 'standard', example: true },
-  { id: 'laborum-16', name: 'Id Est Laborum', org: 'Perspiciatis Unde', city: 'Yaoundé', profile: 'recherche', photo: null, tier: 'standard', example: true },
 ]
 
 /** Compteur affiché tant que la billetterie n'est pas branchée au serveur */

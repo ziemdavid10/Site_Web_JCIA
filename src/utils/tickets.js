@@ -27,13 +27,31 @@ export function isUnlimitedQuota(tier) {
   return tier?.quota == null
 }
 
+/**
+ * Places restantes. `tier.available` (stock réel renvoyé par le serveur de
+ * billetterie / TIKORA) prime sur le quota théorique de la configuration.
+ */
 export function remainingSeats(tier) {
-  if (!tier || isUnlimitedQuota(tier)) return Infinity
-  return Math.max(0, tier.quota - (tier.sold ?? 0))
+  if (!tier) return Infinity
+  const fromQuota = isUnlimitedQuota(tier) ? Infinity : Math.max(0, tier.quota - (tier.sold ?? 0))
+  return Number.isFinite(tier.available) ? Math.max(0, Math.min(tier.available, fromQuota)) : fromQuota
 }
 
 export function isSoldOut(tier) {
-  return !isUnlimitedQuota(tier) && remainingSeats(tier) === 0
+  if (!tier) return false
+  if (tier.onSale === false) return true
+  return Number.isFinite(remainingSeats(tier)) && remainingSeats(tier) === 0
+}
+
+/**
+ * Frais de service TIKORA (pourcentage du sous-total, plancher 100 FCFA).
+ * Estimation affichée avant paiement ; le montant exact est confirmé par le
+ * serveur au lancement du paiement. Sans serveur (démonstration) : 0.
+ */
+export function estimateFees(subtotal, buyerFee) {
+  if (!subtotal || !buyerFee) return 0
+  const fee = buyerFee.type === 'fixed' ? buyerFee.value : Math.round((subtotal * buyerFee.value) / 100)
+  return Math.max(buyerFee.minimum ?? 100, fee)
 }
 
 export function maxQuantity(tier) {
