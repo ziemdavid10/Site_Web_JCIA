@@ -1,0 +1,9 @@
+node_modules
+data
+tests
+coverage
+.env
+.env.*
+*.md
+load-summary*.json
+.git

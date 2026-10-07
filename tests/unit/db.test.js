@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { dbReady, run, get, all } from '../src/database/db.js'
+import { dbReady, run, get, all } from '../../src/database/db.js'
 
 test('BASE - initialise les tables nécessaires', async () => {
   await dbReady

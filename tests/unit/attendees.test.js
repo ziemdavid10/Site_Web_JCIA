@@ -1,8 +1,8 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import express from 'express'
-import attendeesRoutes from '../src/routes/attendees.js'
-import { dbReady, run } from '../src/database/db.js'
+import attendeesRoutes from '../../src/routes/attendees.js'
+import { dbReady, run } from '../../src/database/db.js'
 
 const app = express()
 app.use('/attendees', attendeesRoutes)

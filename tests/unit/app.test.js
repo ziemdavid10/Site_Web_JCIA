@@ -1,7 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import app from '../src/app.js'
-import { dbReady } from '../src/database/db.js'
+import app from '../../src/app.js'
+import { dbReady } from '../../src/database/db.js'
 
 let server
 

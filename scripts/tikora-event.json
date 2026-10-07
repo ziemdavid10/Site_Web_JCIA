@@ -1,0 +1,76 @@
+{
+  "title": "JCIA 2027 — Journées Camerounaises de l'Intelligence Artificielle",
+  "description": "Deux jours de conférences, masterclasses, salon et Cameroon AI Awards. 27 & 28 avril 2027, Hilton Hotel, Yaoundé.",
+  "program": "27 et 28 avril 2027 · 08h00 accueil · conférences plénières, masterclasses, salon, Cameroon AI Awards",
+  "category": "Conférence",
+  "city": "Yaoundé",
+  "venue": "Hilton Hotel",
+  "startAt": "2027-04-27T07:00:00.000Z",
+  "endAt": "2027-04-28T22:00:00.000Z",
+  "maxParticipants": 1500,
+  "visibility": "public",
+  "ticketCategories": [
+    {
+      "name": "Étudiant — lancement",
+      "price": 3500,
+      "totalQuantity": 50,
+      "purchaseLimitPerUser": 5,
+      "saleEndAt": "2026-12-31T23:59:59Z",
+      "description": "Tarif de lancement (-30 %) jusqu'au 31/12/2026. Carte d'étudiant exigée à l'accueil."
+    },
+    {
+      "name": "Étudiant",
+      "price": 5000,
+      "totalQuantity": 50,
+      "purchaseLimitPerUser": 5,
+      "saleStartAt": "2027-01-01T00:00:00Z",
+      "description": "Carte d'étudiant exigée à l'accueil."
+    },
+    {
+      "name": "Standard — lancement",
+      "price": 7000,
+      "totalQuantity": 125,
+      "purchaseLimitPerUser": 10,
+      "saleEndAt": "2026-12-31T23:59:59Z",
+      "description": "Tarif de lancement (-30 %) jusqu'au 31/12/2026."
+    },
+    {
+      "name": "Standard",
+      "price": 10000,
+      "totalQuantity": 125,
+      "purchaseLimitPerUser": 10,
+      "saleStartAt": "2027-01-01T00:00:00Z"
+    },
+    {
+      "name": "En ligne — lancement",
+      "price": 10500,
+      "totalQuantity": 500,
+      "purchaseLimitPerUser": 10,
+      "saleEndAt": "2026-12-31T23:59:59Z",
+      "description": "Retransmission. Tarif de lancement (-30 %) jusqu'au 31/12/2026."
+    },
+    {
+      "name": "En ligne",
+      "price": 15000,
+      "totalQuantity": 500,
+      "purchaseLimitPerUser": 10,
+      "saleStartAt": "2027-01-01T00:00:00Z",
+      "description": "Retransmission."
+    },
+    {
+      "name": "VIP — lancement",
+      "price": 17500,
+      "totalQuantity": 75,
+      "purchaseLimitPerUser": 10,
+      "saleEndAt": "2026-12-31T23:59:59Z",
+      "description": "Tarif de lancement (-30 %) jusqu'au 31/12/2026."
+    },
+    {
+      "name": "VIP",
+      "price": 25000,
+      "totalQuantity": 75,
+      "purchaseLimitPerUser": 10,
+      "saleStartAt": "2027-01-01T00:00:00Z"
+    }
+  ]
+}

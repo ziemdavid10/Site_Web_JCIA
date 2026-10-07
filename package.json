@@ -1,11 +1,24 @@
 {
   "name": "serveur_backend_jcia",
   "version": "1.0.0",
-  "main": "src/app.js",
+  "main": "src/server.js",
   "scripts": {
-    "start": "node src/app.js",
-    "dev": "node --watch src/app.js",
-    "test": "node --test tests/"
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "test": "npm run test:unit",
+    "test:unit": "node scripts/run-tests.js tests/unit",
+    "test:integration": "node scripts/run-tests.js tests/integration --test-concurrency=1",
+    "test:all": "npm run test:unit && npm run test:integration",
+    "test:load": "node tests/load/run-stack.js load",
+    "test:load:smoke": "node tests/load/run-stack.js smoke",
+    "mock:tikora": "node tests/helpers/mock-tikora-server.js",
+    "lint": "eslint .",
+    "check:config": "node scripts/check-config.js",
+    "email:test": "node scripts/send-test-email.js",
+    "test:load:stack": "node tests/load/run-stack.js",
+    "tikora": "node scripts/tikora-setup.js",
+    "simulation": "node scripts/simulation.js",
+    "photos": "node scripts/photos.js"
   },
   "keywords": [],
   "author": "",
@@ -15,8 +28,18 @@
     "cors": "^2.8.6",
     "dotenv": "^18.0.5",
     "express": "^5.2.1",
+    "express-rate-limit": "^8.7.0",
+    "helmet": "^8.3.0",
     "nodemailer": "^10.0.13",
     "sqlite3": "^6.0.1"
   },
-  "type": "module"
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.12.0",
+    "globals": "^17.13.0"
+  }
 }

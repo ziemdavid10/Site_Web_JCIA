@@ -1,34 +1,22 @@
-# Validation complète du backend JCIA
+# Lancer les tests du backend JCIA
 
-## Installation propre
-
-```bat
-rmdir /s /q node_modules
-npm ci
+```bash
+npm ci                      # installation propre (Linux, macOS ou Windows)
+npm run lint                # ESLint
+npm test                    # tests unitaires (tests/unit)            ~2 s
+npm run test:integration    # intégration : vrai serveur + faux TIKORA ~15 s
+npm run test:all            # les deux
+npm run test:load:smoke     # charge k6, 30 s (k6 requis, ou K6_BIN=…)
+npm run test:load           # charge k6 nominale, 5 min
+node tests/load/run-stack.js stress|spike|soak
 ```
 
-## Suite complète
+- Chaque fichier de test a **sa propre base SQLite temporaire** (`tests/helpers/setup.js`) :
+  `data/database.sqlite` n'est jamais modifié, le fichier `.env` n'est pas lu.
+- Aucun test n'appelle TIKORA ni un vrai serveur SMTP : le faux TIKORA
+  (`tests/helpers/mock-tikora-server.js`) reproduit l'API Partenaire.
+- Importer `src/app.js` n'ouvre aucun port ; le serveur démarre avec `npm start`
+  (`src/server.js`).
+- Envoi réel d'un e-mail de contrôle SMTP : `npm run email:test -- vous@example.com`.
 
-```bat
-npm test
-```
-
-La suite doit se terminer avec :
-
-```text
-fail 0
-```
-
-## Vérification qu'aucun serveur principal ne démarre pendant les tests
-
-Pendant `npm test`, aucun message `Serveur démarré sur http://localhost:5000` ne doit apparaître.
-
-Les tests HTTP démarrent leurs propres serveurs sur leurs ports de test.
-
-## Démarrage normal
-
-```bat
-npm start
-```
-
-Dans ce cas seulement, le serveur principal écoute sur `PORT` (5000 par défaut).
+Le détail (scénarios, résultats de charge, CI) est dans `../PROCEDURE.md`.

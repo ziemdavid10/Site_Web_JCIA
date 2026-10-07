@@ -1,9 +1,9 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import express from 'express'
-import receiptRoutes from '../src/routes/receipt.js'
-import { dbReady, run } from '../src/database/db.js'
-import { mailerService } from '../src/services/mailer.js'
+import receiptRoutes from '../../src/routes/receipt.js'
+import { dbReady, run } from '../../src/database/db.js'
+import { mailerService } from '../../src/services/mailer.js'
 
 const app = express()
 app.use(express.json())

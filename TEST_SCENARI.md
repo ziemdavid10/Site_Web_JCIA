@@ -79,21 +79,33 @@ La suite couvre les scénarios fonctionnels et d'erreur par fonctionnalité.
 - insertion/lecture paiement
 - colonnes ajoutées par migration
 
-## À distinguer des tests d'intégration fournisseur
+## Tests d'intégration fournisseur — IMPLÉMENTÉS (tests/integration/)
 
-Les tests locaux utilisent le mode `demo`. Les scénarios suivants nécessitent un fournisseur réel ou un faux serveur de paiement :
+Les tests unitaires utilisent le mode `demo`. Les scénarios suivants sont couverts
+par `npm run test:integration`, contre un faux serveur TIKORA fidèle à l'API
+Partenaire (`tests/helpers/mock-tikora-server.js`) :
 
 - HTTP 400/401/403/404/429/500 du fournisseur
 - timeout fournisseur
 - réponse non JSON
-- `paymentId` absent ou invalide
+- réponse TIKORA illisible (commande sans identifiant)
 - statut fournisseur inconnu
 - échec du réseau après création du paiement
 - `redirectUrl` invalide ou non HTTPS
 - webhook fournisseur non reçu / reçu en double / signature invalide
 - confirmation asynchrone après plusieurs interrogations
 
-Ils doivent être exécutés dans une suite d'intégration séparée afin de ne pas dépendre d'un compte marchand réel dans les tests unitaires.
+S'y ajoutent : parcours nominal complet (billets + QR TIKORA + reçu unique),
+double clic concurrent (un seul débit), nouvel essai après refus, réservation
+expirée, dérive de prix TIKORA, stock épuisé, faux webhook / ancienne route
+/payments/callback, inscription gratuite, consentement de la liste publique,
+anti-spam du reçu, en-têtes de sécurité, limitation de débit, démarrage refusé
+en production avec une configuration dangereuse, contrat tarifaire
+frontend ↔ backend.
+
+## Tests de bout en bout (frontend/tests/e2e) et de charge (tests/load)
+
+Voir `../PROCEDURE.md`.
 
 ## Régression démarrage serveur
 

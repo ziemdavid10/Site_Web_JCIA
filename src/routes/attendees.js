@@ -1,54 +1,71 @@
 import express from 'express'
-import { all } from '../database/db.js'
+import { all, dbReady } from '../database/db.js'
+import { limiters } from '../middleware/security.js'
+import { normalizeTierId } from '../utils/pricing.js'
+import { cleanText } from '../utils/validation.js'
+import { logger } from '../utils/logger.js'
+import { attendeeId, attendeeNames, publicPhotoPath, publicPhotoVersions } from '../services/photos.js'
 
+/**
+ * GET /attendees — liste publique « Ils y seront ».
+ *
+ * Uniquement : commandes confirmées (payées ou gratuites) ET consentement
+ * explicite (public_listing = 1). Champs publiés : nom, organisation, profil,
+ * tarif et, si la personne en a ajouté une, sa photo (chemin /attendees/<id>/photo).
+ * Jamais d'e-mail, de téléphone ni de numéro de billet.
+ *
+ * `profile` utilise les identifiants du frontend (src/data/attendees.js :
+ * etudiant, entreprise, recherche, startup, institution, enLigne).
+ */
 const router = express.Router()
 
-function profileOfTier(tierId) {
-  if (tierId === 'etudiant') return 'etudiant'
-  if (tierId === 'standard' ) return 'standard'
-  if (tierId === 'en-ligne' || tierId === 'enligne') return 'enLigne'
-  return 'vip'
+export function profileOfTier(tierId) {
+  const id = normalizeTierId(tierId)
+  if (id === 'etudiant') return 'etudiant'
+  if (id === 'en-ligne') return 'enLigne'
+  return 'entreprise'
 }
 
-router.get('/', async (req, res) => {
+router.get('/', limiters.read, async (req, res) => {
   try {
-    const rows = await all(`
-      SELECT id, customer_name AS name, customer_org AS org, tier_id AS tierId,
-             attendees_json AS attendeesJson
-      FROM orders
-      WHERE status IN ('paid', 'free') AND public_listing = 1
-      ORDER BY datetime(created_at) DESC
-    `)
+    await dbReady
+    const [rows, photos] = await Promise.all([
+      all(`
+        SELECT id, customer_name, customer_org AS org, tier_id AS tierId, attendees_json
+        FROM orders
+        WHERE status IN ('paid', 'free') AND public_listing = 1
+        ORDER BY datetime(created_at) DESC
+        LIMIT 2000
+      `),
+      publicPhotoVersions(),
+    ])
 
     const attendees = []
     for (const row of rows) {
-      let names = []
-      try {
-        names = Array.isArray(JSON.parse(row.attendeesJson || '[]'))
-          ? JSON.parse(row.attendeesJson || '[]')
-          : []
-      } catch {
-        names = []
-      }
-
-      const publicNames = names.length ? names : [row.name]
-      publicNames.forEach((name, index) => {
-        if (!name) return
+      attendeeNames(row).forEach((name, index) => {
+        const clean = cleanText(name, 80)
+        if (!clean) return
+        const position = index + 1
+        const version = photos.get(`${row.id}|${position}`)
         attendees.push({
-          id: `cmd-${row.id}-${index + 1}`,
-          name,
-          org: row.org || '',
+          id: attendeeId(row.id, position),
+          name: clean,
+          org: cleanText(row.org, 120),
           city: '',
           profile: profileOfTier(row.tierId),
+          tier: normalizeTierId(row.tierId) ?? 'standard',
+          // Chemin relatif à l'API (le site le préfixe par VITE_PAYMENT_API_URL)
+          photo: version ? publicPhotoPath(row.id, position, version) : null,
           example: false,
         })
       })
     }
 
+    res.set('Cache-Control', 'public, max-age=30')
     return res.json(attendees)
   } catch (error) {
-    console.error('GET /attendees:', error)
-    return res.status(500).json({ error: 'Erreur de récupération de la liste des participants' })
+    logger.error('GET /attendees', { error })
+    return res.status(500).json({ error: 'Erreur de récupération de la liste des participants', code: 'INTERNAL_ERROR' })
   }
 })
 

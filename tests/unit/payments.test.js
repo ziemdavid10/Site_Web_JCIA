@@ -1,19 +1,27 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import express from 'express'
-import paymentRoutes from '../src/routes/payments.js'
-import { dbReady, run, get } from '../src/database/db.js'
+import paymentRoutes from '../../src/routes/payments.js'
+import { dbReady, run, get } from '../../src/database/db.js'
+import { getTicketPricing } from '../../src/utils/pricing.js'
+
+// Prix calculés à la date du test : la promotion (-30 %) rend les montants
+// codés en dur (10000, 20000) faux une partie de l'année.
+const STANDARD = getTicketPricing('standard').price
 
 const app = express()
 app.use(express.json())
 app.use('/payments', paymentRoutes)
 let server
 const base = {
-  currency: 'XAF', method: 'momo', operator: 'mtn', phone: '670000000',
+  currency: 'XAF', method: 'momo', operator: 'mtn', phone: '677123456',
   customer: { name: 'Alice', email: 'alice@example.com' },
+  tierId: 'standard', quantity: 1,
 }
 let counter = 0
-const orderId = (prefix = 'PAY') => `JCIA27-${prefix}${String(++counter).padStart(4, '0')}`.slice(0, 13)
+// Correction : l'ancienne version tronquait le compteur (.slice(0, 13)) et
+// produisait le MÊME identifiant pour plusieurs tests.
+const orderId = (prefix = 'PA') => `JCIA27-${prefix.slice(0, 2)}${String(++counter).padStart(4, '0')}`
 
 async function post(payload, headers = {}) {
   return fetch('http://localhost:5001/payments', {
@@ -25,7 +33,7 @@ async function post(payload, headers = {}) {
 
 async function create(overrides = {}) {
   return post({
-    orderId: orderId(), amount: 10000, ...base, ...overrides,
+    orderId: orderId(), amount: STANDARD, ...base, ...overrides,
   })
 }
 
@@ -64,9 +72,14 @@ test('POST /payments - rejette montant absent, NaN et négatif', async () => {
   }
 })
 
-test('POST /payments - accepte le montant zéro au niveau technique mais le contrôle métier doit se faire avec le tarif', async () => {
-  const response = await create({ orderId: orderId(), amount: 0 })
-  assert.equal(response.status, 200)
+// Ancien test : « accepte le montant zéro ». Un paiement de 0 FCFA n'a pas de
+// sens et laissait passer un montant falsifié : le serveur le refuse désormais
+// (le tarif gratuit passe par POST /orders/free).
+test('POST /payments - refuse un montant nul ou différent du tarif', async () => {
+  for (const amount of [0, 1, STANDARD - 1]) {
+    const response = await create({ orderId: orderId(), amount })
+    assert.equal(response.status, 400)
+  }
 })
 
 test('POST /payments - rejette une devise inconnue', async () => {
@@ -98,12 +111,18 @@ test('POST /payments - Orange Money est accepté', async () => {
   assert.equal(response.status, 200)
 })
 
-test('POST /payments - carte bancaire ne nécessite pas d’opérateur Mobile Money', async () => {
+// Ancien test : « la carte est acceptée ». TIKORA n'encaisse que Mobile Money
+// et recevoir un numéro de carte imposerait la conformité PCI-DSS (SAQ D) :
+// le serveur refuse donc toute demande par carte, sans jamais stocker la carte.
+test('POST /payments - refuse la carte bancaire et ne conserve aucune donnée de carte', async () => {
+  const id = orderId()
   const response = await create({
-    orderId: orderId(), amount: 10000, method: 'card', operator: undefined,
+    orderId: id, method: 'card', operator: undefined,
     card: { number: '4111111111111111', name: 'Alice', exp: '1228', cvc: '123' },
   })
-  assert.equal(response.status, 200)
+  assert.equal(response.status, 400)
+  assert.equal((await response.json()).code, 'CARD_NOT_SUPPORTED')
+  assert.equal(await get('SELECT * FROM orders WHERE id = ?', [id]), null)
 })
 
 test('POST /payments - rejette un e-mail invalide', async () => {
@@ -114,16 +133,16 @@ test('POST /payments - rejette un e-mail invalide', async () => {
 })
 
 test('POST /payments - valide le tarif si tierId et quantity sont fournis', async () => {
-  const good = await create({ orderId: orderId(), tierId: 'standard', quantity: 2, amount: 20000 })
+  const good = await create({ orderId: orderId(), tierId: 'standard', quantity: 2, amount: STANDARD * 2, attendees: ['Alice', 'Bob Martin'] })
   assert.equal(good.status, 200)
 
-  const bad = await create({ orderId: orderId(), tierId: 'standard', quantity: 2, amount: 10000 })
+  const bad = await create({ orderId: orderId(), tierId: 'standard', quantity: 2, amount: STANDARD })
   assert.equal(bad.status, 400)
 })
 
 test('POST /payments - rejette quantité invalide lorsqu’un tier est fourni', async () => {
   for (const quantity of [0, -1, 1.5, 11, 'abc']) {
-    const response = await create({ orderId: orderId(), tierId: 'standard', quantity, amount: 10000 })
+    const response = await create({ orderId: orderId(), tierId: 'standard', quantity, amount: STANDARD })
     assert.equal(response.status, 400)
   }
 })
@@ -131,7 +150,7 @@ test('POST /payments - rejette quantité invalide lorsqu’un tier est fourni', 
 test('POST /payments - persiste commande et participants', async () => {
   const id = orderId()
   const response = await create({
-    orderId: id, amount: 20000, tierId: 'standard', quantity: 2,
+    orderId: id, amount: STANDARD * 2, tierId: 'standard', quantity: 2,
     customer: { name: 'Alice', email: 'alice@example.com', org: 'JCIA' },
     publicListing: true, attendees: [' Alice ', '', 'Bob'], lang: 'en',
   })
@@ -145,14 +164,14 @@ test('POST /payments - persiste commande et participants', async () => {
 
 test('POST /payments - rejoue une requête sans créer un second paiement', async () => {
   const id = orderId()
-  const payload = { orderId: id, amount: 10000, ...base }
+  const payload = { orderId: id, amount: STANDARD, ...base }
   const first = await post(payload, { 'Idempotency-Key': id })
   const second = await post(payload, { 'Idempotency-Key': id })
   assert.equal(first.status, 200)
   assert.equal(second.status, 200)
-  assert.deepEqual(await second.json(), await first.clone().json())
+  assert.deepEqual(await second.json(), await first.json())
   const rows = await new Promise((resolve, reject) => {
-    import('../src/database/db.js').then(({ all }) => all('SELECT * FROM payments WHERE order_id = ?', [id]).then(resolve).catch(reject))
+    import('../../src/database/db.js').then(({ all }) => all('SELECT * FROM payments WHERE order_id = ?', [id]).then(resolve).catch(reject))
   })
   assert.equal(rows.length, 1)
 })
@@ -178,16 +197,27 @@ test('GET /payments/:id - renvoie FAILED avec raison', async () => {
   assert.deepEqual(await response.json(), { status: 'FAILED', reason: 'declined' })
 })
 
+// Ancien test : un paiement inséré à la main (sans commande fournisseur)
+// devenait SUCCESSFUL. Désormais le statut vient toujours du fournisseur :
+// le paiement est créé par POST /payments, puis interrogé.
 test('GET /payments/:id - un paiement PENDING passe à SUCCESSFUL en mode démo', async () => {
-  await run(`INSERT OR REPLACE INTO orders (id, status) VALUES ('JCIA27-GET003', 'pending')`)
-  await run(`INSERT OR REPLACE INTO payments (payment_id, order_id, amount, currency, method, status)
-    VALUES ('PAY-PENDING-TEST', 'JCIA27-GET003', 10000, 'XAF', 'momo', 'PENDING')`)
-  const response = await fetch('http://localhost:5001/payments/PAY-PENDING-TEST')
+  const id = 'JCIA27-GET003'
+  const created = await (await create({ orderId: id })).json()
+  assert.equal(created.status, 'PENDING')
+  const response = await fetch(`http://localhost:5001/payments/${created.paymentId}`)
   assert.equal(response.status, 200)
   const body = await response.json()
   assert.equal(body.status, 'SUCCESSFUL')
-  const order = await get('SELECT status FROM orders WHERE id = ?', ['JCIA27-GET003'])
+  const order = await get('SELECT status FROM orders WHERE id = ?', [id])
   assert.equal(order.status, 'paid')
+})
+
+test('GET /payments/:id - mode démo : un numéro finissant par 0000 est refusé', async () => {
+  const created = await (await create({ orderId: 'JCIA27-GET004', phone: '670000000' })).json()
+  // 670000000 se termine par 0000 → solde insuffisant simulé
+  const body = await (await fetch(`http://localhost:5001/payments/${created.paymentId}`)).json()
+  assert.equal(body.status, 'FAILED')
+  assert.equal(body.reason, 'INSUFFICIENT_BALANCE')
 })
 
 test('POST /payments - rejette explicitement un montant absent ou nul', async () => {

@@ -3,13 +3,16 @@ import assert from 'node:assert/strict'
 import {
   getTicketPricing,
   validateOrderAmount,
-  inferTierIdFromAmount
-} from '../src/utils/pricing.js'
+  inferTierIdFromAmount,
+  normalizeTierId,
+  estimateBuyerFee
+} from '../../src/utils/pricing.js'
 
+// Identifiants alignés sur le frontend (src/data/config.js) : « en-ligne ».
 const OFFICIAL_TIERS = [
   'etudiant',
   'standard',
-  'enligne',
+  'en-ligne',
   'vip'
 ]
 
@@ -27,7 +30,7 @@ test('TARIFS - chaque catégorie officielle possède un tarif', () => {
 
 test('TARIFS - aucune catégorie non officielle n’est acceptée', () => {
   for (const tier of [
-    'en-ligne',
+    'EN-LIGNE',
     'online',
     'student',
     'standard-plus'
@@ -186,7 +189,7 @@ test('TARIFS - inférence d’un tarif à partir du montant', () => {
       15000,
       new Date('2026-09-01')
     ),
-    'enligne'
+    'en-ligne'
   )
 
   assert.equal(
@@ -233,4 +236,22 @@ test('TARIFS - bornes de promotion inclusives', () => {
   assert.equal(end.discounted, true)
   assert.equal(start.price, 7000)
   assert.equal(end.price, 7000)
+})
+
+test('TARIFS - l’ancien identifiant « enligne » reste accepté (alias)', () => {
+  assert.equal(normalizeTierId('enligne'), 'en-ligne')
+  assert.equal(getTicketPricing('enligne', new Date('2026-09-01')).price, 15000)
+})
+
+test('TARIFS - tarif gratuit : prix nul, jamais remisé', () => {
+  const p = getTicketPricing('gratuit', new Date('2026-11-01'))
+  assert.equal(p.price, 0)
+  assert.equal(p.discounted, false)
+})
+
+test('TARIFS - estimation des frais TIKORA (2 %, plancher 100 FCFA)', () => {
+  assert.equal(estimateBuyerFee(0), 0)
+  assert.equal(estimateBuyerFee(3500), 100)
+  assert.equal(estimateBuyerFee(17500), 350)
+  assert.equal(estimateBuyerFee(10000, { type: 'percent', value: 3.5, minimum: 100 }), 350)
 })
