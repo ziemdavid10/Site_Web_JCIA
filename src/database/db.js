@@ -142,6 +142,25 @@ async function initializeDatabase() {
     )
   `)
 
+  // Achats faits directement sur la page TIKORA de l'événement : voir services/webOrders.js
+  await run(`
+    CREATE TABLE IF NOT EXISTS tikora_web_orders (
+      tikora_order_id TEXT PRIMARY KEY,
+      order_number TEXT,
+      buyer_name TEXT,
+      buyer_email TEXT,
+      total REAL,
+      tikora_created_at TEXT,
+      seen_at TEXT NOT NULL,
+      form_sent_at TEXT,
+      sending_at INTEGER,
+      form_attempts INTEGER DEFAULT 0,
+      last_error TEXT
+    )
+  `)
+
+  await ensureColumn('tikora_web_orders', 'jcia_order_id', 'TEXT')
+
   // Migration des bases créées par les versions précédentes.
   await ensureColumn('payments', 'operator', 'TEXT')
   await ensureColumn('payments', 'redirect_url', 'TEXT')

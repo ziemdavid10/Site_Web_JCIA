@@ -4,7 +4,7 @@
  *   npm run photos -- list                          photos enregistrées (participant, poids, date, publiée ?)
  *   npm run photos -- remove cmd-JCIA27-XXXXXX-1    retire la photo d'un participant
  *   npm run photos -- remove JCIA27-XXXXXX          retire toutes les photos d'une commande
- *   … --base=data/simulation.sqlite                 agit sur une autre base (ex. celle de la simulation)
+ *   … --base=chemin/vers/base.sqlite                agit sur une autre base que celle de .env (DB_PATH)
  *
  * Un retrait est immédiat dans la liste publique ; les navigateurs qui avaient
  * déjà affiché la photo peuvent la garder en cache jusqu'à une heure.

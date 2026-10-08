@@ -29,10 +29,10 @@ test('CONFIG - une configuration de production complète est acceptée', () => {
 
 test('CONFIG - erreurs bloquantes en production', () => {
   const cases = [
-    [{ PAYMENT_PROVIDER_MODE: 'demo' }, /interdit en production/],
+    [{ PAYMENT_PROVIDER_MODE: 'demo' }, /n’existe plus/],
     [{ ALLOWED_ORIGIN: '*' }, /ALLOWED_ORIGIN/],
     [{ APP_SECRET: 'court' }, /APP_SECRET/],
-    [{ TIKORA_API_KEY: '' }, /TIKORA_API_KEY est obligatoire/],
+    [{ TIKORA_API_KEY: '' }, /TIKORA_API_KEY \(clé tk_live_…\) est obligatoire/],
     [{ TIKORA_API_KEY: 'Bearer tk_live_abcdefgh12345678' }, /sans « Authorization: Bearer »/],
     [{ TIKORA_API_URL: 'http://tikora.example/api/v1/partner' }, /HTTPS/],
     [{ TIKORA_EVENT_ID: '' }, /TIKORA_EVENT_ID/],
@@ -46,11 +46,16 @@ test('CONFIG - erreurs bloquantes en production', () => {
   }
 })
 
-test('CONFIG - hors production, le mode démo et CORS ouvert sont tolérés', () => {
+test('CONFIG - aucun mode démo : TIKORA est obligatoire, même en développement', () => {
   const config = loadConfig({ NODE_ENV: 'development' })
-  assert.equal(config.payment.mode, 'demo')
-  assert.deepEqual(config.allowedOrigins, ['*'])
-  assert.equal(loadConfig({ NODE_ENV: 'production' }).payment.mode, 'live')
+  assert.equal(config.payment.mode, 'live')
+  assert.deepEqual(config.allowedOrigins, ['*'], 'CORS ouvert toléré hors production')
+  const { errors } = validateConfig(config)
+  assert.ok(errors.some((e) => /TIKORA_API_KEY/.test(e)), 'clé TIKORA exigée')
+  assert.ok(errors.some((e) => /TIKORA_EVENT_ID/.test(e)), 'événement TIKORA exigé')
+  // Un ancien .env avec PAYMENT_PROVIDER_MODE=demo est refusé clairement, même en développement
+  const old = validateConfig(loadConfig({ ...LIVE_ENV, NODE_ENV: 'development', PAYMENT_PROVIDER_MODE: 'demo' }))
+  assert.ok(old.errors.some((e) => /PAYMENT_PROVIDER_MODE=demo n’existe plus/.test(e)))
 })
 
 test('JETON - accès commande déterministe, lié à l’identifiant, comparaison sûre', () => {

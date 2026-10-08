@@ -61,7 +61,6 @@ function buyerFeeOf(event) {
 /** Catalogue public (sans aucun identifiant interne TIKORA). */
 export async function getPublicCatalog(now = new Date()) {
   const base = {
-    mode: CONFIG.payment.mode,
     currency: 'XAF',
     methods: ['momo'], // TIKORA n'encaisse que Mobile Money (MTN / Orange)
     operators: ['mtn', 'orange'],
@@ -73,13 +72,16 @@ export async function getPublicCatalog(now = new Date()) {
     return { id: tier.id, ...pricing, maxQty: tier.maxQty, quota: tier.quota, available: null, onSale: true }
   })
 
-  if (CONFIG.payment.mode !== 'live') return { ...base, buyerFee: { ...DEFAULT_BUYER_FEE }, tiers }
-
   const event = await getEvent()
   const categories = new Map((event?.ticketCategories ?? []).map((c) => [c.id, c]))
+  // Vente des billets payants ouverte : événement validé (published) ET vente activée chez TIKORA.
+  // Tant que ce n'est pas le cas, le site affiche « ouverture prochaine » (et non « complet »).
+  const salesOpen = event?.status === 'published' && Boolean(event?.ticketsOnSale)
   return {
     ...base,
     buyerFee: buyerFeeOf(event),
+    salesOpen,
+    eventStatus: event?.status ?? null,
     ticketsOnSale: Boolean(event?.ticketsOnSale),
     tiers: tiers.map((tier) => {
       if (tier.id === 'gratuit') return tier // inscription gratuite : gérée par JCIA, hors TIKORA
@@ -88,7 +90,7 @@ export async function getPublicCatalog(now = new Date()) {
       return {
         ...tier,
         available: Number.isFinite(Number(category.available)) ? Number(category.available) : null,
-        onSale: Boolean(category.onSale) && Boolean(event?.ticketsOnSale) && event?.status === 'published',
+        onSale: Boolean(category.onSale) && salesOpen,
         // Signale une dérive de prix entre TIKORA et la grille JCIA (à corriger côté TIKORA)
         priceMismatch: Number(category.price) !== tier.price ? true : undefined,
       }

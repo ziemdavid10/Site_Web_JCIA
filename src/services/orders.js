@@ -151,7 +151,11 @@ const sameBuyer = (row, req) =>
 function mapProviderError(error) {
   if (error instanceof HttpError) return error
   if (error instanceof TikoraError) {
-    const unavailable = ['PRICE_MISMATCH', 'TIER_NOT_MAPPED', 'CATEGORY_NOT_FOUND', 'NOT_ON_SALE', 'EVENT_NOT_PUBLISHED', 'EVENT_NOT_FOUND', 'CATEGORY_NOT_SELLABLE']
+    // Événement pas encore validé par TIKORA : la vente n'est pas ouverte (≠ billets épuisés)
+    if (error.code === 'EVENT_NOT_PUBLISHED') {
+      return new HttpError(409, 'La vente en ligne n’est pas encore ouverte', 'SALES_NOT_OPEN')
+    }
+    const unavailable = ['PRICE_MISMATCH', 'TIER_NOT_MAPPED', 'CATEGORY_NOT_FOUND', 'NOT_ON_SALE', 'EVENT_NOT_FOUND', 'CATEGORY_NOT_SELLABLE']
     if (unavailable.includes(error.code) || error.status === 400) {
       return new HttpError(409, 'Billets indisponibles pour ce tarif (stock épuisé ou vente fermée)', 'TICKETS_UNAVAILABLE')
     }

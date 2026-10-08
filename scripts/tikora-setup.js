@@ -6,6 +6,10 @@
  *   npm run tikora -- create         crée l'événement JCIA 2027 décrit dans scripts/tikora-event.json
  *   npm run tikora -- events         liste vos événements TIKORA (statut, identifiant)
  *   npm run tikora -- env <eventId>  affiche TIKORA_EVENT_ID et TIKORA_CATEGORY_MAP à coller dans .env
+ *   npm run tikora -- orders         commandes de l'événement vues par l'API (achats faits sur la page TIKORA compris ?)
+ *   npm run tikora -- forms          e-mails « formulaire participant » envoyés / en attente
+ *   npm run tikora -- sync           repère tout de suite les achats payés et envoie les formulaires
+ *   npm run tikora -- resend <ORD-…> renvoie le formulaire à l'acheteur d'une commande
  *
  * « create » est idempotent : relancé avec le même fichier, il ne crée pas de doublon.
  */
@@ -167,8 +171,57 @@ async function env(eventId) {
   printEnv(event)
 }
 
+const mask = (email) => String(email ?? '').replace(/^(.)[^@]*(@.*)$/, '$1•••$2')
+
+async function orders() {
+  const { isWebOrderToNotify } = await import('../src/services/webOrders.js')
+  console.log(`\nCommandes TIKORA de l'événement ${CONFIG.payment.eventId || '(TIKORA_EVENT_ID absent)'}`)
+  let count = 0
+  for (let page = 1; page <= 20; page += 1) {
+    const res = await tikora.listOrders({ page, limit: 100 })
+    const items = Array.isArray(res?.items) ? res.items : []
+    for (const o of items.filter((x) => x.eventId === CONFIG.payment.eventId)) {
+      count += 1
+      const source = /^JCIA27-/.test(o.reference ?? '') ? `site JCIA (${o.reference})` : 'page TIKORA'
+      console.log(
+        `  ${String(o.orderNumber).padEnd(14)} ${String(o.status).padEnd(17)} ${String(o.total).padStart(9)} XAF  ${String(o.createdAt ?? '').slice(0, 16).replace('T', ' ')}  ${source.padEnd(24)} ${mask(o.buyer?.email)}${isWebOrderToNotify(o) ? '  → formulaire' : ''}`,
+      )
+    }
+    if (items.length < 100 || page >= (Number(res?.meta?.totalPages) || 1)) break
+  }
+  if (!count) info('(aucune commande)')
+  console.log('\nUn achat fait sur la page TIKORA doit apparaître ici avec « page TIKORA ».')
+  console.log('Sinon, TIKORA ne transmet pas ces achats à l\'API : à demander au support TIKORA.')
+}
+
+async function forms() {
+  const { webOrdersReport } = await import('../src/services/webOrders.js')
+  const rows = await webOrdersReport()
+  console.log(`\nFormulaire participant — ${rows.length} achat(s) repéré(s) sur la page TIKORA`)
+  for (const r of rows) {
+    const state = r.form_sent_at ? `✓ envoyé ${r.form_sent_at.slice(0, 16).replace('T', ' ')}` : `✗ non envoyé (${r.form_attempts} essai(s)${r.last_error ? ` : ${r.last_error}` : ''})`
+    console.log(`  ${String(r.order_number).padEnd(14)} ${String(r.buyer_name).padEnd(26).slice(0, 26)} ${mask(r.buyer_email).padEnd(28)} ${state}`)
+  }
+}
+
+async function sync() {
+  const { syncWebOrders } = await import('../src/services/webOrders.js')
+  const stats = await syncWebOrders()
+  ok(`${stats.scanned} commande(s) lue(s) · ${stats.sent} formulaire(s) envoyé(s) · ${stats.failed} échec(s)`)
+}
+
+async function resend(orderNumber) {
+  const { resetWebOrder, syncWebOrders } = await import('../src/services/webOrders.js')
+  if (!orderNumber || !(await resetWebOrder(orderNumber))) {
+    ko(`Commande « ${orderNumber ?? ''} » inconnue (voir : npm run tikora -- forms)`)
+    process.exit(1)
+  }
+  await syncWebOrders()
+  ok(`Formulaire renvoyé pour ${orderNumber} (voir : npm run tikora -- forms)`)
+}
+
 const [command = 'check', arg] = process.argv.slice(2)
-const commands = { check, create, events, env: () => env(arg) }
+const commands = { check, create, events, env: () => env(arg), orders, forms, sync, resend: () => resend(arg) }
 
 if (!CONFIG.payment.apiKey) {
   console.error('TIKORA_API_KEY absent de backend/.env')
@@ -180,7 +233,7 @@ if (!/\/api\/v1\/partner$/.test(CONFIG.payment.apiUrl)) {
   console.error('  TIKORA_API_URL=https://tikoraapi.totiokamdem.uk/api/v1/partner')
 }
 if (!commands[command]) {
-  console.error(`Commande inconnue « ${command} ». Commandes : check, create, events, env <eventId>`)
+  console.error(`Commande inconnue « ${command} ». Commandes : check, create, events, env <eventId>, orders, forms, sync, resend <ORD-…>`)
   process.exit(1)
 }
 try {

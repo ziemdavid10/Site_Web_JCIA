@@ -11,13 +11,11 @@
     "test:all": "npm run test:unit && npm run test:integration",
     "test:load": "node tests/load/run-stack.js load",
     "test:load:smoke": "node tests/load/run-stack.js smoke",
-    "mock:tikora": "node tests/helpers/mock-tikora-server.js",
     "lint": "eslint .",
     "check:config": "node scripts/check-config.js",
     "email:test": "node scripts/send-test-email.js",
     "test:load:stack": "node tests/load/run-stack.js",
     "tikora": "node scripts/tikora-setup.js",
-    "simulation": "node scripts/simulation.js",
     "photos": "node scripts/photos.js"
   },
   "keywords": [],

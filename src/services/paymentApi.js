@@ -1,16 +1,12 @@
-import crypto from 'node:crypto'
 import { CONFIG } from '../config/env.js'
 import { tikora, TikoraError } from './tikoraClient.js'
 import { resolveCategory } from './catalog.js'
-import { estimateBuyerFee } from '../utils/pricing.js'
 import { toE164, toMsisdn } from '../utils/validation.js'
 
 /**
- * Fournisseur de paiement : TIKORA (mode live) ou simulation (mode demo).
- *
- * Les deux implémentations exposent le MÊME contrat, ce qui permet de tester
- * tout le parcours sans compte marchand et de basculer en live par simple
- * variable d'environnement (PAYMENT_PROVIDER_MODE=live).
+ * Fournisseur de paiement : l'API Partenaire TIKORA, toujours. Le serveur ne
+ * simule aucun paiement (les tests automatiques utilisent un faux TIKORA qui
+ * imite l'API, voir tests/helpers/mock-tikora-server.js).
  *
  * Parcours TIKORA :
  *   1. POST /orders                 réserve les billets 15 min, calcule le total (frais inclus)
@@ -124,97 +120,9 @@ const liveProvider = {
   },
 }
 
-// ─── Simulation (demo) ───────────────────────────────────────────────────────
-// Même comportement que le mode démonstration du site : un numéro se
-// terminant par « 0000 » est refusé (solde insuffisant), les autres sont payés.
-
-const demoOrders = new Map()
-
-function demoTickets(order) {
-  return Array.from({ length: order.quantity }, (_, i) => {
-    const id = crypto.randomUUID()
-    return {
-      id,
-      code: `DEMO-${order.orderId.slice(-6)}-${i + 1}`,
-      qrToken: `DEMO|${order.orderId}|${i + 1}|${crypto.randomBytes(6).toString('hex')}`,
-      qrImageUrl: null,
-      holder: order.attendees?.[i] ?? order.customer.name,
-      category: order.tierId,
-      status: 'valid',
-    }
-  })
-}
-
-const demoProvider = {
-  name: 'demo',
-
-  async createOrder({ orderId, tierId, quantity, unitPrice, customer, attendees }) {
-    const subtotal = unitPrice * quantity
-    const fees = estimateBuyerFee(subtotal)
-    const record = {
-      providerOrderId: `demo-${crypto.randomUUID()}`,
-      orderId,
-      tierId,
-      quantity,
-      customer,
-      attendees,
-      subtotal,
-      fees,
-      total: subtotal + fees,
-      expiresAt: new Date(Date.now() + 15 * 60_000).toISOString(),
-      orderStatus: 'awaiting_payment',
-      payment: null,
-      tickets: [],
-    }
-    demoOrders.set(record.providerOrderId, record)
-    return demoProvider.snapshot(record)
-  },
-
-  async startPayment({ providerOrderId, phone }) {
-    const record = demoOrders.get(providerOrderId)
-    if (!record) throw new TikoraError('Commande démo introuvable', { code: 'ORDER_NOT_FOUND', status: 404 })
-    record.payment = { phone: String(phone), status: 'pending', at: Date.now() }
-    return { depositId: crypto.randomUUID(), amount: record.total, status: 'PENDING', reason: null }
-  },
-
-  async fetchOrder(providerOrderId) {
-    const record = demoOrders.get(providerOrderId)
-    if (!record) throw new TikoraError('Commande démo introuvable', { code: 'ORDER_NOT_FOUND', status: 404 })
-    if (record.payment?.status === 'pending') {
-      if (record.payment.phone.endsWith('0000')) record.payment = { ...record.payment, status: 'failed', failureCode: 'INSUFFICIENT_BALANCE' }
-      else {
-        record.orderStatus = 'paid'
-        record.payment = { ...record.payment, status: 'confirmed', confirmedAt: new Date().toISOString() }
-        record.tickets = demoTickets(record)
-      }
-    }
-    return demoProvider.snapshot(record)
-  },
-
-  snapshot(record) {
-    const paid = record.orderStatus === 'paid'
-    const failed = record.payment?.status === 'failed'
-    return {
-      providerOrderId: record.providerOrderId,
-      orderNumber: `DEMO-${record.orderId.slice(-6)}`,
-      orderStatus: record.orderStatus,
-      status: paid ? 'SUCCESSFUL' : failed ? 'FAILED' : 'PENDING',
-      reason: failed ? record.payment.failureCode : null,
-      transactionId: paid ? `TK-DEMO-${record.orderId.slice(-6)}` : null,
-      subtotal: record.subtotal,
-      fees: record.fees,
-      total: record.total,
-      currency: 'XAF',
-      expiresAt: record.expiresAt,
-      confirmedAt: record.payment?.confirmedAt ?? null,
-      reference: record.orderId,
-      tickets: record.tickets,
-    }
-  },
-}
-
+/** Unique fournisseur : TIKORA. Aucun paiement n'est jamais simulé par le serveur. */
 export function getProvider() {
-  return CONFIG.payment.mode === 'live' ? liveProvider : demoProvider
+  return liveProvider
 }
 
-export { liveProvider, demoProvider }
+export { liveProvider }

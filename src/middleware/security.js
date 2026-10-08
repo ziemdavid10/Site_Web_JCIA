@@ -72,6 +72,8 @@ export const limiters = {
   // Photos des participants : envoi (recadrages successifs compris), lecture par le
   // titulaire, et affichage public (une page de participants charge beaucoup d'images,
   // souvent depuis la même IP partagée des opérateurs mobiles)
+  // Rattachement d'un achat TIKORA (numéro + e-mail) : freine les essais au hasard
+  claim: limiter('claim', 15 * 60_000, 10),
   photoUpload: limiter('photo-upload', 15 * 60_000, 20),
   photoOwner: limiter('photo-owner', 60_000, 60),
   photoPublic: limiter('photo-public', 60_000, 1500),

@@ -197,25 +197,32 @@ test('GET /payments/:id - renvoie FAILED avec raison', async () => {
   assert.deepEqual(await response.json(), { status: 'FAILED', reason: 'declined' })
 })
 
-// Ancien test : un paiement inséré à la main (sans commande fournisseur)
-// devenait SUCCESSFUL. Désormais le statut vient toujours du fournisseur :
+/** Statut final d'un paiement (le faux TIKORA répond en quelques millisecondes). */
+async function finalStatus(paymentId) {
+  for (let i = 0; i < 50; i += 1) {
+    const body = await (await fetch(`http://localhost:5001/payments/${paymentId}`)).json()
+    if (body.status !== 'PENDING') return body
+    await new Promise((r) => setTimeout(r, 20))
+  }
+  return { status: 'PENDING' }
+}
+
+// Le statut vient toujours du fournisseur (ici le faux TIKORA des tests) :
 // le paiement est créé par POST /payments, puis interrogé.
-test('GET /payments/:id - un paiement PENDING passe à SUCCESSFUL en mode démo', async () => {
+test('GET /payments/:id - un paiement PENDING passe à SUCCESSFUL une fois confirmé par TIKORA', async () => {
   const id = 'JCIA27-GET003'
   const created = await (await create({ orderId: id })).json()
   assert.equal(created.status, 'PENDING')
-  const response = await fetch(`http://localhost:5001/payments/${created.paymentId}`)
-  assert.equal(response.status, 200)
-  const body = await response.json()
+  const body = await finalStatus(created.paymentId)
   assert.equal(body.status, 'SUCCESSFUL')
   const order = await get('SELECT status FROM orders WHERE id = ?', [id])
   assert.equal(order.status, 'paid')
 })
 
-test('GET /payments/:id - mode démo : un numéro finissant par 0000 est refusé', async () => {
+test('GET /payments/:id - paiement refusé par l’opérateur : FAILED avec le motif TIKORA', async () => {
   const created = await (await create({ orderId: 'JCIA27-GET004', phone: '670000000' })).json()
-  // 670000000 se termine par 0000 → solde insuffisant simulé
-  const body = await (await fetch(`http://localhost:5001/payments/${created.paymentId}`)).json()
+  // Faux TIKORA : un numéro finissant par 0000 → solde insuffisant
+  const body = await finalStatus(created.paymentId)
   assert.equal(body.status, 'FAILED')
   assert.equal(body.reason, 'INSUFFICIENT_BALANCE')
 })

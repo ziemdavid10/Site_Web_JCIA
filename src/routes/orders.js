@@ -6,6 +6,7 @@ import { limiters } from '../middleware/security.js'
 import { ORDER_ID_RE } from '../utils/validation.js'
 import { sendError } from './payments.js'
 import { logger } from '../utils/logger.js'
+import { claimWebOrder } from '../services/webOrders.js'
 
 /**
  *   POST /orders/free   inscription au tarif gratuit (hors TIKORA)
@@ -24,6 +25,24 @@ router.post('/free', limiters.createPayment, async (req, res) => {
     return res.status(201).json(await createFreeOrder(req.body))
   } catch (error) {
     return sendError(res, error, 'POST /orders/free')
+  }
+})
+
+/**
+ * POST /orders/tikora-claim  { orderNumber: 'ORD-…', email, publicListing, lang }
+ * Billet payé sur la page TIKORA : vérifié chez TIKORA, puis rattaché à une
+ * commande JCIA → 200 { orderId, accessToken, order }.
+ */
+router.post('/tikora-claim', limiters.claim, async (req, res) => {
+  try {
+    const { orderNumber, email, publicListing, lang } = req.body ?? {}
+    return res.json(await claimWebOrder({ orderNumber, email, publicListing: publicListing === true, lang }))
+  } catch (error) {
+    if (error.name === 'TikoraError') {
+      logger.warn('claim.tikora_error', { code: error.code })
+      return res.status(502).json({ error: 'TIKORA ne répond pas, réessayez dans un instant', code: 'PROVIDER_ERROR' })
+    }
+    return sendError(res, error, 'POST /orders/tikora-claim')
   }
 })
 

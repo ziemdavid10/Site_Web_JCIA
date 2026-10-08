@@ -34,6 +34,8 @@ router.get('/', limiters.read, async (req, res) => {
         SELECT id, customer_name, customer_org AS org, tier_id AS tierId, attendees_json
         FROM orders
         WHERE status IN ('paid', 'free') AND public_listing = 1
+          -- commandes de l'ancien mode démonstration (paiements simulés) : jamais publiées
+          AND COALESCE(payment_mode, 'live') <> 'demo'
         ORDER BY datetime(created_at) DESC
         LIMIT 2000
       `),

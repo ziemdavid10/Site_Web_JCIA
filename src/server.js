@@ -3,6 +3,7 @@ import { fileURLToPath } from 'node:url'
 import { CONFIG, validateConfig } from './config/env.js'
 import { closeDb, dbReady, dbPath } from './database/db.js'
 import { reconcilePending } from './services/orders.js'
+import { syncWebOrders } from './services/webOrders.js'
 import { logger } from './utils/logger.js'
 
 /**
@@ -18,9 +19,7 @@ export async function start() {
   warnings.forEach((w) => logger.warn('config.warning', { detail: w }))
   if (errors.length) {
     errors.forEach((e) => logger.error('config.error', { detail: e }))
-    if (CONFIG.isProduction || CONFIG.payment.mode === 'live') {
-      throw new Error(`Configuration invalide (${errors.length} erreur(s)) — voir les logs`)
-    }
+    throw new Error(`Configuration invalide (${errors.length} erreur(s)) — voir les logs`)
   }
 
   await dbReady
@@ -47,9 +46,22 @@ export async function start() {
     timer.unref()
   }
 
+  // Achats faits sur la page TIKORA : envoi du lien du formulaire participant
+  let webTimer = null
+  let webFirst = null
+  if (CONFIG.webOrders.syncIntervalMs > 0) {
+    const tick = () => syncWebOrders().catch((error) => logger.warn('web_orders.error', { code: error.code, error }))
+    webFirst = setTimeout(tick, 10_000)
+    webFirst.unref()
+    webTimer = setInterval(tick, CONFIG.webOrders.syncIntervalMs)
+    webTimer.unref()
+  }
+
   const shutdown = (signal) => {
     logger.info('server.stopping', { signal })
     if (timer) clearInterval(timer)
+    if (webTimer) clearInterval(webTimer)
+    if (webFirst) clearTimeout(webFirst)
     server.close(() => closeDb().then(() => process.exit(0)))
     setTimeout(() => process.exit(1), 10_000).unref()
   }

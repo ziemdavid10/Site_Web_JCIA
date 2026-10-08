@@ -18,11 +18,19 @@ const FRONT_CONFIG =
     .map((dir) => path.resolve(ROOT, dir, 'src/data/config.js'))
     .find((file) => fs.existsSync(file)) ?? path.resolve(ROOT, '../frontend/src/data/config.js')
 
-test('DÉMARRAGE - la production refuse le mode démo (paiements gratuits)', async () => {
-  const srv = spawnServer({ NODE_ENV: 'production', PAYMENT_PROVIDER_MODE: 'demo', ALLOWED_ORIGIN: 'https://www.jcia.cm', APP_SECRET: 'x'.repeat(40) })
-  const code = await srv.exited
-  assert.equal(code, 1)
-  assert.match(srv.output(), /PAYMENT_PROVIDER_MODE=demo est interdit en production/)
+test('DÉMARRAGE - aucun paiement simulé : PAYMENT_PROVIDER_MODE=demo refusé, même en développement', async () => {
+  for (const NODE_ENV of ['production', 'development']) {
+    const srv = spawnServer({ NODE_ENV, PAYMENT_PROVIDER_MODE: 'demo', ALLOWED_ORIGIN: 'https://www.jcia.cm', APP_SECRET: 'x'.repeat(40) })
+    assert.equal(await srv.exited, 1, NODE_ENV)
+    assert.match(srv.output(), /PAYMENT_PROVIDER_MODE=demo n’existe plus/)
+  }
+})
+
+test('DÉMARRAGE - sans configuration TIKORA, le serveur refuse de démarrer (pas de repli simulé)', async () => {
+  const srv = spawnServer({ NODE_ENV: 'development', ALLOWED_ORIGIN: 'http://localhost:5173' })
+  assert.equal(await srv.exited, 1)
+  assert.match(srv.output(), /TIKORA_API_KEY/)
+  assert.match(srv.output(), /TIKORA_EVENT_ID/)
 })
 
 test('DÉMARRAGE - la production refuse une clé TIKORA mal saisie et un CORS ouvert', async () => {

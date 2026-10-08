@@ -172,7 +172,8 @@ export async function getPublicPhoto(orderId, position) {
   return get(
     `SELECT p.data, p.version FROM attendee_photos p
      JOIN orders o ON o.id = p.order_id
-     WHERE p.order_id = ? AND p.position = ? AND o.status IN ('paid', 'free') AND o.public_listing = 1`,
+     WHERE p.order_id = ? AND p.position = ? AND o.status IN ('paid', 'free') AND o.public_listing = 1
+       AND COALESCE(o.payment_mode, 'live') <> 'demo'`,
     [orderId, position],
   )
 }
@@ -183,7 +184,8 @@ export async function publicPhotoVersions() {
   const rows = await all(
     `SELECT p.order_id AS orderId, p.position, p.version FROM attendee_photos p
      JOIN orders o ON o.id = p.order_id
-     WHERE o.status IN ('paid', 'free') AND o.public_listing = 1`,
+     WHERE o.status IN ('paid', 'free') AND o.public_listing = 1
+       AND COALESCE(o.payment_mode, 'live') <> 'demo'`,
   )
   return new Map(rows.map((r) => [`${r.orderId}|${r.position}`, r.version]))
 }

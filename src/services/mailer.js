@@ -1,6 +1,7 @@
 import nodemailer from 'nodemailer'
 import { CONFIG } from '../config/env.js'
 import { buildReceipt } from './receiptTemplate.js'
+import { buildFormEmail } from './formEmailTemplate.js'
 
 /**
  * Envoi du récapitulatif de commande (SMTP).
@@ -11,8 +12,6 @@ import { buildReceipt } from './receiptTemplate.js'
 let transporter = null
 
 function getTransporter() {
-  // Simulation locale : le message est construit (mêmes vérifications) mais reste en mémoire
-  if (CONFIG.smtp.dryRun) return (transporter ??= nodemailer.createTransport({ jsonTransport: true }))
   if (!CONFIG.smtp.host || !CONFIG.smtp.user || !CONFIG.smtp.pass) {
     throw new Error('Configuration SMTP incomplète')
   }
@@ -70,4 +69,11 @@ export async function sendReceiptEmail({ email, orderId, lang = 'fr', order, tic
   return true
 }
 
-export const mailerService = { sendReceiptEmail }
+/** Lien du formulaire participant après un achat sur la page TIKORA de l'événement. */
+export async function sendAttendeeFormEmail({ email, name, orderNumber, total }) {
+  const { subject, text, html } = buildFormEmail({ name, orderNumber, total, formUrl: CONFIG.webOrders.formUrl, siteUrl: CONFIG.publicSiteUrl, contactEmail: CONFIG.smtp.replyTo })
+  await getTransporter().sendMail({ from: CONFIG.smtp.from, replyTo: CONFIG.smtp.replyTo, to: email, subject, text, html })
+  return true
+}
+
+export const mailerService = { sendReceiptEmail, sendAttendeeFormEmail }

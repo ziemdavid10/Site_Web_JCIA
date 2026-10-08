@@ -21,7 +21,7 @@ La suite couvre les scénarios fonctionnels et d'erreur par fonctionnalité.
 - recherche d'un paiement inexistant
 - paiement SUCCESSFUL
 - paiement FAILED avec motif
-- paiement PENDING puis SUCCESSFUL en mode démonstration
+- paiement PENDING puis SUCCESSFUL une fois confirmé par TIKORA (faux TIKORA des tests)
 - mise à jour de la commande après succès
 
 ## Participants
@@ -81,7 +81,8 @@ La suite couvre les scénarios fonctionnels et d'erreur par fonctionnalité.
 
 ## Tests d'intégration fournisseur — IMPLÉMENTÉS (tests/integration/)
 
-Les tests unitaires utilisent le mode `demo`. Les scénarios suivants sont couverts
+Le serveur passe toujours par TIKORA (aucun mode démo). Les tests unitaires
+s'appuient sur un faux TIKORA local démarré par `tests/helpers/setup.js`. Les scénarios suivants sont couverts
 par `npm run test:integration`, contre un faux serveur TIKORA fidèle à l'API
 Partenaire (`tests/helpers/mock-tikora-server.js`) :
 

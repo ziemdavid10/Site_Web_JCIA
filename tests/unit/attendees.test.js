@@ -68,3 +68,10 @@ test('PARTICIPANTS - expose les champs attendus par le frontend', async () => {
   assert.ok(item)
   for (const field of ['id', 'name', 'org', 'city', 'profile', 'example']) assert.ok(field in item)
 })
+
+test('PARTICIPANTS - les commandes de l’ancien mode démonstration ne sont jamais publiées', async () => {
+  await run(`INSERT OR REPLACE INTO orders (id, customer_name, customer_email, status, public_listing, tier_id, attendees_json, payment_mode)
+    VALUES ('JCIA27-ATTDM1', 'Demo Simulee', 'demo@test.com', 'paid', 1, 'vip', '["Demo Simulee"]', 'demo')`)
+  const data = await (await fetch('http://localhost:5003/attendees')).json()
+  assert.equal(data.some((x) => x.name === 'Demo Simulee'), false)
+})

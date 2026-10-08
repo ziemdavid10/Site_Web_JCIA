@@ -56,7 +56,9 @@ export function loadConfig(env = process.env) {
   const nodeEnv = env.NODE_ENV || 'development'
   const isProduction = nodeEnv === 'production'
   const allowedOrigins = parseList(env.ALLOWED_ORIGIN)
-  const mode = (env.PAYMENT_PROVIDER_MODE || (isProduction ? 'live' : 'demo')).toLowerCase()
+  // Le paiement passe TOUJOURS par TIKORA : l'ancien mode « demo » (paiements validés
+  // sans débit) a été retiré. La variable n'est plus lue que pour signaler un .env périmé.
+  const requestedMode = String(env.PAYMENT_PROVIDER_MODE || 'live').trim().toLowerCase()
 
   return {
     nodeEnv,
@@ -86,14 +88,11 @@ export function loadConfig(env = process.env) {
       pass: env.SMTP_PASS,
       from: env.MAIL_FROM || (env.SMTP_USER ? `"Billetterie JCIA 2027" <${env.SMTP_USER}>` : ''),
       replyTo: env.MAIL_REPLY_TO || 'contact@jciacm.com',
-      // Simulation locale : les reçus sont construits mais pas envoyés (interdit en production)
-      dryRun: parseBool(env.SMTP_DRY_RUN, false),
     },
 
     payment: {
-      // 'live' : TIKORA réel ; 'demo' : simulation locale (jamais en production)
-      mode,
-      allowDemoInProduction: parseBool(env.ALLOW_DEMO_IN_PRODUCTION, false),
+      mode: 'live',
+      requestedMode,
       // L'ancienne variable PAYMENT_PROVIDER_URL n'est reprise que si elle désigne bien
       // l'API (…/api/…) : l'ancien .env pointait vers la page « développeurs » du site.
       apiUrl: String(
@@ -120,6 +119,16 @@ export function loadConfig(env = process.env) {
       multiplier: Math.max(1, parseIntSafe(env.RATE_LIMIT_MULTIPLIER, 1)),
     },
 
+    // Achats faits sur la page TIKORA de l'événement (hors de notre site) : le serveur
+    // les repère via l'API Partenaire et envoie à chaque acheteur le lien du formulaire.
+    webOrders: {
+      formUrl: String(env.ATTENDEE_FORM_URL || 'https://docs.google.com/forms/d/1jpOGg8oab-88-x19JbFD2-s9IMjPXvjN2XXoOQH-7v8/previewResponse').trim(),
+      syncIntervalMs: parseIntSafe(env.TIKORA_WEB_SYNC_INTERVAL_MS, 120_000), // 0 = désactivé
+      // Commandes antérieures à cette date ignorées (évite d'écrire aux achats de test)
+      since: Date.parse(env.TIKORA_WEB_SYNC_SINCE || '') || 0,
+      maxPages: parseIntSafe(env.TIKORA_WEB_SYNC_MAX_PAGES, 20),
+    },
+
     receipt: {
       // Délai minimal entre deux envois manuels du reçu d'une même commande
       minIntervalMs: parseIntSafe(env.RECEIPT_MIN_INTERVAL_MS, 60_000),
@@ -143,12 +152,13 @@ export function validateConfig(config) {
   const warnings = []
   const p = config.payment
 
-  if (!['live', 'demo'].includes(p.mode)) errors.push(`PAYMENT_PROVIDER_MODE invalide : « ${p.mode} » (live | demo)`)
+  if (p.requestedMode !== 'live') {
+    errors.push(
+      `PAYMENT_PROVIDER_MODE=${p.requestedMode} n’existe plus : le serveur passe toujours par TIKORA. Mettez PAYMENT_PROVIDER_MODE=live (ou retirez la ligne).`,
+    )
+  }
 
   if (config.isProduction) {
-    if (p.mode === 'demo' && !p.allowDemoInProduction) {
-      errors.push('PAYMENT_PROVIDER_MODE=demo est interdit en production : tout paiement serait validé sans débit.')
-    }
     if (!config.allowedOrigins.length || config.allowedOrigins.includes('*')) {
       errors.push('ALLOWED_ORIGIN doit lister explicitement les origines du site en production (pas de « * »).')
     }
@@ -158,44 +168,48 @@ export function validateConfig(config) {
     if (!config.dbPath) warnings.push('DB_PATH non défini : base créée dans ./data/database.sqlite')
   }
 
-  if (p.mode === 'live') {
-    if (!p.apiKey) errors.push('TIKORA_API_KEY est obligatoire en mode live.')
-    else if (/\s|authorization|bearer/i.test(p.apiKey)) {
-      errors.push('TIKORA_API_KEY doit contenir la clé seule (tk_live_…), sans « Authorization: Bearer ».')
-    } else if (!KEY_RE.test(p.apiKey)) {
-      warnings.push('TIKORA_API_KEY ne ressemble pas à une clé tk_live_… / tk_test_….')
+  // TIKORA (toujours obligatoire)
+  if (!p.apiKey) errors.push('TIKORA_API_KEY (clé tk_live_…) est obligatoire.')
+  else if (/\s|authorization|bearer/i.test(p.apiKey)) {
+    errors.push('TIKORA_API_KEY doit contenir la clé seule (tk_live_…), sans « Authorization: Bearer ».')
+  } else if (!KEY_RE.test(p.apiKey)) {
+    warnings.push('TIKORA_API_KEY ne ressemble pas à une clé tk_live_… / tk_test_….')
+  }
+  if (config.isProduction && p.apiKey.startsWith('tk_test_')) warnings.push('Clé TIKORA de TEST utilisée en production.')
+  try {
+    const u = new URL(p.apiUrl)
+    if (u.protocol !== 'https:' && !['localhost', '127.0.0.1'].includes(u.hostname)) {
+      errors.push('TIKORA_API_URL doit être en HTTPS.')
     }
-    if (config.isProduction && p.apiKey.startsWith('tk_test_')) warnings.push('Clé TIKORA de TEST utilisée en production.')
-    try {
-      const u = new URL(p.apiUrl)
-      if (u.protocol !== 'https:' && !['localhost', '127.0.0.1'].includes(u.hostname)) {
-        errors.push('TIKORA_API_URL doit être en HTTPS.')
-      }
-      if (/developpeurs|\/docs/.test(u.pathname)) {
-        errors.push('TIKORA_API_URL pointe vers une page de documentation, pas vers l’API (…/api/v1/partner).')
-      }
-    } catch {
-      errors.push('TIKORA_API_URL invalide.')
+    if (/developpeurs|\/docs/.test(u.pathname)) {
+      errors.push('TIKORA_API_URL pointe vers une page de documentation, pas vers l’API (…/api/v1/partner).')
     }
-    if (!UUIDISH_RE.test(p.eventId)) errors.push('TIKORA_EVENT_ID (identifiant de l’événement TIKORA) est obligatoire en mode live.')
-    if (p.categoryMap.__invalid) errors.push('TIKORA_CATEGORY_MAP n’est pas un JSON valide.')
-    else {
-      for (const tier of ['etudiant', 'standard', 'en-ligne', 'vip']) {
-        const entry = p.categoryMap[tier]
-        const ids = typeof entry === 'string' ? [entry] : entry && typeof entry === 'object' ? Object.values(entry) : []
-        if (!ids.length || !ids.every((id) => UUIDISH_RE.test(String(id)))) {
-          errors.push(`TIKORA_CATEGORY_MAP : catégorie TIKORA manquante pour le tarif « ${tier} ».`)
-        }
+  } catch {
+    errors.push('TIKORA_API_URL invalide.')
+  }
+  if (!UUIDISH_RE.test(p.eventId)) errors.push('TIKORA_EVENT_ID (identifiant de l’événement TIKORA) est obligatoire.')
+  if (p.categoryMap.__invalid) errors.push('TIKORA_CATEGORY_MAP n’est pas un JSON valide.')
+  else {
+    for (const tier of ['etudiant', 'standard', 'en-ligne', 'vip']) {
+      const entry = p.categoryMap[tier]
+      const ids = typeof entry === 'string' ? [entry] : entry && typeof entry === 'object' ? Object.values(entry) : []
+      if (!ids.length || !ids.every((id) => UUIDISH_RE.test(String(id)))) {
+        errors.push(`TIKORA_CATEGORY_MAP : catégorie TIKORA manquante pour le tarif « ${tier} ».`)
       }
-    }
-    if (!p.webhookSecret) {
-      warnings.push('TIKORA_WEBHOOK_SECRET absent : les webhooks sont acceptés comme simple signal et re-vérifiés auprès de TIKORA.')
     }
   }
+  if (!p.webhookSecret) {
+    warnings.push('TIKORA_WEBHOOK_SECRET absent : les webhooks sont acceptés comme simple signal et re-vérifiés auprès de TIKORA.')
+  }
 
-  if (config.smtp.dryRun) {
-    ;(config.isProduction ? errors : warnings).push('SMTP_DRY_RUN actif : les reçus sont préparés mais AUCUN e-mail n’est envoyé.')
-  } else if (!config.smtp.host || !config.smtp.user || !config.smtp.pass) {
+  try {
+    const f = new URL(config.webOrders.formUrl)
+    if (f.protocol !== 'https:') errors.push('ATTENDEE_FORM_URL doit être en HTTPS.')
+  } catch {
+    errors.push('ATTENDEE_FORM_URL invalide.')
+  }
+
+  if (!config.smtp.host || !config.smtp.user || !config.smtp.pass) {
     ;(config.isProduction ? errors : warnings).push('SMTP_HOST / SMTP_USER / SMTP_PASS incomplets : aucun reçu ne pourra être envoyé.')
   }
   return { errors, warnings }

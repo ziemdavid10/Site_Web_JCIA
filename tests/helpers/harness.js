@@ -27,6 +27,16 @@ export async function startStack({ env = {}, mockOptions = {} } = {}) {
     sent.push(args)
     return true
   }
+  const formsSent = []
+  let formFailures = 0
+  mailerService.sendAttendeeFormEmail = async (args) => {
+    if (formFailures > 0) {
+      formFailures -= 1
+      throw new Error('SMTP indisponible')
+    }
+    formsSent.push(args)
+    return true
+  }
 
   const server = await new Promise((resolve) => {
     const s = app.listen(0, '127.0.0.1', () => resolve(s))
@@ -68,6 +78,10 @@ export async function startStack({ env = {}, mockOptions = {} } = {}) {
     orders,
     catalog,
     sent,
+    formsSent,
+    failNextForms(n = 1) {
+      formFailures = n
+    },
     request,
     waitForStatus,
     async close() {

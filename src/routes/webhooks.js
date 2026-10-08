@@ -2,6 +2,7 @@ import express from 'express'
 import { CONFIG } from '../config/env.js'
 import { run } from '../database/db.js'
 import { syncFromWebhook } from '../services/orders.js'
+import { handleWebOrderWebhook } from '../services/webOrders.js'
 import { sha256, verifyWebhookSignature } from '../services/security.js'
 import { limiters } from '../middleware/security.js'
 import { logger } from '../utils/logger.js'
@@ -57,7 +58,9 @@ export async function handleTikoraWebhook(req, res) {
   if (inserted.changes === 0) return res.json({ received: true, duplicate: true })
 
   try {
-    const result = await syncFromWebhook(ids)
+    let result = await syncFromWebhook(ids)
+    // Commande inconnue de notre site : achat fait sur la page TIKORA de l'événement
+    if (result === 'unknown_order' && ids.tikoraOrderId) result = `web:${await handleWebOrderWebhook(ids.tikoraOrderId)}`
     await run('UPDATE webhook_events SET result = ? WHERE event_key = ?', [result, key])
     logger.info('webhook.processed', { event: ids.event, result, signed })
     // Réponse identique que la commande existe ou non (pas d'énumération)

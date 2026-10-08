@@ -1,7 +1,7 @@
 /**
  * Faux serveur TIKORA — reproduit l'API Partenaire (OpenAPI « TIKORA — API
- * Partenaire » v1.0.0) pour les tests d'intégration, de bout en bout et de
- * charge, sans compte marchand ni débit réel.
+ * Partenaire » v1.0.0) pour les TESTS AUTOMATIQUES uniquement, sans compte
+ * marchand ni débit réel.
  *
  * Fidèle au contrat : authentification Bearer, Idempotency-Key obligatoire sur
  * les POST (rejeu = réponse initiale ; même clé + autre corps = 422), enveloppe
@@ -15,12 +15,11 @@
  * Injection de pannes : POST /__mock/fault { mode: '500'|'429'|'timeout'|'nonjson'|'401', count }
  * Utilitaires : POST /__mock/reset, GET /__mock/state, POST /__mock/orders/:id/expire
  *
- * Lancement autonome : node tests/helpers/mock-tikora-server.js  (port MOCK_TIKORA_PORT, 4010)
+ * Réservé aux tests automatiques (unitaires, intégration, bout en bout, charge) :
+ * il n'a pas de lancement autonome et n'est jamais utilisé par le site.
  */
 import crypto from 'node:crypto'
 import http from 'node:http'
-import path from 'node:path'
-import { fileURLToPath } from 'node:url'
 import { getTicketPricing } from '../../src/utils/pricing.js'
 
 export const MOCK_KEY = 'tk_test_mockkey0123456789'
@@ -44,8 +43,10 @@ export function createMockTikora({
   priceOverrides = {},
   // Comme le vrai TIKORA : montants renvoyés en texte décimal ("3500.00")
   decimalStrings = false,
-  // Journal lisible (simulation locale) : onEvent(type, détails)
+  // Journal lisible : onEvent(type, détails)
   onEvent = () => {},
+  // Statut de l'événement : 'published' (vente ouverte) ou 'pending_review' (en attente de validation TIKORA)
+  eventStatus = 'published',
 } = {}) {
   const state = {
     orders: new Map(),
@@ -89,7 +90,7 @@ export function createMockTikora({
       description: null,
       program: null,
       category: 'Conférence',
-      status: 'published',
+      status: eventStatus,
       rejectionReason: null,
       visibility: 'public',
       city: 'Yaoundé',
@@ -101,7 +102,7 @@ export function createMockTikora({
       endAt: '2027-04-28T22:00:00.000Z',
       maxParticipants: 500,
       posterUrl: null,
-      ticketsOnSale: true,
+      ticketsOnSale: eventStatus === 'published',
       buyerFee: { type: 'percent', value: 2 },
       ticketCategories: Object.entries(MOCK_CATEGORIES).map(([tier, id]) => ({
         id,
@@ -127,7 +128,8 @@ export function createMockTikora({
       id: o.id,
       orderNumber: o.orderNumber,
       reference: o.reference ?? null,
-      eventId: MOCK_EVENT_ID,
+      eventId: o.eventId ?? MOCK_EVENT_ID,
+      livemode: o.livemode ?? true,
       status: o.status,
       subtotal: o.subtotal,
       buyerFee: o.buyerFee,
@@ -213,6 +215,36 @@ export function createMockTikora({
       const { json } = await readBody(req)
       state.fault = json.mode ? { mode: json.mode, count: Number(json.count ?? 1) } : null
       return send(res, 200, { fault: state.fault })
+    }
+    // Achat fait directement sur la page TIKORA de l'événement (sans notre référence)
+    if (p === '/__mock/web-order') {
+      const { json } = await readBody(req)
+      const tier = json.tier ?? 'standard'
+      const quantity = json.quantity ?? 1
+      const subtotal = priceOf(tier) * quantity
+      const buyerFee = Math.max(100, Math.round(subtotal * 0.02))
+      const o = {
+        id: crypto.randomUUID(),
+        orderNumber: `ORD-${crypto.randomBytes(4).toString('hex').toUpperCase()}`,
+        reference: null,
+        eventId: json.eventId,
+        livemode: json.livemode ?? true,
+        tier,
+        quantity,
+        status: json.status ?? 'paid',
+        subtotal,
+        buyerFee,
+        partnerCommission: buyerFee,
+        total: subtotal + buyerFee,
+        expiresAt: new Date(Date.now() + 15 * 60_000).toISOString(),
+        buyer: { fullName: json.name ?? 'Achat Web', email: json.email ?? 'web@example.com', phone: '+237677000000' },
+        items: [{ ticketCategoryId: MOCK_CATEGORIES[tier], name: tier, quantity, unitPrice: priceOf(tier), subtotal }],
+        payment: { status: 'confirmed', method: 'mtn_momo', failureCode: null, failureReason: null, confirmedAt: now() },
+        tickets: [],
+        createdAt: json.createdAt ?? now(),
+      }
+      state.orders.set(o.id, o)
+      return send(res, 201, { id: o.id, orderNumber: o.orderNumber })
     }
     const expire = p.match(/^\/__mock\/orders\/([^/]+)\/expire$/)
     if (expire) {
@@ -469,6 +501,9 @@ export function createMockTikora({
     setStock(tier, n) {
       state.stock[tier] = n
     },
+    setEventStatus(status) {
+      eventStatus = status
+    },
   }
 }
 
@@ -482,12 +517,4 @@ export function mockEnv(mockUrl) {
     TIKORA_CATEGORY_MAP: JSON.stringify(MOCK_CATEGORIES),
     TIKORA_WEBHOOK_SECRET: MOCK_WEBHOOK_SECRET,
   }
-}
-
-const isMain = process.argv[1] && path.resolve(process.argv[1]) === path.resolve(fileURLToPath(import.meta.url))
-if (isMain) {
-  const mock = createMockTikora()
-  await mock.listen(Number(process.env.MOCK_TIKORA_PORT || 4010))
-  process.stdout.write(`Faux TIKORA prêt : ${mock.url}\n`)
-  for (const [k, v] of Object.entries(mockEnv(mock.url))) process.stdout.write(`  ${k}=${v}\n`)
 }
