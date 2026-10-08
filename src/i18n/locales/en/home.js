@@ -24,9 +24,9 @@ export default {
     badgeLead: '',
     badgeStrong: 'Preparatory side event for the Geneva AI Summit 2027',
     // Main title: the full event name; second line: the organiser
-    titleStart: 'Cameroon ',
+    titleStart: ' 2027 Cameroon Days of ',
     titleAccent: 'Artificial Intelligence',
-    titleEnd: ' Days 2027',
+    titleEnd: '',
     kicker: 'Cameroon Artificial Intelligence Policy Institute — Intelligence Artificielle Cameroun (CAIPI/IAC) ',
     theme: 'Theme: “Thinking Artificial Intelligence **in Cameroon**, **for Cameroon**”',
     ctaRegister: 'Book my seat',
