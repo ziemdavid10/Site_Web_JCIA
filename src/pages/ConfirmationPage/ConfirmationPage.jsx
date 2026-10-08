@@ -13,22 +13,20 @@ import { formatCmPhone } from '@/utils/phone'
 import { buildEventIcsHref } from '@/utils/calendar'
 import { canGenerateFlyer, getOrder, isConfirmed, saveServerOrder } from '@/services/orders'
 import { receiptFallbackHref, requestOrderReceipt } from '@/services/email'
-import { fetchServerOrder, PAYMENT_MODE } from '@/services/payment'
+import { fetchServerOrder } from '@/services/payment'
 import useDocumentMeta from '@/hooks/useDocumentMeta'
 import logoWhite from '@/assets/images/brand/logo-jcia-white-sm.webp'
 import './ConfirmationPage.scss'
 
 /**
- * Génère les QR codes des billets (un par participant).
- *  • mode réel : le QR encode le jeton officiel émis par TIKORA (ou, pour un
- *    billet gratuit, le jeton signé par le serveur JCIA) — c'est lui qui est
- *    vérifié au contrôle d'accès ;
- *  • démonstration : contenu lisible (n° de commande + participant), sans valeur.
+ * Génère les QR codes des billets (un par participant). Le QR encode le jeton
+ * officiel émis par TIKORA (ou, pour un billet gratuit, le jeton signé par le
+ * serveur JCIA) — c'est lui qui est vérifié au contrôle d'accès. Tant que le
+ * serveur ne les a pas transmis, aucun QR n'est affiché.
  * Le QR est dessiné dans le navigateur (data:), aucune image externe chargée.
  */
 function qrPayloads(order) {
-  if (order.payment.mode !== 'demo') return order.tickets?.length ? order.tickets.map((t) => t.qrToken) : []
-  return order.attendees.map((name, i) => `JCIA2027|${order.id}|${i + 1}/${order.attendees.length}|${order.tierId}|${name}`)
+  return order.tickets?.length ? order.tickets.map((t) => t.qrToken) : []
 }
 
 function useTicketQrCodes(order) {
@@ -65,7 +63,7 @@ function useTicketQrCodes(order) {
 const receiptRequests = new Map()
 
 /** Icône associée à chaque état de l'envoi */
-const RECEIPT_ICON = { sending: 'clock', sent: 'mail', queued: 'mail', demo: 'info', failed: 'alert' }
+const RECEIPT_ICON = { sending: 'clock', sent: 'mail', queued: 'mail', failed: 'alert' }
 
 function useOrderReceipt(order) {
   const [state, setState] = useState('sending')
@@ -99,7 +97,7 @@ function useOrderReceipt(order) {
 }
 
 /**
- * Mode réel : relit la commande sur le serveur (statut, frais, billets
+ * Relit la commande sur le serveur (statut, frais, billets
  * officiels) grâce au jeton d'accès — celui gardé sur l'appareil, ou celui du
  * lien reçu par e-mail (#t=…, retiré aussitôt de la barre d'adresse). Tant que
  * le paiement est en attente de confirmation, la lecture est répétée.
@@ -110,10 +108,9 @@ function useServerOrder(orderId) {
   const [order, setOrder] = useState(() => getOrder(orderId))
   // Jeton du lien e-mail lu UNE fois (le fragment est ensuite effacé de l'URL)
   const [linkToken] = useState(hashToken)
-  const [loading, setLoading] = useState(() => PAYMENT_MODE === 'live' && Boolean(linkToken))
+  const [loading, setLoading] = useState(() => Boolean(linkToken))
 
   useEffect(() => {
-    if (PAYMENT_MODE !== 'live') return undefined
     if (hashToken()) window.history.replaceState(window.history.state, '', window.location.pathname + window.location.search)
     const token = linkToken || getOrder(orderId)?.accessToken
     if (!token) return undefined
@@ -128,7 +125,7 @@ function useServerOrder(orderId) {
       if (saved) setOrder(saved)
       setLoading(false)
       const status = saved?.payment.status ?? getOrder(orderId)?.payment.status
-      const needsTickets = saved && isConfirmed(saved) && saved.payment.mode !== 'demo' && !saved.tickets.length
+      const needsTickets = saved && isConfirmed(saved) && !saved.tickets.length
       if ((status === 'pending' || needsTickets) && Date.now() < deadline) timer = setTimeout(tick, 5000)
     }
     tick()
@@ -170,7 +167,7 @@ export default function ConfirmationPage() {
     )
   }
 
-  // --- Paiement en attente de confirmation ou refusé (mode réel) ------------------------
+  // --- Paiement en attente de confirmation ou refusé ------------------------------------
   if (order && !isConfirmed(order) && ['pending', 'failed'].includes(order.payment.status)) {
     const pending = order.payment.status === 'pending'
     return (
@@ -223,10 +220,8 @@ export default function ConfirmationPage() {
   const tier = CONFIG.tickets.tiers.find((x) => x.id === order.tierId)
   const tt = t.tickets.tiers[order.tierId]
   const e = t.event
-  // Mobile Money : l'opérateur débité ; carte : le réseau utilisé n'est pas connu
-  // du navigateur (le paiement se fait chez la banque), on affiche donc « Carte ».
+  // Mobile Money : l'opérateur débité
   const operator = payment.operators.find((o) => o.id === order.payment.operator)
-  const isDemo = order.payment.mode === 'demo'
   const date = new Date(order.payment.paidAt || order.createdAt).toLocaleString(locale, { dateStyle: 'long', timeStyle: 'short' })
   const firstName = order.customer.name.split(' ')[0]
 
@@ -241,20 +236,13 @@ export default function ConfirmationPage() {
           </span>
           <h1>{rich(c.heading)}</h1>
           <p>{fill(c.lead, { name: firstName, email: order.customer.email })}</p>
-          {isDemo && (
-            <p className="confirmation__demo">
-              <Icon name="info" size={16} /> {c.demo}
-            </p>
-          )}
 
           {/* État réel de l'envoi du récapitulatif : on n'annonce « envoyé »
               que lorsque le serveur l'a confirmé. */}
           <p className={`confirmation__receipt is-${receipt ?? 'sending'}`} aria-live="polite">
             <Icon name={RECEIPT_ICON[receipt] ?? 'clock'} size={16} />
             <span>
-              {receipt === 'demo'
-                ? c.receipt.demo
-                : receipt === 'failed'
+              {receipt === 'failed'
                   ? c.receipt.failed
                   : receipt === 'sending'
                     ? c.receipt.sending
@@ -341,20 +329,12 @@ export default function ConfirmationPage() {
                 <dt>{t.tickets.checkout.total}</dt>
                 <dd>{order.total === 0 ? c.free : formatXAF(order.payment.amountPaid ?? order.total, locale)}</dd>
               </div>
-              {(operator || order.payment.method === 'card') && (
+              {operator && (
                 <>
                   <div>
                     <dt>{c.paidWith}</dt>
                     <dd>
-                      {operator ? (
-                        <>
-                          <OperatorBadge id={operator.id} size="sm" /> {order.payment.phone ? formatCmPhone(order.payment.phone) : ''}
-                        </>
-                      ) : (
-                        `${payment.cards.find((x) => x.id === order.payment.brand)?.name ?? t.tickets.checkout.methods.card.name}${
-                          order.payment.last4 ? ` •••• ${order.payment.last4}` : ''
-                        }`
-                      )}
+                      <OperatorBadge id={operator.id} size="sm" /> {order.payment.phone ? formatCmPhone(order.payment.phone) : ''}
                     </dd>
                   </div>
                   <div>

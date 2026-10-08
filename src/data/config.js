@@ -53,9 +53,9 @@ export const CONFIG = {
    *
    *  payment            paiement en ligne. `false` : la billetterie reste
    *                     consultable (tarifs, quotas, places restantes) mais
-   *                     aucune commande ne peut être passée. À repasser à
-   *                     `true` le jour où l'API de paiement (Mobile Money et
-   *                     cartes) est branchée — voir VITE_PAYMENT_API_URL.
+   *                     aucune commande ne peut être passée (fermeture
+   *                     volontaire). `true` : commandes via le serveur de
+   *                     billetterie (VITE_PAYMENT_API_URL) et TIKORA.
    *  documentDownloads  téléchargement du TDR (appel à candidatures CAIA) et du
    *                     dossier de partenariat. `false` : boutons grisés, les
    *                     PDF n'étant pas encore définitifs.
@@ -100,6 +100,7 @@ export const CONFIG = {
     theme: 'jcia-theme',
     consent: 'jcia-consent',
     orders: 'jcia-orders',
+    photos: 'jcia-photos',
   },
 
   /**
@@ -126,36 +127,19 @@ export const CONFIG = {
   },
 
   /**
-   * Paiement Mobile Money.
-   * Tant que VITE_PAYMENT_API_URL n'est pas défini, le site fonctionne en
-   * MODE DÉMONSTRATION (paiement simulé, aucun débit) — voir src/services/payment.js.
+   * Paiement Mobile Money (MTN MoMo, Orange Money) via le serveur de billetterie
+   * et TIKORA. VITE_PAYMENT_API_URL est OBLIGATOIRE : sans elle, la billetterie
+   * s'affiche « momentanément indisponible » (aucun paiement n'est simulé).
+   * TIKORA n'encaisse pas les cartes bancaires : aucune saisie de carte sur le site.
    */
   payment: {
     apiUrl: import.meta.env.VITE_PAYMENT_API_URL || '',
     /**
-     * Cartes bancaires acceptées.
-     *
-     * Le visiteur saisit ses coordonnées dans le formulaire de la page de
-     * paiement (nom, numéro, expiration, CVC). Elles sont envoyées en HTTPS au
-     * serveur de billetterie, qui les transmet au prestataire bancaire ; elles
-     * ne sont NI journalisées, NI conservées, et la commande enregistrée ne
-     * garde que le réseau (« visa ») et les quatre derniers chiffres. Si la
-     * banque exige une authentification forte (3-D Secure), le serveur renvoie
-     * une adresse de redirection, vérifiée avant usage.
-     *
-     * ⚠️ Conformité : dès que le numéro traverse nos pages, le commerçant relève
-     * du questionnaire PCI-DSS le plus exigeant (SAQ D). Le jour où le
-     * prestataire fournira ses champs hébergés, basculer `CARD_FIELDS_MODE` sur
-     * 'hosted' dans src/services/payment.js : seul un jeton sera alors transmis.
-     *
-     * Les logos officiels Visa / Mastercard doivent être obtenus auprès des
-     * réseaux (kits de marque) et déposés dans public/images/ ; en attendant,
-     * une pastille typographique est affichée, comme pour les opérateurs.
+     * Billets PAYANTS : le paiement se fait sur la page de l'événement chez TIKORA
+     * (Mobile Money). Après le paiement, TIKORA envoie les billets et le serveur
+     * JCIA envoie à l'acheteur le lien du formulaire participant.
      */
-    cards: [
-      { id: 'visa', name: 'Visa', short: 'VISA', color: '#1a1f71', text: '#ffffff' },
-      { id: 'mastercard', name: 'Mastercard', short: 'MC', color: '#c8102e', text: '#ffffff' },
-    ],
+    tikoraEventUrl: 'https://tikora.proditech.online/evenements/jcia-2027-journees-camerounaises-de-l-intelligence-artificielle',
     operators: [
       // Préfixes des numéros camerounais (9 chiffres commençant par 6), à ajuster si besoin
       { id: 'mtn', name: 'MTN Mobile Money', short: 'MoMo', color: '#ffcb05', text: '#1a1a1a', prefixes: ['67', '680', '681', '682', '683', '684', '650', '651', '652', '653', '654'] },

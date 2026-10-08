@@ -574,6 +574,16 @@
     border-radius: $radius-pill;
   }
 
+  // Serveur de billetterie injoignable
+  &--error {
+    border-color: $flag-red;
+
+    .tickets-closed__tag {
+      color: $white;
+      background: $flag-red;
+    }
+  }
+
   h3 {
     font-size: clamp(1.1rem, 2.4vw, 1.45rem);
   }
@@ -582,5 +592,60 @@
     font-size: 0.95rem;
     line-height: 1.6;
     color: $text-muted;
+  }
+}
+
+// Billets payants : paiement sur TIKORA, puis e-mail avec le formulaire participant
+.tickets-tikora {
+  display: flex;
+  align-items: flex-start;
+  gap: $space-4;
+  max-width: 900px;
+  margin: 0 auto $space-6;
+  padding: $space-4 $space-5;
+  background: $surface;
+  border: 1px solid $border;
+  border-left: 5px solid $orange;
+  border-radius: $radius-md;
+
+  &__icon {
+    flex-shrink: 0;
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    color: $navy;
+    background: $orange;
+    border-radius: 50%;
+  }
+
+  h3 {
+    font-size: 1rem;
+  }
+
+  p {
+    margin-top: 4px;
+    font-size: 0.88rem;
+    line-height: 1.55;
+    color: $text-soft;
+  }
+}
+
+.tier-card__how {
+  display: block;
+  margin-top: $space-2;
+  font-size: 0.8rem;
+  font-weight: $fw-semibold;
+  text-align: center;
+  color: $text-muted;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+
+  &:hover {
+    color: $text;
+  }
+
+  &:focus-visible {
+    @include focus-ring($teal);
   }
 }

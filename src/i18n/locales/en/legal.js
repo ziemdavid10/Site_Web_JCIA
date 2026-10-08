@@ -38,7 +38,7 @@ export default {
           {
             list: [
               '**Ticketing**: full name, e-mail address, phone, organisation or institution (optional), names of other attendees on the same order, ticket type and quantity.',
-              '**Payment**: chosen method (MTN Mobile Money, Orange Money, Visa or Mastercard), number charged for Mobile Money, amount and transaction ID. Payment is processed by the operator, the bank or their licensed aggregator; we **never** collect your PIN or your card details.',
+              '**Payment**: paid tickets are bought and paid for on the TIKORA platform (MTN Mobile Money or Orange Money), which processes the payment under its own terms. To send you the link to the attendee form and, at your request, link your ticket to our website (“I’ll be there” visual, photo, attendee list), our server receives from TIKORA the order number, name, e-mail address and amount of your purchase. We **never** collect your Mobile Money PIN.',
               '**Attendee photo (optional)**: the photo you add after registering, cropped and stripped of its metadata (including GPS location). It illustrates your “I’ll be there” visual and only appears in the public attendee list **if you agreed to be listed**. You can remove it at any time.',
               '**Exchanges with the secretariat**: information you send us by e-mail or phone (stand booking, partnership, press accreditation, speaker proposal…).',
               '**CAIA 2027 applications**: submitted on the dedicated platform (awards.jcia.cm) and governed by the Terms of Reference of the call for applications.',
@@ -191,7 +191,7 @@ export default {
         blocks: [
           {
             list: [
-              'Tickets are sold in CFA francs (XAF), all taxes included, and paid with MTN Mobile Money, Orange Money, Visa or Mastercard. Card payments are made on the bank’s secure page; no card data is collected by this site. The order is confirmed as soon as the payment is approved; the e-ticket is then issued.',
+              'Tickets are sold in CFA francs (XAF), all taxes included. The free ticket is booked on this website. Paid tickets are sold and paid for on the TIKORA platform (MTN Mobile Money or Orange Money), whose terms apply to payment and ticket issuing; a TIKORA service fee may be added to the ticket price. The order is confirmed once the payment is approved.',
               'The “Online” ticket gives access to the live stream and to session replays for 30 days; it does not give access to the Hilton Hotel.',
               'Each ticket is sold within a quota published on the Tickets page. Once the quota is reached, the ticket is marked “sold out”.',
               // Free option disabled: 'The “Online” ticket is free.' — see src/data/config.js

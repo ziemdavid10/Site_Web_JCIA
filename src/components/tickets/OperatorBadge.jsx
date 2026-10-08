@@ -2,19 +2,17 @@ import { CONFIG } from '@/data/config'
 import './OperatorBadge.scss'
 
 /**
- * <OperatorBadge /> — pastille typographique d'un moyen de paiement :
- * opérateur Mobile Money (MTN, Orange) ou réseau de carte (Visa, Mastercard),
- * à ses couleurs.
+ * <OperatorBadge /> — pastille typographique d'un opérateur Mobile Money (MTN,
+ * Orange), à ses couleurs.
  * Volontairement textuelle : remplacer par les logos officiels fournis par les
- * opérateurs, les réseaux de cartes ou l'agrégateur une fois le contrat de
- * paiement signé (les kits de marque imposent des règles d'usage précises).
+ * opérateurs une fois les autorisations obtenues (les kits de marque imposent
+ * des règles d'usage précises).
  *
- * @param {'mtn'|'orange'|'visa'|'mastercard'} id
+ * @param {'mtn'|'orange'} id
  * @param {'sm'|'md'} size
  */
 export default function OperatorBadge({ id, size = 'md', className = '' }) {
-  const { operators, cards } = CONFIG.payment
-  const op = [...operators, ...cards].find((o) => o.id === id)
+  const op = CONFIG.payment.operators.find((o) => o.id === id)
   if (!op) return null
   return (
     <span

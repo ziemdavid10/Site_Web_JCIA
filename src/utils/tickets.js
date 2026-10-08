@@ -37,16 +37,19 @@ export function remainingSeats(tier) {
   return Number.isFinite(tier.available) ? Math.max(0, Math.min(tier.available, fromQuota)) : fromQuota
 }
 
+/**
+ * Plus aucune place (stock réel épuisé). Une vente pas encore ouverte n'est PAS
+ * « complète » : voir tierAvailability() dans src/hooks/useTicketCatalog.js.
+ */
 export function isSoldOut(tier) {
   if (!tier) return false
-  if (tier.onSale === false) return true
   return Number.isFinite(remainingSeats(tier)) && remainingSeats(tier) === 0
 }
 
 /**
  * Frais de service TIKORA (pourcentage du sous-total, plancher 100 FCFA).
  * Estimation affichée avant paiement ; le montant exact est confirmé par le
- * serveur au lancement du paiement. Sans serveur (démonstration) : 0.
+ * serveur au lancement du paiement.
  */
 export function estimateFees(subtotal, buyerFee) {
   if (!subtotal || !buyerFee) return 0

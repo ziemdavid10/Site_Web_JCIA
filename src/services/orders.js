@@ -7,9 +7,10 @@ import { ORDER_ID_RE, cleanText } from '@/security/sanitize'
  * Commandes de billets.
  *
  * Copie locale (localStorage) des commandes passées sur cet appareil : elle
- * sert à l'affichage hors ligne. En mode réel, la commande fait foi sur le
- * SERVEUR : la page de confirmation la relit (GET /orders/:id + jeton d'accès)
- * pour obtenir le statut et les QR codes officiels émis par TIKORA.
+ * sert à l'affichage hors ligne. La commande fait foi sur le SERVEUR : la page
+ * de confirmation la relit (GET /orders/:id + jeton d'accès) pour obtenir le
+ * statut et les QR codes officiels émis par TIKORA. Les anciennes commandes
+ * « de démonstration » (paiement simulé) sont ignorées.
  *
  * Structure d'une commande :
  * {
@@ -18,15 +19,13 @@ import { ORDER_ID_RE, cleanText } from '@/security/sanitize'
  *   customer: { name, email, phone, org, school? },
  *   attendees: [ 'Nom 1', 'Nom 2', … ],
  *   publicListing: true | false,   // accord pour figurer dans la liste publique
- *   payment: { method: 'momo'|'card', operator, phone, brand, last4,
- *              status: 'free'|'pending'|'paid'|'failed', transactionId, paidAt, mode,
+ *   payment: { method: 'momo', operator, phone,
+ *              status: 'free'|'pending'|'paid'|'failed', transactionId, paidAt, mode: 'live',
  *              fees, amountPaid },
  *   accessToken: jeton remis par le serveur (consultation des billets),
  *   tickets: [{ code, qrToken, holder, status }]  billets officiels (mode réel),
  *   photos: [{ position, version }]  photos des participants connues du serveur
  *           (la photo elle-même est gardée à part : src/services/photos.js),
- *   ⚠️ Aucun numéro de carte, aucun CVC : seuls le réseau (« visa ») et les
- *      quatre derniers chiffres sont conservés, pour le reçu.
  * }
  */
 
@@ -35,8 +34,6 @@ const MAX_ORDERS = 20 // limite la taille des données gardées sur l'appareil
 const TIER_IDS = CONFIG.tickets.tiers.map((t) => t.id)
 const STATUSES = ['free', 'pending', 'paid', 'failed']
 const OPERATORS = CONFIG.payment.operators.map((o) => o.id)
-const METHODS = ['momo', 'card'] // Mobile Money ou carte bancaire
-const BRANDS = ['visa', 'mastercard']
 const TOKEN_RE = /^[\w-]{20,100}$/
 const TICKET_STATUSES = ['valid', 'used', 'cancelled', 'expired']
 const VERSION_RE = /^[\w-]{1,40}$/
@@ -57,10 +54,10 @@ function sanitizeOrder(o) {
   const unitPrice = getTicketPrice(tier, o.createdAt)
   if (Number(o.total) !== unitPrice * quantity) return null // montant falsifié
   const p = o.payment ?? {}
+  if (p.mode !== 'live') return null // ancienne commande de démonstration : ignorée
   if (!STATUSES.includes(p.status)) return null
   if (p.status === 'free' && unitPrice !== 0) return null
   if (p.operator && !OPERATORS.includes(p.operator)) return null
-  if (p.method && !METHODS.includes(p.method)) return null
   const attendees = Array.isArray(o.attendees) ? o.attendees.slice(0, quantity).map((a) => cleanText(a, 80)) : []
   if (attendees.length !== quantity) return null
   const tickets = Array.isArray(o.tickets)
@@ -98,10 +95,8 @@ function sanitizeOrder(o) {
       : [],
     payment: {
       status: p.status,
-      method: METHODS.includes(p.method) ? p.method : 'momo',
-      brand: BRANDS.includes(p.brand) ? p.brand : undefined,
-      last4: /^\d{4}$/.test(String(p.last4 ?? '')) ? String(p.last4) : undefined,
-      mode: p.mode === 'live' ? 'live' : 'demo',
+      method: 'momo',
+      mode: 'live',
       operator: p.operator ?? undefined,
       phone: p.phone ? cleanText(p.phone, 20).replace(/\D/g, '') : undefined,
       transactionId: p.transactionId ? cleanText(p.transactionId, 80) : undefined,
@@ -123,6 +118,7 @@ const SERVER_STATUS = { paid: 'paid', free: 'free', pending: 'pending', failed: 
  */
 export function saveServerOrder(server, accessToken) {
   if (!server || !ORDER_ID_RE.test(server.id ?? '')) return null
+  if (server.payment?.mode === 'demo') return null // commande de l'ancien mode démonstration
   const created = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/.test(server.createdAt ?? '')
     ? `${server.createdAt.replace(' ', 'T')}Z`
     : server.createdAt
@@ -212,3 +208,4 @@ export function setOrderPhoto(orderId, position, version) {
   if (version) photos.push({ position, version })
   return saveOrder({ ...order, photos: photos.sort((a, b) => a.position - b.position) })
 }
+

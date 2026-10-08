@@ -1,5 +1,5 @@
 import { useEffect, useId, useMemo, useRef, useState } from 'react'
-import { Link, useSearchParams } from 'react-router'
+import { Link, useNavigate, useSearchParams } from 'react-router'
 import { Button, Icon, PersonAvatar, Reveal } from '@/components/ui'
 import { PageHero } from '@/components/page'
 import { FLYER_FORMATS, TIER_STYLES, drawFlyer, loadFlyerFonts, loadImage, styleForTier } from '@/components/tickets/flyerRenderer'
@@ -9,10 +9,10 @@ import { fill } from '@/i18n/format'
 import { CONFIG } from '@/data/config'
 import useAttendeePhotos from '@/hooks/useAttendeePhotos'
 import { canGenerateFlyer, getOrder, latestConfirmedOrder, saveServerOrder, setOrderPhoto } from '@/services/orders'
-import { fetchServerOrder, PAYMENT_MODE } from '@/services/payment'
+import { claimTikoraOrder, fetchServerOrder } from '@/services/payment'
 import { removeAttendeePhoto } from '@/services/photos'
 import useDocumentMeta from '@/hooks/useDocumentMeta'
-import { cleanText } from '@/security/sanitize'
+import { cleanText, isValidEmail } from '@/security/sanitize'
 import logoWhiteSrc from '@/assets/images/brand/logo-jcia-white.webp'
 import logoColorSrc from '@/assets/images/brand/logo-jcia.webp'
 import mapDarkSrc from '@/assets/images/brand/map-large-dark.webp'
@@ -170,8 +170,7 @@ function FlyerEditor({ order }) {
   const ratio = FLYER_FORMATS[format]
   const style = styleForTier(tierId)
   const tierColor = CONFIG.tickets.tiers.find((x) => x.id === tierId)?.color
-  const live = PAYMENT_MODE === 'live' && order.payment.mode === 'live'
-  const photoStatus = photoSrc ? (live ? (order.publicListing ? p.public : p.private) : p.demo) : p.missing
+  const photoStatus = photoSrc ? (order.publicListing ? p.public : p.private) : p.missing
 
   return (
     <div className="flyer-editor" style={{ '--tier-a': style.swatch[0], '--tier-b': style.swatch[1] }}>
@@ -347,13 +346,13 @@ function FlyerEditor({ order }) {
 }
 
 /**
- * Commande relue sur le serveur (mode réel) : photos ajoutées depuis un autre
- * appareil, billets officiels. La copie de l'appareil s'affiche sans attendre.
+ * Commande relue sur le serveur : photos ajoutées depuis un autre appareil,
+ * billets officiels. La copie de l'appareil s'affiche sans attendre.
  */
 function useFreshOrder(initial) {
   const [fresh, setFresh] = useState(null)
   useEffect(() => {
-    if (!initial || PAYMENT_MODE !== 'live' || initial.payment.mode !== 'live' || !initial.accessToken) return undefined
+    if (!initial?.accessToken) return undefined
     let alive = true
     fetchServerOrder(initial.id, initial.accessToken).then((server) => {
       const saved = server ? saveServerOrder(server, initial.accessToken) : null
@@ -364,6 +363,98 @@ function useFreshOrder(initial) {
     }
   }, [initial])
   return fresh?.id === initial?.id ? fresh : initial
+}
+
+/**
+ * Billet payé sur la page TIKORA : la personne donne son numéro de commande
+ * TIKORA (ORD-…, dans l'e-mail de TIKORA) et l'adresse e-mail utilisée pour
+ * l'achat. Le serveur le VÉRIFIE chez TIKORA puis renvoie la commande JCIA : le
+ * billet (et donc la charte du visuel) vient de TIKORA, la photo est enregistrée
+ * comme pour tout participant et figure dans la liste si la personne l'accepte.
+ */
+function ClaimTicket({ initialNumber }) {
+  const { t, lang } = useI18n()
+  const f = t.tickets.flyer
+  const uid = useId()
+  const navigate = useNavigate()
+  const [orderNumber, setOrderNumber] = useState(initialNumber ?? '')
+  const [email, setEmail] = useState('')
+  const [listed, setListed] = useState(true)
+  const [error, setError] = useState('')
+  const [busy, setBusy] = useState(false)
+
+  const submit = async (e) => {
+    e.preventDefault()
+    if (busy) return
+    if (!/^[A-Za-z0-9][A-Za-z0-9-]{3,39}$/.test(orderNumber.trim())) return setError(f.claim.errors.number)
+    if (!isValidEmail(email)) return setError(f.claim.errors.email)
+    setBusy(true)
+    setError('')
+    const res = await claimTikoraOrder({ orderNumber: orderNumber.trim(), email: email.trim(), publicListing: listed, lang })
+    const saved = res.ok ? saveServerOrder(res.order, res.accessToken) : null
+    if (!saved) {
+      setBusy(false)
+      return setError(f.claim.errors[res.reason] ?? f.claim.errors.server)
+    }
+    navigate(`${CONFIG.routes.flyer}?order=${saved.id}`, { replace: true })
+    return undefined
+  }
+
+  return (
+    <form className="flyer-declare" onSubmit={submit} noValidate aria-labelledby={`${uid}-title`}>
+      <h2 id={`${uid}-title`}>{f.claim.title}</h2>
+      <p>{f.claim.text}</p>
+      <div className="fx-field">
+        <label htmlFor={`${uid}-number`}>{f.claim.number}</label>
+        <input
+          id={`${uid}-number`}
+          type="text"
+          inputMode="text"
+          autoCapitalize="characters"
+          spellCheck="false"
+          maxLength={40}
+          placeholder="ORD-XXXXXXXX"
+          value={orderNumber}
+          aria-describedby={`${uid}-number-hint`}
+          onChange={(e) => {
+            setOrderNumber(e.target.value)
+            setError('')
+          }}
+        />
+        <small id={`${uid}-number-hint`}>{f.claim.numberHint}</small>
+      </div>
+      <div className="fx-field">
+        <label htmlFor={`${uid}-email`}>{f.claim.email}</label>
+        <input
+          id={`${uid}-email`}
+          type="email"
+          autoComplete="email"
+          maxLength={254}
+          value={email}
+          onChange={(e) => {
+            setEmail(e.target.value)
+            setError('')
+          }}
+        />
+      </div>
+      <label className="flyer-declare__consent">
+        <input type="checkbox" checked={listed} onChange={(e) => setListed(e.target.checked)} />
+        <span>
+          {f.claim.listing}
+          <small>{f.claim.listingHint}</small>
+        </span>
+      </label>
+      {error && (
+        <p className="flyer-declare__error" role="alert">
+          <Icon name="alert" size={15} /> {error}
+        </p>
+      )}
+      <Button type="submit" size="lg" icon={busy ? undefined : 'arrow-right'} iconLeft={busy ? 'clock' : undefined} disabled={busy}>
+        {busy ? f.claim.checking : f.claim.cta}
+      </Button>
+      <p className="flyer-declare__note">{f.claim.note}</p>
+    </form>
+  )
 }
 
 /**
@@ -398,9 +489,14 @@ export default function FlyerPage() {
               </span>
               <h2>{f.lockedTitle}</h2>
               <p>{f.lockedText}</p>
-              <Button as={Link} to={CONFIG.routes.tickets} size="lg" icon="arrow-right">
+              <Button as={Link} to={CONFIG.routes.tickets} size="lg" variant="outline" icon="arrow-right">
                 {f.lockedCta}
               </Button>
+            </Reveal>
+          )}
+          {!unlocked && (
+            <Reveal delay={80}>
+              <ClaimTicket initialNumber={params.get('commande')} />
             </Reveal>
           )}
         </div>

@@ -113,52 +113,69 @@ test.after(async () => {
   await mock?.close()
 })
 
-test('E2E - achat Mobile Money : frais TIKORA affichés, paiement confirmé, QR officiel', async () => {
+test('E2E - billet payant : paiement poursuivi sur la page TIKORA de l’événement', async () => {
+  const TIKORA = 'https://tikora.proditech.online/evenements/jcia-2027-journees-camerounaises-de-l-intelligence-artificielle'
   const { context, page } = await newPage()
   try {
+    // Page billetterie : chaque billet payant mène directement à TIKORA (nouvel onglet)
+    await page.goto(`${WEB}/billetterie`)
+    await page.getByText('Billets payants : paiement sur TIKORA, puis consultez votre boîte mail').waitFor()
+    const links = page.getByRole('link', { name: /^Payer sur TIKORA — / })
+    assert.equal(await links.count(), 4)
+    for (const link of await links.all()) {
+      assert.equal(await link.getAttribute('href'), TIKORA)
+      assert.equal(await link.getAttribute('target'), '_blank')
+      assert.match((await link.getAttribute('rel')) ?? '', /noopener/)
+    }
+
+    // Ancien lien de commande d'un billet payant : explications, puis lien vers TIKORA, aucun formulaire
     await page.goto(`${WEB}/billetterie/commande/standard`)
-    // TIKORA n'encaisse pas la carte : le choix « Carte bancaire » est masqué en mode réel
-    await page.getByText('MTN Mobile Money ou Orange Money').waitFor()
-    assert.equal(await page.getByText('Visa ou Mastercard', { exact: true }).count(), 0)
-    // Frais de service estimés (2 %, plancher 100 FCFA) dans le récapitulatif
-    await page.getByText(/Frais de service de la plateforme de paiement/).waitFor()
-    assert.equal(await page.getByText('Mode démonstration').count(), 0)
-
-    await fillBuyer(page, { name: 'Awa Diallo', email: 'awa.e2e@example.com', phone: '677123456' })
-    await page.getByLabel('Afficher mon nom dans la liste publique des participants').check()
-    await page.locator('.co-summary__submit').click()
-
-    await page.getByRole('dialog').waitFor()
-    await page.waitForURL(/\/billetterie\/confirmation\/JCIA27-[A-Z0-9]{6}$/, { timeout: 30_000 })
-    const orderId = page.url().split('/').pop()
-
-    await page.locator('.e-ticket__official').first().waitFor({ timeout: 20_000 })
-    const code = await page.locator('.e-ticket__id').first().textContent()
-    assert.match(code, /^TKT-/)
-    assert.match(await page.locator('.e-ticket__qr').first().getAttribute('src'), /^data:image\/png/)
-
-    // Côté TIKORA : commande payée, référencée par notre numéro
-    const state = await (await fetch(`${mock.base}/__mock/state`)).json()
-    const tk = state.orders.find((o) => o.reference === orderId)
-    assert.equal(tk.status, 'paid')
-    assert.equal(tk.buyer.email, 'awa.e2e@example.com')
-
-    // Liste publique : le participant consentant apparaît
-    await page.goto(`${WEB}/participants`)
-    await page.getByText('Awa Diallo').first().waitFor({ timeout: 10_000 })
+    await page.getByText('Après le paiement, consultez votre boîte mail').waitFor()
+    await page.getByText(/choisissez « Standard — lancement »|choisissez « Standard »/).waitFor()
+    assert.equal(await page.getByRole('link', { name: 'Payer sur TIKORA' }).getAttribute('href'), TIKORA)
+    assert.equal(await page.locator('#checkout-form').count(), 0)
   } finally {
     await context.close()
   }
 })
 
-test('E2E - paiement refusé : motif précis affiché, aucune confirmation', async () => {
+test('E2E - billet payé sur TIKORA : vérifié, visuel aux couleurs du billet, photo dans la liste', async () => {
+  // Achat fait directement sur la page TIKORA de l'événement
+  const { MOCK_EVENT_ID } = await import(path.join(BACK, 'tests/helpers/mock-tikora-server.js'))
+  const web = await (
+    await fetch(`${mock.base}/__mock/web-order`, {
+      method: 'POST',
+      body: JSON.stringify({ eventId: MOCK_EVENT_ID, tier: 'vip', name: 'Awa Tikora', email: 'awa.tikora@example.com' }),
+    })
+  ).json()
+
   const { context, page } = await newPage()
   try {
-    await page.goto(`${WEB}/billetterie/commande/vip`)
-    await fillBuyer(page, { name: 'Jean Kamga', email: 'jean.e2e@example.com', phone: '677120000' })
-    await page.locator('.co-summary__submit').click()
-    await page.getByText('Solde Mobile Money insuffisant', { exact: false }).waitFor({ timeout: 20_000 })
-    assert.match(page.url(), /\/billetterie\/commande\/vip$/)
+    // Lien de l'e-mail : numéro de commande prérempli
+    await page.goto(`${WEB}/mon-flyer?commande=${web.orderNumber}`)
+    assert.equal(await page.getByLabel('Numéro de commande TIKORA').inputValue(), web.orderNumber)
+    // Mauvaise adresse : refus
+    await page.getByLabel('Adresse e-mail utilisée sur TIKORA').fill('pirate@example.com')
+    await page.getByRole('button', { name: 'Vérifier mon billet' }).click()
+    await page.getByText('Aucune commande ne correspond à ce numéro').waitFor({ timeout: 15_000 })
+    // Bonne adresse : billet vérifié chez TIKORA → visuel VIP
+    await page.getByLabel('Adresse e-mail utilisée sur TIKORA').fill('awa.tikora@example.com')
+    await page.getByRole('button', { name: 'Vérifier mon billet' }).click()
+    await page.getByText('Couleurs du billet VIP').waitFor({ timeout: 15_000 })
+
+    await page.getByRole('button', { name: 'Ajouter une photo' }).click()
+    const dialog = page.locator('dialog.photo-dialog')
+    await dialog.locator('input[type=file]').setInputFiles(path.join(BACK, 'tests/fixtures/photo.jpg'))
+    await dialog.locator('canvas').waitFor()
+    await dialog.getByRole('button', { name: 'Enregistrer la photo' }).click()
+    await dialog.waitFor({ state: 'detached', timeout: 15_000 })
+    await page.locator('.fx-actions > button.btn:not([disabled])').first().waitFor({ timeout: 10_000 })
+
+    // La photo figure dans la liste publique des participants
+    const list = await (await fetch(`${API}/attendees`)).json()
+    const me = list.find((a) => a.name === 'Awa Tikora')
+    assert.equal(me.tier, 'vip')
+    assert.match(me.photo ?? '', /^\/attendees\/cmd-JCIA27-[A-Z0-9]{6}-1\/photo\?v=/)
   } finally {
     await context.close()
   }

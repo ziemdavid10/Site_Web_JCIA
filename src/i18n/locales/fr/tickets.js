@@ -10,15 +10,38 @@ export default {
       hero: {
         eyebrow: 'Billetterie JCIA 2027',
         title: 'Réservez votre place au *Hilton de Yaoundé*',
-        lead: 'Choisissez le billet qui vous correspond — sur place au Hilton ou en ligne —, réglez par MTN Mobile Money, Orange Money, Visa ou Mastercard, puis générez votre visuel « J’y serai ».',
+        lead: 'Choisissez le billet qui vous correspond — sur place au Hilton ou en ligne —, réglez sur TIKORA par MTN Mobile Money ou Orange Money, puis générez votre visuel « J’y serai ».',
       },
       steps: [
         { icon: 'ticket', title: 'Choisissez', text: 'votre billet' },
-        { icon: 'phone', title: 'Payez', text: 'par Mobile Money ou carte' },
-        { icon: 'mail', title: 'Recevez', text: 'votre billet' },
+        { icon: 'phone', title: 'Payez', text: 'sur TIKORA, par Mobile Money' },
+        { icon: 'mail', title: 'Recevez', text: 'vos billets et le formulaire par e-mail' },
         { icon: 'star', title: 'Partagez', text: 'votre visuel « J’y serai »' },
       ],
       tiersTitle: 'Nos billets',
+      // Billets payants : paiement sur la page TIKORA de l'événement
+      payOnTikora: 'Payer sur TIKORA',
+      newTab: 's’ouvre dans un nouvel onglet',
+      howItWorks: 'Comment ça marche ?',
+      tikora: {
+        title: 'Billets payants : paiement sur TIKORA, puis consultez votre boîte mail',
+        text: 'Le paiement (MTN Mobile Money ou Orange Money) se fait sur la page de l’événement chez TIKORA, notre plateforme de billetterie. Une fois le paiement effectué, consultez votre boîte mail : TIKORA vous envoie vos billets et nous vous envoyons le lien du formulaire participant.',
+      },
+      // Vente des billets payants pas encore ouverte chez TIKORA
+      soon: {
+        tag: 'Ouverture prochaine',
+        title: 'La vente des billets payants ouvre très bientôt',
+        text: 'L’événement est en cours de validation par TIKORA, notre plateforme de paiement. L’inscription gratuite est déjà ouverte.',
+        cta: 'S’inscrire gratuitement',
+      },
+      // Serveur de billetterie injoignable (seule l'inscription gratuite en dépend)
+      unavailable: {
+        tag: 'Momentanément indisponible',
+        title: 'L’inscription gratuite est momentanément indisponible',
+        text: 'Notre serveur de billetterie ne répond pas. Les billets payants restent disponibles sur TIKORA. Réessayez dans quelques instants.',
+        retry: 'Réessayer',
+      },
+      unavailableCta: 'Indisponible',
       quota: 'Quota : {n} billets',
       unlimitedQuota: 'Sans limite',
       seatsLeft: '{n} places restantes sur {total}',
@@ -119,6 +142,13 @@ export default {
     // ----------------------------------------------------------------------- Commande
     checkout: {
       title: 'Commande',
+      checking: 'Vérification des places disponibles…',
+      soonTitle: 'Vente bientôt ouverte',
+      soonText: 'La vente de ce billet n’est pas encore ouverte. L’inscription gratuite, elle, est déjà possible.',
+      soonFree: 'S’inscrire gratuitement',
+      unavailableTitle: 'Inscription momentanément indisponible',
+      unavailableText: 'Notre serveur de billetterie ne répond pas : aucune inscription ne peut être enregistrée pour le moment.',
+      retry: 'Réessayer',
       back: 'Tous les billets',
       organizer: 'Organisé par IAC – CAIPI',
       steps: ['Billet', 'Informations', 'Paiement'],
@@ -282,6 +312,30 @@ export default {
       },
     },
 
+    // ----------------------------------------------------------------------- Paiement sur TIKORA
+    handoff: {
+      eyebrow: 'Billet payant',
+      launchName: '{tier} — lancement',
+      fees: '+ frais de service TIKORA',
+      step1Title: 'Payez sur TIKORA',
+      step1Text: 'Sur la page de l’événement, choisissez « {category} », puis réglez par MTN Mobile Money ou Orange Money.',
+      step2Title: 'Recevez vos billets',
+      step2Text: 'TIKORA vous envoie vos billets (QR codes) par e-mail dès le paiement validé.',
+      step3Title: 'Complétez votre fiche participant',
+      step3Text: 'Nous vous envoyons par e-mail le lien du formulaire participant : remplissez-le pour finaliser votre inscription.',
+      step4Title: 'Partagez votre visuel',
+      step4Text: 'Avec votre numéro de commande TIKORA, créez votre visuel « J’y serai » aux couleurs de votre billet et ajoutez votre photo à la liste des participants.',
+      cta: 'Payer sur TIKORA',
+      ctaNote: 'La page de paiement TIKORA s’ouvre dans un nouvel onglet. Nous ne vous demanderons jamais votre code secret Mobile Money.',
+      soonNote: 'L’événement est en cours de validation par TIKORA : la vente ouvre très bientôt.',
+      mailTitle: 'Après le paiement, consultez votre boîte mail',
+      mailText: 'Deux e-mails vous attendent, envoyés à l’adresse saisie sur TIKORA :',
+      mailTickets: 'vos billets et leurs QR codes, envoyés par TIKORA ;',
+      mailForm: 'le lien du formulaire participant, envoyé par les JCIA 2027 (quelques minutes après le paiement).',
+      mailSpam: 'Rien reçu ? Pensez à vérifier vos courriers indésirables, puis écrivez-nous.',
+      flyer: 'Déjà payé ? Créez votre visuel « J’y serai »',
+    },
+
     // ----------------------------------------------------------------------- Photo de participant
     // Une seule photo par participant : fiche de la liste publique ET visuel « J’y serai »
     photo: {
@@ -336,7 +390,30 @@ export default {
         lead: 'Créez en quelques secondes votre visuel personnalisé aux couleurs de votre billet et partagez-le sur WhatsApp, LinkedIn, Facebook, Instagram ou X.',
       },
       lockedTitle: 'Réservé aux participants',
-      lockedText: 'Le visuel « J’y serai » est offert à chaque participant, avec un billet gratuit ou payant : il se débloque dès que votre inscription est confirmée.',
+      lockedText: 'Le visuel « J’y serai » est offert à chaque participant, avec un billet gratuit ou payant.',
+      claim: {
+        title: 'Vous avez payé votre billet sur TIKORA ?',
+        text: 'Retrouvez votre billet pour créer votre visuel aux couleurs de celui-ci et ajouter votre photo à la liste des participants.',
+        number: 'Numéro de commande TIKORA',
+        numberHint: 'Il figure dans l’e-mail de confirmation de TIKORA et dans le nôtre (ex. ORD-410F271F).',
+        email: 'Adresse e-mail utilisée sur TIKORA',
+        listing: 'Afficher mon nom et ma photo dans la liste publique des participants',
+        listingHint: 'Seuls votre nom, votre profil, votre billet et votre photo seront visibles. Vous pouvez demander leur retrait à tout moment.',
+        cta: 'Vérifier mon billet',
+        checking: 'Vérification auprès de TIKORA…',
+        note: 'Nous vérifions votre achat auprès de TIKORA. Le visuel ne remplace pas votre billet TIKORA.',
+        errors: {
+          number: 'Indiquez votre numéro de commande TIKORA (ex. ORD-410F271F).',
+          email: 'Indiquez une adresse e-mail valide.',
+          notFound: 'Aucune commande ne correspond à ce numéro et à cette adresse e-mail. Vérifiez l’e-mail de TIKORA.',
+          notPaid: 'Cette commande n’est pas encore payée. Réessayez une fois le paiement validé.',
+          invalid: 'Numéro de commande ou adresse e-mail invalide.',
+          rate: 'Trop d’essais : réessayez dans quelques minutes.',
+          network: 'Connexion impossible. Vérifiez votre connexion et réessayez.',
+          unavailable: 'La vérification est momentanément indisponible. Réessayez plus tard.',
+          server: 'La vérification n’a pas abouti. Réessayez dans un instant.',
+        },
+      },
       lockedCta: 'Réserver mon billet',
       who: 'Pour quel participant ?',
       photo: 'Photo',

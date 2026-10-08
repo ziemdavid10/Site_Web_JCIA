@@ -199,7 +199,6 @@
 }
 
 // --- Messages ---------------------------------------------------------------------------------
-.co-demo,
 .co-summary-error {
   display: flex;
   gap: $space-3;
@@ -214,10 +213,70 @@
   }
 }
 
-.co-demo {
+// État du serveur de billetterie : injoignable, vente pas encore ouverte, vérification
+.co-status {
+  display: flex;
+  gap: $space-3;
+  padding: $space-4;
+  font-size: 0.88rem;
+  line-height: 1.55;
   color: $text-soft;
-  background: rgba($flag-yellow, 0.16);
-  border: 1px solid rgba($flag-yellow, 0.5);
+  background: rgba($teal, 0.08);
+  border: 1px solid rgba($teal, 0.35);
+  border-radius: $radius-md;
+
+  > .icon {
+    flex-shrink: 0;
+    margin-top: 2px;
+    color: $teal-text;
+  }
+
+  strong {
+    display: block;
+    color: $text;
+  }
+
+  p {
+    margin-top: 2px;
+  }
+
+  &--error {
+    background: rgba($flag-red, 0.06);
+    border-color: rgba($flag-red, 0.3);
+
+    > .icon {
+      color: $flag-red;
+    }
+  }
+
+  &--loading {
+    align-items: center;
+    padding: $space-3 $space-4;
+    font-size: 0.82rem;
+    background: $surface-muted;
+    border-color: $border;
+  }
+
+  &__retry,
+  &__link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: $space-3;
+    padding: $space-2 $space-3;
+    font-weight: $fw-semibold;
+    color: $teal-text;
+    border: 1.5px solid currentColor;
+    border-radius: $radius-pill;
+
+    &:hover {
+      background: rgba($teal, 0.1);
+    }
+
+    &:focus-visible {
+      @include focus-ring($teal);
+    }
+  }
 }
 
 .co-summary-error {
@@ -664,6 +723,20 @@
     box-shadow: 0 0 0 3px rgba($teal, 0.28);
   }
 
+  // Mobile Money seul moyen accepté : simple information (pas de choix à faire)
+  &--static {
+    margin-bottom: $space-5;
+    cursor: default;
+
+    &.is-checked {
+      box-shadow: none;
+    }
+
+    &:hover {
+      border-color: $teal;
+    }
+  }
+
   &__icon {
     display: grid;
     place-items: center;
@@ -719,57 +792,6 @@
       opacity: 1;
       transform: scale(1);
     }
-  }
-}
-
-.co-secure--card {
-  margin-bottom: $space-5;
-}
-
-// --- Carte bancaire ------------------------------------------------------------
-.co-card {
-  display: grid;
-  gap: $space-4;
-  padding: $space-4;
-  margin-bottom: $space-5;
-  background: $surface;
-  border: 1.5px solid $border;
-  border-radius: $radius-md;
-
-  @include mq('sm') {
-    padding: $space-5;
-  }
-
-  // Champ « numéro » : la pastille du réseau s'affiche à droite, dans le champ
-  &__input {
-    position: relative;
-    display: flex;
-    align-items: center;
-
-    input {
-      width: 100%;
-      padding-right: 104px;
-      font-variant-numeric: tabular-nums;
-      letter-spacing: 0.06em;
-    }
-  }
-
-  &__brand {
-    position: absolute;
-    right: 10px;
-    pointer-events: none;
-  }
-
-  .co-secure--card {
-    margin: 0;
-  }
-}
-
-// Deux champs courts côte à côte (expiration / CVC)
-.co-row--tight {
-  @include mq('sm') {
-    grid-template-columns: 1fr 1fr;
-    max-width: 380px;
   }
 }
 
@@ -942,6 +964,15 @@
 
   &__submit {
     width: 100%;
+  }
+
+  // Commande impossible pour l'instant (serveur injoignable, vente pas encore ouverte)
+  &__blocked {
+    margin-top: $space-3;
+    font-size: 0.8rem;
+    line-height: 1.45;
+    text-align: center;
+    color: $text-muted;
   }
 
   &__ops {

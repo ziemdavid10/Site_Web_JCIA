@@ -1,4 +1,5 @@
 import { CONFIG } from '@/data/config'
+import { API } from './payment'
 
 /**
  * Envoi du récapitulatif de commande par e-mail.
@@ -22,38 +23,18 @@ import { CONFIG } from '@/data/config'
  * e-mail parti de notre nom de domaine.
  *
  * Le test d'envoi réel se lance avec `npm run test:email`.
- *
- * ─── Mode démonstration ──────────────────────────────────────────────────────
- * Sans VITE_PAYMENT_API_URL, aucun serveur n'existe : la fonction renvoie
- * 'demo' sans appel réseau. L'interface affiche alors « un récapitulatif vous
- * a été envoyé » uniquement si l'envoi a réellement eu lieu.
  */
-
-/** L'API doit être en HTTPS (sauf localhost en développement) */
-function secureApiUrl(url) {
-  try {
-    const u = new URL(url)
-    const local = ['localhost', '127.0.0.1'].includes(u.hostname) && import.meta.env.DEV
-    return u.protocol === 'https:' || local ? u.href.replace(/\/$/, '') : ''
-  } catch {
-    return ''
-  }
-}
-
-const API = secureApiUrl(CONFIG.payment.apiUrl)
-export const EMAIL_MODE = API ? 'live' : 'demo'
-
 const ORDER_ID_RE = /^JCIA27-[A-Z0-9]{6}$/
 
 /**
  * Demande l'envoi du récapitulatif d'une commande confirmée.
  * @param {object} order commande enregistrée (voir src/services/orders.js)
- * @returns {Promise<'sent'|'queued'|'demo'|'failed'>}
+ * @returns {Promise<'sent'|'queued'|'failed'>}
  */
 export async function requestOrderReceipt(order) {
   if (!order || !ORDER_ID_RE.test(order.id ?? '') || !order.customer?.email) return 'failed'
   if (!['paid', 'free'].includes(order.payment?.status)) return 'failed'
-  if (!API) return 'demo'
+  if (!API) return 'failed'
 
   const controller = new AbortController()
   const timer = setTimeout(() => controller.abort(), 12_000)

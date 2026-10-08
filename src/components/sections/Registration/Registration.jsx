@@ -99,7 +99,7 @@ function TicketsTeaser() {
       </Button>
       <div className="tickets-teaser__pay">
         <span>{r.payWith}</span>
-        {[...CONFIG.payment.operators, ...CONFIG.payment.cards].map((op) => (
+        {CONFIG.payment.operators.map((op) => (
           <OperatorBadge key={op.id} id={op.id} size="sm" />
         ))}
       </div>

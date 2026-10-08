@@ -9,7 +9,7 @@ import { CONFIG } from '@/data/config'
 import { formatXAF } from '@/utils/money'
 import { formatSeats, getTicketPricing, isLowStock, isPromotionActive, isSoldOut, isUnlimitedQuota, remainingSeats } from '@/utils/tickets'
 import useDocumentMeta from '@/hooks/useDocumentMeta'
-import useTicketCatalog from '@/hooks/useTicketCatalog'
+import useTicketCatalog, { tierAvailability, tikoraAvailability } from '@/hooks/useTicketCatalog'
 import './TicketsPage.scss'
 
 /**
@@ -25,11 +25,14 @@ export default function TicketsPage() {
   const { t, locale } = useI18n()
   const tp = t.tickets.page
   const { routes, payment, contact, features } = CONFIG
-  // Tarifs + stock réel (TIKORA) quand le serveur de billetterie est branché
-  const tickets = { ...CONFIG.tickets, tiers: useTicketCatalog().tiers }
-  // Paiement en ligne pas encore branché : les tarifs restent consultables,
-  // mais aucune commande ne peut être lancée (CONFIG.features.payment).
+  // Tarifs + stock réel (TIKORA) et ouverture de la vente, lus sur le serveur de billetterie
+  const catalog = useTicketCatalog()
+  const tickets = { ...CONFIG.tickets, tiers: catalog.tiers }
+  // Fermeture volontaire de la billetterie (CONFIG.features.payment = false)
   const open = features.payment
+  // Serveur injoignable / vente des billets payants pas encore ouverte chez TIKORA
+  const unavailable = open && catalog.status === 'unavailable'
+  const soon = open && catalog.ready && !catalog.salesOpen
   const pricing = (tier) => getTicketPricing(tier)
   const price = (tier) => {
     const p = pricing(tier)
@@ -71,6 +74,44 @@ export default function TicketsPage() {
             <span>{tp.promotion.text}</span>
           </Reveal>
         )}
+        {/* Billets payants : paiement sur la page TIKORA, puis e-mail avec le formulaire */}
+        {open && !soon && (
+          <Reveal className="tickets-tikora">
+            <span className="tickets-tikora__icon" aria-hidden="true">
+              <Icon name="mail" size={22} />
+            </span>
+            <div>
+              <h3>{tp.tikora.title}</h3>
+              <p>{tp.tikora.text}</p>
+            </div>
+          </Reveal>
+        )}
+        {/* Serveur de billetterie injoignable : seule l'inscription gratuite en dépend */}
+        {unavailable && (
+          <Reveal className="tickets-closed tickets-closed--error" role="alert">
+            <span className="tickets-closed__tag">
+              <Icon name="alert" size={15} /> {tp.unavailable.tag}
+            </span>
+            <h3>{tp.unavailable.title}</h3>
+            <p>{tp.unavailable.text}</p>
+            <Button onClick={catalog.retry} variant="secondary" iconLeft="refresh">
+              {tp.unavailable.retry}
+            </Button>
+          </Reveal>
+        )}
+        {/* Événement pas encore validé par TIKORA : paiement bientôt ouvert, gratuit ouvert */}
+        {soon && (
+          <Reveal className="tickets-closed">
+            <span className="tickets-closed__tag">
+              <Icon name="clock" size={15} /> {tp.soon.tag}
+            </span>
+            <h3>{tp.soon.title}</h3>
+            <p>{tp.soon.text}</p>
+            <Button as={Link} to={`${routes.checkout}/gratuit`} variant="secondary" icon="arrow-right">
+              {tp.soon.cta}
+            </Button>
+          </Reveal>
+        )}
         {/* Billetterie en ligne fermée : on l'annonce avant les tarifs */}
         {!open && (
           <Reveal className="tickets-closed">
@@ -92,6 +133,10 @@ export default function TicketsPage() {
         <ul className="tier-grid">
           {tickets.tiers.map((tier, i) => {
             const tt = t.tickets.tiers[tier.id]
+            // Billet payant : paiement sur la page TIKORA (indépendante de notre serveur)
+            const paid = tier.price > 0
+            const availability = paid ? tikoraAvailability(tier, catalog) : tierAvailability(tier, catalog)
+            const blocked = ['soon', 'unavailable', 'loading'].includes(availability)
             return (
               <Reveal
                 as="li"
@@ -151,17 +196,33 @@ export default function TicketsPage() {
                   >
                     {tp.soldOutCta}
                   </Button>
-                ) : !open ? (
+                ) : blocked ? (
                   <Button
                     variant="outline"
-                    iconLeft="clock"
+                    iconLeft={availability === 'unavailable' ? 'alert' : 'clock'}
                     className="tier-card__cta"
                     disabled
-                    title={tp.closed.title}
-                    aria-label={`${tt.name} — ${tp.chooseClosed}`}
+                    title={availability === 'unavailable' ? tp.unavailable.title : tp.closed.title}
+                    aria-label={`${tt.name} — ${availability === 'unavailable' ? tp.unavailableCta : tp.chooseClosed}`}
                   >
-                    {tp.chooseClosed}
+                    {availability === 'unavailable' ? tp.unavailableCta : tp.chooseClosed}
                   </Button>
+                ) : paid ? (
+                  <>
+                    <Button
+                      href={payment.tikoraEventUrl}
+                      external
+                      variant="secondary"
+                      icon="arrow-up-right"
+                      className="tier-card__cta"
+                      aria-label={`${tp.payOnTikora} — ${tt.name} (${tp.newTab})`}
+                    >
+                      {tp.payOnTikora}
+                    </Button>
+                    <Link to={`${routes.checkout}/${tier.id}`} className="tier-card__how">
+                      {tp.howItWorks}
+                    </Link>
+                  </>
                 ) : (
                   <Button
                     as={Link}
@@ -249,7 +310,7 @@ export default function TicketsPage() {
             <h2>{tp.pay.title}</h2>
             <p>{tp.pay.text}</p>
             <div className="tickets-info__ops">
-              {[...payment.operators, ...payment.cards].map((op) => (
+              {payment.operators.map((op) => (
                 <OperatorBadge key={op.id} id={op.id} />
               ))}
             </div>

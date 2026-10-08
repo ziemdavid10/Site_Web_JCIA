@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router'
 import { Button, Frise, Icon, PatternBg } from '@/components/ui'
 import OperatorBadge from '@/components/tickets/OperatorBadge'
 import PaymentDialog from '@/components/tickets/PaymentDialog'
+import TikoraHandoff from '@/components/tickets/TikoraHandoff'
 import { useI18n } from '@/i18n/context'
 import { rich } from '@/i18n/rich'
 import { fill } from '@/i18n/format'
@@ -10,26 +11,16 @@ import { CONFIG } from '@/data/config'
 import { formatXAF } from '@/utils/money'
 import { estimateFees, formatSeats, getTicketPricing, isSoldOut, isUnlimitedQuota, maxQuantity } from '@/utils/tickets'
 import { detectOperator, formatCmPhone, isValidCmPhone, normalizePhone } from '@/utils/phone'
-import {
-  digitsOnly,
-  detectBrand,
-  formatCardNumber,
-  formatExpiry,
-  isValidCardNumber,
-  isValidCvc,
-  isValidExpiry,
-  last4,
-} from '@/utils/card'
 import { newOrderId, saveOrder } from '@/services/orders'
 import { cleanText, isValidEmail, isValidPersonName } from '@/security/sanitize'
-import { PAYMENT_MODE, processPayment, registerFreeOrder } from '@/services/payment'
-import useTicketCatalog from '@/hooks/useTicketCatalog'
+import { processPayment, registerFreeOrder } from '@/services/payment'
+import useTicketCatalog, { tierAvailability } from '@/hooks/useTicketCatalog'
 import useDocumentMeta from '@/hooks/useDocumentMeta'
 import logoColor from '@/assets/images/brand/logo-jcia-sm.webp'
 import './CheckoutPage.scss'
 
 // Sécurité : longueurs maximales des champs (limitent les abus et les erreurs)
-const MAX = { name: 80, email: 254, phone: 20, org: 120, cardName: 80, cardNumber: 23, exp: 5, cvc: 4 }
+const MAX = { name: 80, email: 254, phone: 20, org: 120 }
 // Après 3 paiements échoués, pause de 60 s avant un nouvel essai (anti-abus)
 const MAX_FAILURES = 3
 const COOLDOWN_MS = 60_000
@@ -82,7 +73,11 @@ const aria = (id, error, hint) => ({
  *
  *   1. Billet     : choix du tarif (présélectionné par l'URL) et de la quantité ;
  *   2. Informations : acheteur, puis nom des autres participants ;
- *   3. Paiement   : opérateur (détecté d'après le numéro) et numéro à débiter.
+ *   3. Paiement   : Mobile Money — opérateur (détecté d'après le numéro) et numéro à débiter.
+ *
+ * Tout passe par le serveur de billetterie (puis TIKORA) : aucun paiement n'est
+ * simulé. Si le serveur est injoignable ou si la vente n'est pas encore ouverte,
+ * la page l'explique et bloque l'envoi.
  *
  * Un récapitulatif reste visible (colonne collante sur desktop, barre fixe en
  * bas d'écran sur mobile). Le paiement est suivi dans <PaymentDialog /> ; une
@@ -108,16 +103,9 @@ export default function CheckoutPage() {
   const [quantity, setQuantity] = useState(1)
   const [values, setValues] = useState({ name: '', email: '', phone: '', org: '', school: '' })
   const [attendees, setAttendees] = useState([])
-  const [method, setMethod] = useState('momo') // 'momo' (Mobile Money) ou 'card' (Visa/Mastercard)
   const [operatorId, setOperatorId] = useState(null) // choix explicite de l'utilisateur
   const [samePhone, setSamePhone] = useState(true)
   const [payPhone, setPayPhone] = useState('')
-  /**
-   * Coordonnées de carte : elles ne vivent que dans cet état, le temps du
-   * paiement. Rien n'est écrit dans le stockage de l'appareil, rien n'est
-   * journalisé ; la commande ne garde que le réseau et les 4 derniers chiffres.
-   */
-  const [card, setCard] = useState({ name: '', number: '', exp: '', cvc: '' })
   const [terms, setTerms] = useState(false)
   const [listed, setListed] = useState(false) // accord pour la liste publique des participants
   const [errors, setErrors] = useState({})
@@ -142,10 +130,14 @@ export default function CheckoutPage() {
   const pricing = tier ? getTicketPricing(tier) : { originalPrice: 0, price: 0, discounted: false, discountPercent: 0 }
   const unitPrice = pricing.price
   const isFree = unitPrice === 0
-  // Carte : uniquement si le serveur l'accepte (TIKORA = Mobile Money seulement)
-  const cardAllowed = catalog.methods.includes('card')
-  const isCard = method === 'card' && cardAllowed
-  const cardBrand = detectBrand(card.number)
+  // Commande possible ? (serveur joignable, vente ouverte chez TIKORA, places restantes)
+  const availability = tier ? tierAvailability(tier, catalog) : 'unavailable'
+  const availabilityMessage = {
+    soldout: t.tickets.page.soldOutNote,
+    soon: c.soonText,
+    unavailable: c.unavailableText,
+    loading: c.checking,
+  }[availability]
   const isStudent = tier?.id === 'etudiant'
   const total = unitPrice * qty // sous-total (grille JCIA)
   const fees = isFree ? 0 : estimateFees(total, catalog.buyerFee) // frais de service TIKORA
@@ -161,14 +153,6 @@ export default function CheckoutPage() {
   const setField = (key) => (e) => {
     setValues((v) => ({ ...v, [key]: e.target.value }))
     if (errors[key]) setErrors((errs) => omit(errs, key))
-  }
-
-  /** Saisie d'un champ de carte, remise en forme au fil de la frappe */
-  const setCardField = (key) => (e) => {
-    const raw = e.target.value
-    const value = key === 'number' ? formatCardNumber(raw) : key === 'exp' ? formatExpiry(raw) : key === 'cvc' ? digitsOnly(raw).slice(0, 4) : raw
-    setCard((c) => ({ ...c, [key]: value }))
-    if (errors[`card-${key}`]) setErrors((errs) => omit(errs, `card-${key}`))
   }
 
   const changeTier = (id) => {
@@ -187,26 +171,17 @@ export default function CheckoutPage() {
     extraAttendees.forEach((a, i) => {
       if (!isValidPersonName(a)) e[`attendee-${i}`] = c.errors.attendee
     })
-    if (!isFree && !isCard) {
+    if (!isFree) {
       if (!operator) e.operator = c.errors.operator
       if (!samePhone && !isValidCmPhone(payPhone)) e.payPhone = c.errors.payPhone
-    }
-    if (!isFree && isCard) {
-      if (!isValidPersonName(card.name)) e['card-name'] = c.errors.cardName
-      if (!isValidCardNumber(card.number)) e['card-number'] = c.errors.cardNumber
-      if (!isValidExpiry(card.exp)) e['card-exp'] = c.errors.cardExp
-      if (!isValidCvc(card.cvc, cardBrand ?? 'visa')) e['card-cvc'] = c.errors.cardCvc
     }
     if (!terms) e.terms = c.errors.terms
     return e
   }
 
   // --- Paiement -----------------------------------------------------------------------------
-  /**
-   * Lance le paiement. Les coordonnées de carte sont passées séparément de la
-   * commande : elles servent à l'appel, puis disparaissent avec le composant.
-   */
-  const runPayment = async (order, cardData) => {
+  /** Lance le paiement Mobile Money (serveur de billetterie → TIKORA) et suit son avancement. */
+  const runPayment = async (order) => {
     setPay({ order, status: 'running', step: 'initiating' })
     let result
     try {
@@ -215,7 +190,6 @@ export default function CheckoutPage() {
           orderId: order.id,
           amount: order.total,
           currency: order.currency,
-          method: order.payment.method,
           operator: order.payment.operator,
           phone: order.payment.phone,
           tierId: order.tierId,
@@ -223,7 +197,6 @@ export default function CheckoutPage() {
           attendees: order.attendees,
           publicListing: order.publicListing,
           lang: order.lang,
-          card: cardData,
           customer: order.customer,
           description: `JCIA 2027 — ${order.tierId} × ${order.quantity}`,
         },
@@ -237,11 +210,11 @@ export default function CheckoutPage() {
     if (!alive.current) return
 
     submitting.current = false
-    // Jeton d'accès et montant réellement débité (frais TIKORA inclus) — mode réel
+    // Jeton d'accès et montant réellement débité (frais TIKORA inclus)
     const serverInfo = {
       ...(result.accessToken ? { accessToken: result.accessToken } : {}),
     }
-    const paidInfo = { fees: result.fees, amountPaid: result.amount, mode: result.mode }
+    const paidInfo = { fees: result.fees, amountPaid: result.amount }
     if (result.status === 'SUCCESSFUL') {
       failures.current = 0
       const paid = saveOrder({
@@ -276,8 +249,8 @@ export default function CheckoutPage() {
       setErrors({ summary: fill(c.errors.tooMany, { s: wait }) })
       return
     }
-    if (isSoldOut(tier)) {
-      setErrors({ summary: t.tickets.page.soldOutNote })
+    if (availability !== 'open') {
+      setErrors({ summary: availabilityMessage })
       return
     }
     const errs = validate()
@@ -307,22 +280,19 @@ export default function CheckoutPage() {
       attendees: [cleanText(values.name, MAX.name), ...extraAttendees.map((a) => cleanText(a, MAX.name))],
       publicListing: listed,
       payment: isFree
-        ? { status: 'free', method, mode: PAYMENT_MODE }
-        : isCard
-          ? { status: 'pending', method: 'card', mode: PAYMENT_MODE, brand: cardBrand, last4: last4(card.number) }
-          : {
-              status: 'pending',
-              method: 'momo',
-              operator: operator.id,
-              phone: normalizePhone(effectivePayPhone),
-              mode: PAYMENT_MODE,
-            },
+        ? { status: 'free', method: 'momo', mode: 'live' }
+        : {
+            status: 'pending',
+            method: 'momo',
+            operator: operator.id,
+            phone: normalizePhone(effectivePayPhone),
+            mode: 'live',
+          },
     }
 
     submitting.current = true
     if (isFree) {
-      // Inscription gratuite : enregistrée par le serveur (liste des participants,
-      // e-mail, QR signé), localement seulement en démonstration
+      // Inscription gratuite : enregistrée par le serveur (liste des participants, e-mail, QR signé)
       registerFreeOrder(order).then((res) => {
         submitting.current = false
         if (!alive.current) return
@@ -330,11 +300,11 @@ export default function CheckoutPage() {
           setErrors({ summary: t.tickets.payment.reasons[res.reason] ?? t.tickets.payment.reasons.init })
           return
         }
-        const saved = saveOrder({ ...order, ...(res.accessToken ? { accessToken: res.accessToken } : {}), payment: { ...order.payment, mode: res.mode } })
+        const saved = saveOrder({ ...order, accessToken: res.accessToken })
         navigate(`${routes.confirmation}/${saved.id}`)
       })
     } else {
-      runPayment(order, isCard ? card : undefined)
+      runPayment(order)
     }
   }
 
@@ -384,63 +354,110 @@ export default function CheckoutPage() {
     )
   }
 
+  const e = t.event
+  // En-tête commun : carte de l'événement (+ étapes du formulaire, le cas échéant)
+  const hero = (steps = null) => (
+    <header className="checkout__hero">
+      <PatternBg variant="circuit" color="currentColor" opacity={0.06} fade="radial" />
+      <div className="container checkout__hero-inner">
+        <Link to={routes.tickets} className="checkout__back">
+          <Icon name="arrow-left" size={18} /> {c.back}
+        </Link>
+        <div className="event-card">
+          <div className="event-card__logo">
+            <img src={logoColor} alt="" width="120" height="50" />
+          </div>
+          <div>
+            <h1 className="event-card__title">
+              {e.shortName} — {e.name}
+            </h1>
+            <ul className="event-card__meta">
+              <li>
+                <Icon name="calendar" size={16} /> {e.dateLabel}
+              </li>
+              <li>
+                <Icon name="pin" size={16} /> {e.venue.name}, {e.venue.city}
+              </li>
+              <li>
+                <Icon name="building" size={16} /> {c.organizer}
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        {steps}
+      </div>
+      <Frise height={12} />
+    </header>
+  )
+
+  // --- Billet payant : le paiement se poursuit sur la page TIKORA de l'événement --------
+  if (!isFree) {
+    return (
+      <div className="checkout">
+        {hero()}
+        <TikoraHandoff tier={tier} catalog={catalog} />
+      </div>
+    )
+  }
+
   const tt = t.tickets.tiers[tier.id]
   const errorCount = Object.keys(errors).length
-  const e = t.event
+  const canSubmit = availability === 'open'
   const submitLabel = isFree ? c.confirmFree : fill(c.pay, { amount: grandAmount })
   const buyerDone = isValidPersonName(values.name) && isValidEmail(values.email) && isValidCmPhone(values.phone)
   const stepState = (i) => (i === 0 || (i === 1 && buyerDone) ? 'done' : (i === 1 && !buyerDone) || (i === 2 && buyerDone) ? 'active' : 'todo')
+  const stepper = (
+    <>
+      {/* Étapes */}
+      <ol className="co-stepper" aria-label={c.title}>
+        {c.steps.map((s, i) => (
+          <li key={s} className={`is-${stepState(i)}`}>
+            <span aria-hidden="true">{stepState(i) === 'done' ? <Icon name="check" size={14} /> : i + 1}</span>
+            {s}
+          </li>
+        ))}
+      </ol>
+    </>
+  )
 
   return (
     <div className="checkout">
       {/* --- En-tête : carte de l'événement ------------------------------------------ */}
-      <header className="checkout__hero">
-        <PatternBg variant="circuit" color="currentColor" opacity={0.06} fade="radial" />
-        <div className="container checkout__hero-inner">
-          <Link to={routes.tickets} className="checkout__back">
-            <Icon name="arrow-left" size={18} /> {c.back}
-          </Link>
-          <div className="event-card">
-            <div className="event-card__logo">
-              <img src={logoColor} alt="" width="120" height="50" />
-            </div>
-            <div>
-              <h1 className="event-card__title">
-                {e.shortName} — {e.name}
-              </h1>
-              <ul className="event-card__meta">
-                <li>
-                  <Icon name="calendar" size={16} /> {e.dateLabel}
-                </li>
-                <li>
-                  <Icon name="pin" size={16} /> {e.venue.name}, {e.venue.city}
-                </li>
-                <li>
-                  <Icon name="building" size={16} /> {c.organizer}
-                </li>
-              </ul>
-            </div>
-          </div>
-
-          {/* Étapes */}
-          <ol className="co-stepper" aria-label={c.title}>
-            {c.steps.map((s, i) => (
-              <li key={s} className={`is-${stepState(i)}`}>
-                <span aria-hidden="true">{stepState(i) === 'done' ? <Icon name="check" size={14} /> : i + 1}</span>
-                {s}
-              </li>
-            ))}
-          </ol>
-        </div>
-        <Frise height={12} />
-      </header>
+      {hero(stepper)}
 
       <div className="container checkout__grid">
         <form id="checkout-form" ref={formRef} className="checkout__form" onSubmit={onSubmit} noValidate>
-          {catalog.demo && !isFree && (
-            <p className="co-demo">
-              <Icon name="info" size={18} />
-              <span>{rich(c.demo)}</span>
+          {/* État du serveur de billetterie : rien n'est simulé, on dit les choses */}
+          {availability === 'unavailable' && (
+            <div className="co-status co-status--error" role="alert">
+              <Icon name="alert" size={20} />
+              <div>
+                <strong>{c.unavailableTitle}</strong>
+                <p>{c.unavailableText}</p>
+                <button type="button" className="co-status__retry" onClick={catalog.retry}>
+                  <Icon name="refresh" size={15} /> {c.retry}
+                </button>
+              </div>
+            </div>
+          )}
+          {availability === 'soon' && (
+            <div className="co-status" role="status">
+              <Icon name="clock" size={20} />
+              <div>
+                <strong>{c.soonTitle}</strong>
+                <p>{c.soonText}</p>
+                {!isFree && (
+                  <Link to={`${routes.checkout}/gratuit`} className="co-status__link">
+                    {c.soonFree} <Icon name="arrow-right" size={15} />
+                  </Link>
+                )}
+              </div>
+            </div>
+          )}
+          {availability === 'loading' && (
+            <p className="co-status co-status--loading" role="status">
+              <Icon name="clock" size={18} /> {c.checking}
             </p>
           )}
 
@@ -649,122 +666,22 @@ export default function CheckoutPage() {
               </p>
             ) : (
               <>
-                {/* Choix du moyen : Mobile Money ou carte bancaire */}
-                <p className="co-label" id={`${uid}-method`}>
-                  {c.methodLabel}
-                </p>
-                <div className="co-methods" role="radiogroup" aria-labelledby={`${uid}-method`}>
-                  {[
-                    { id: 'momo', icon: 'smartphone', badges: payment.operators },
-                    { id: 'card', icon: 'coins', badges: payment.cards },
-                  ]
-                    .filter((m) => catalog.methods.includes(m.id))
-                    .map((m) => (
-                    <label key={m.id} className={`co-method ${(m.id === 'card') === isCard ? 'is-checked' : ''}`}>
-                      <input
-                        type="radio"
-                        name="method"
-                        value={m.id}
-                        checked={(m.id === 'card') === isCard}
-                        onChange={() => {
-                          setMethod(m.id)
-                          setErrors((errs) => omit(omit(errs, 'operator'), 'payPhone'))
-                        }}
-                      />
-                      <span className="co-method__icon" aria-hidden="true">
-                        <Icon name={m.icon} size={22} />
-                      </span>
-                      <span className="co-method__text">
-                        <strong>{c.methods[m.id].name}</strong>
-                        <small>{c.methods[m.id].detail}</small>
-                      </span>
-                      <span className="co-method__badges" aria-hidden="true">
-                        {m.badges.map((b) => (
-                          <OperatorBadge key={b.id} id={b.id} size="sm" />
-                        ))}
-                      </span>
-                      <Icon name="check" size={18} className="co-method__check" />
-                    </label>
-                  ))}
+                {/* Moyen de paiement : Mobile Money uniquement (TIKORA) */}
+                <div className="co-method co-method--static is-checked">
+                  <span className="co-method__icon" aria-hidden="true">
+                    <Icon name="smartphone" size={22} />
+                  </span>
+                  <span className="co-method__text">
+                    <strong>{c.methods.momo.name}</strong>
+                    <small>{c.methods.momo.detail}</small>
+                  </span>
+                  <span className="co-method__badges" aria-hidden="true">
+                    {payment.operators.map((b) => (
+                      <OperatorBadge key={b.id} id={b.id} size="sm" />
+                    ))}
+                  </span>
                 </div>
 
-                {/* --- Carte bancaire : saisie guidée ------------------------- */}
-                {isCard && (
-                  <div className="co-card">
-                    <Field id={`${uid}-cardname`} label={c.card.name} error={errors['card-name']}>
-                      <input
-                        id={`${uid}-cardname`}
-                        type="text"
-                        autoComplete="cc-name"
-                        maxLength={MAX.cardName}
-                        placeholder={c.card.namePlaceholder}
-                        value={card.name}
-                        onChange={setCardField('name')}
-                        {...aria(`${uid}-cardname`, errors['card-name'])}
-                      />
-                    </Field>
-
-                    <Field
-                      id={`${uid}-cardnumber`}
-                      label={c.card.number}
-                      hint={c.card.numberHint}
-                      error={errors['card-number']}
-                      className="co-card__number"
-                    >
-                      <div className="co-card__input">
-                        <input
-                          id={`${uid}-cardnumber`}
-                          type="text"
-                          inputMode="numeric"
-                          autoComplete="cc-number"
-                          maxLength={MAX.cardNumber}
-                          placeholder="4242 4242 4242 4242"
-                          value={card.number}
-                          onChange={setCardField('number')}
-                          {...aria(`${uid}-cardnumber`, errors['card-number'], true)}
-                        />
-                        {/* Réseau reconnu en direct */}
-                        {cardBrand && <OperatorBadge id={cardBrand} size="sm" className="co-card__brand" />}
-                      </div>
-                    </Field>
-
-                    <div className="co-row co-row--tight">
-                      <Field id={`${uid}-cardexp`} label={c.card.exp} error={errors['card-exp']}>
-                        <input
-                          id={`${uid}-cardexp`}
-                          type="text"
-                          inputMode="numeric"
-                          autoComplete="cc-exp"
-                          maxLength={MAX.exp}
-                          placeholder="MM/AA"
-                          value={card.exp}
-                          onChange={setCardField('exp')}
-                          {...aria(`${uid}-cardexp`, errors['card-exp'])}
-                        />
-                      </Field>
-                      <Field id={`${uid}-cardcvc`} label={c.card.cvc} hint={c.card.cvcHint} error={errors['card-cvc']}>
-                        <input
-                          id={`${uid}-cardcvc`}
-                          type="text"
-                          inputMode="numeric"
-                          autoComplete="cc-csc"
-                          maxLength={MAX.cvc}
-                          placeholder="123"
-                          value={card.cvc}
-                          onChange={setCardField('cvc')}
-                          {...aria(`${uid}-cardcvc`, errors['card-cvc'], true)}
-                        />
-                      </Field>
-                    </div>
-
-                    <p className="co-secure co-secure--card">
-                      <Icon name="lock" size={16} /> {c.cardInfo}
-                    </p>
-                  </div>
-                )}
-
-                {!isCard && (
-                <>
                 <p className="co-label" id={`${uid}-op`}>
                   {c.operatorLabel}
                 </p>
@@ -843,14 +760,12 @@ export default function CheckoutPage() {
                 <p className="co-secure">
                   <Icon name="lock" size={16} /> {c.secure}
                 </p>
-                </>
-                )}
               </>
             )}
 
             {/* Facultatif : figurer dans la liste publique des participants */}
             <label className="co-check">
-              <input type="checkbox" checked={listed} onChange={(ev) => setListed(ev.target.checked)} />
+              <input type="checkbox" checked={listed} onChange={(ev) => setListed(ev.target.checked)} checked />
               <span>
                 {c.publicListing}
                 <small>{c.publicListingHint}</small>
@@ -866,6 +781,7 @@ export default function CheckoutPage() {
                   setErrors((errs) => omit(errs, 'terms'))
                 }}
                 aria-invalid={errors.terms ? true : undefined}
+                checked
               />
               <span>{rich(c.terms, { newTab: true })}</span>
             </label>
@@ -911,12 +827,21 @@ export default function CheckoutPage() {
             {fees > 0 && <p className="co-summary__fees-note">{c.feesNote}</p>}
           </dl>
           {/* Bouton pour finaliser le paiement */}
-          <Button type="submit" form="checkout-form" size="lg" icon={isFree ? 'check' : 'lock'} className="co-summary__submit">
+          <Button
+            type="submit"
+            form="checkout-form"
+            size="lg"
+            icon={isFree ? 'check' : 'lock'}
+            className="co-summary__submit"
+            disabled={!canSubmit}
+            title={canSubmit ? undefined : availabilityMessage}
+          >
             {submitLabel}
           </Button>
+          {!canSubmit && <p className="co-summary__blocked">{availabilityMessage}</p>}
           {!isFree && (
             <div className="co-summary__ops">
-              {(isCard ? payment.cards : payment.operators).map((op) => (
+              {payment.operators.map((op) => (
                 <OperatorBadge key={op.id} id={op.id} size="sm" />
               ))}
             </div>
@@ -930,7 +855,7 @@ export default function CheckoutPage() {
           <small>{c.total}</small>
           <strong>{isFree ? t.tickets.page.free : grandAmount}</strong>
         </div>
-        <Button type="submit" form="checkout-form" icon={isFree ? 'check' : 'lock'}>
+        <Button type="submit" form="checkout-form" icon={isFree ? 'check' : 'lock'} disabled={!canSubmit} title={canSubmit ? undefined : availabilityMessage}>
           {isFree ? c.confirmFree : fill(c.pay, { amount: '' }).trim()}
         </Button>
       </div>
@@ -943,13 +868,6 @@ export default function CheckoutPage() {
           amount={formatXAF(pay.amountPaid ?? pay.order.total + estimateFees(pay.order.total, catalog.buyerFee), locale)}
           phone={pay.order.payment.phone ? formatCmPhone(pay.order.payment.phone) : ''}
           operator={payment.operators.find((o) => o.id === pay.order.payment.operator)}
-          method={pay.order.payment.method}
-          cardLabel={
-            pay.order.payment.method === 'card'
-              ? `${payment.cards.find((x) => x.id === pay.order.payment.brand)?.name ?? ''} •••• ${pay.order.payment.last4 ?? ''}`.trim()
-              : undefined
-          }
-          demo={pay.order.payment.mode === 'demo'}
           onRetry={() => {
             // Trop d'échecs : on referme et on affiche le délai d'attente
             const left = cooldownLeft(lockedUntil)
@@ -958,10 +876,7 @@ export default function CheckoutPage() {
               setErrors({ summary: fill(c.errors.tooMany, { s: left }) })
               return
             }
-            runPayment(
-              { ...pay.order, payment: { ...pay.order.payment, status: 'pending' } },
-              pay.order.payment.method === 'card' ? card : undefined,
-            )
+            runPayment({ ...pay.order, payment: { ...pay.order.payment, status: 'pending' } })
           }}
           onClose={() => setPay(null)}
         />

@@ -20,17 +20,12 @@ const STEPS = ['initiating', 'awaiting', 'confirming']
  * @param {string} amount    Montant formaté
  * @param {string} phone     Numéro formaté
  * @param {object} operator  Opérateur (CONFIG.payment.operators)
- * @param {'momo'|'card'} method  Moyen de paiement
- * @param {string} cardLabel Réseau et 4 derniers chiffres (paiement par carte)
- * @param {boolean} demo     Paiement simulé
  * @param {string} reason    Code de refus renvoyé par le serveur (INSUFFICIENT_BALANCE…)
  */
-export default function PaymentDialog({ status, step, amount, phone, operator, method = 'momo', cardLabel, demo, reason, onRetry, onClose }) {
+export default function PaymentDialog({ status, step, amount, phone, operator, reason, onRetry, onClose }) {
   const { t } = useI18n()
   const p = t.tickets.payment
-  const isCard = method === 'card'
-  // Les libellés d'étapes diffèrent : validation au téléphone / authentification bancaire
-  const labels = isCard ? p.cardSteps : p.steps
+  const labels = p.steps
   const dialogRef = useRef(null)
   const failed = status === 'failed'
   const current = STEPS.indexOf(step)
@@ -64,11 +59,8 @@ export default function PaymentDialog({ status, step, amount, phone, operator, m
         aria-describedby="pay-dialog-desc"
         tabIndex={-1}
       >
-        {demo && <p className="pay-dialog__demo">{p.demoNote}</p>}
-
         <div className="pay-dialog__head">
           {operator && <OperatorBadge id={operator.id} />}
-          {isCard && cardLabel && <span className="pay-dialog__card">{cardLabel}</span>}
           <strong className="pay-dialog__amount">{amount}</strong>
         </div>
 
@@ -110,21 +102,15 @@ export default function PaymentDialog({ status, step, amount, phone, operator, m
               })}
             </ol>
 
-            {/* Consignes : validation au téléphone (Mobile Money) ou banque (carte) */}
+            {/* Consignes : validation sur le téléphone (Mobile Money) */}
             <div id="pay-dialog-desc" className={`pay-dialog__phone ${step === 'awaiting' ? 'is-awaiting' : ''}`}>
               <span className="pay-dialog__phone-icon" aria-hidden="true">
-                <Icon name={isCard ? 'lock' : 'smartphone'} size={30} />
+                <Icon name="smartphone" size={30} />
                 <i />
               </span>
               <div>
-                {isCard ? (
-                  <p>{rich(fill(p.cardAwaiting, { amount, card: cardLabel ?? '' }))}</p>
-                ) : (
-                  <>
-                    <p>{rich(fill(p.awaiting, { amount, phone, op: operator?.name ?? '' }))}</p>
-                    {operator && <p className="pay-dialog__ussd">{fill(p.noPrompt, { ussd: p.ussd[operator.id] })}</p>}
-                  </>
-                )}
+                <p>{rich(fill(p.awaiting, { amount, phone, op: operator?.name ?? '' }))}</p>
+                {operator && <p className="pay-dialog__ussd">{fill(p.noPrompt, { ussd: p.ussd[operator.id] })}</p>}
               </div>
             </div>
 

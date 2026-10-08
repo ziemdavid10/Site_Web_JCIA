@@ -4,7 +4,6 @@ import { useI18n } from '@/i18n/context'
 import { loadSafeImage } from '@/security/files'
 import { clampCrop, cropToBlob, drawCrop, saveAttendeePhoto } from '@/services/photos'
 import { setOrderPhoto } from '@/services/orders'
-import { PAYMENT_MODE } from '@/services/payment'
 import './PhotoEditorDialog.scss'
 
 const PREVIEW = 560 // px du canevas d'aperçu (affiché à 300 px environ : net sur écran haute densité)
@@ -145,10 +144,7 @@ export default function PhotoEditorDialog({ order, position, name, onClose, onSa
   }
   const errorText = error ? (p.errors[error] ?? p.errors.server) : ''
   // Où la photo sera visible : liste publique (si consentement) ou visuel seulement
-  const live = PAYMENT_MODE === 'live' && order.payment.mode === 'live'
-  const visibility = live
-    ? { public: order.publicListing, text: order.publicListing ? p.public : p.private }
-    : { public: false, text: p.demo }
+  const visibility = { public: order.publicListing, text: order.publicListing ? p.public : p.private }
 
   return (
     <dialog

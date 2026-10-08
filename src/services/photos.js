@@ -1,6 +1,6 @@
 import { CONFIG } from '@/data/config'
 import { storage } from '@/utils/storage'
-import { API, PAYMENT_MODE } from './payment'
+import { API } from './payment'
 
 /**
  * Photos des participants — champ « photo » de la liste « Ils y seront » et
@@ -11,12 +11,11 @@ import { API, PAYMENT_MODE } from './payment'
  * sa position dans la commande (1 = premier nom). Identifiant : cmd-<commande>-<n>,
  * identique à celui de la liste publique servie par le serveur.
  *
- *  • Mode réel : la photo est envoyée au serveur (PUT /orders/:id/attendees/:n/photo,
- *    jeton de la commande). Le serveur la publie dans la liste UNIQUEMENT si la
- *    personne a accepté d'y figurer ; sinon elle ne sert qu'au visuel.
- *  • Démonstration : elle reste sur cet appareil.
- *  • Dans les deux cas, une copie est gardée sur l'appareil (affichage immédiat,
- *    hors ligne) ; sur un autre appareil, elle est relue sur le serveur.
+ *  • La photo est envoyée au serveur (PUT /orders/:id/attendees/:n/photo, jeton de
+ *    la commande). Le serveur la publie dans la liste UNIQUEMENT si la personne a
+ *    accepté d'y figurer ; sinon elle ne sert qu'au visuel.
+ *  • Une copie est gardée sur l'appareil (affichage immédiat, hors ligne) ; sur un
+ *    autre appareil, elle est relue sur le serveur.
  *
  * La photo est recadrée au carré et ré-encodée en JPEG dans le navigateur
  * (métadonnées EXIF/GPS retirées) ; le serveur la contrôle à nouveau.
@@ -129,11 +128,11 @@ export async function cropToBlob(img, zoom, offset) {
 }
 
 // --- Serveur ------------------------------------------------------------------------------------
-const isLive = (order) => PAYMENT_MODE === 'live' && order?.payment?.mode === 'live'
 const photoPath = (order, position) => `${API}/orders/${encodeURIComponent(order.id)}/attendees/${position}/photo`
 
 /** Appel à l'API photo (jeton de la commande). Le corps est lu par l'appelant, dans le même délai. */
 async function call(order, position, init, read = async () => null) {
+  if (!API) throw new Error('network')
   if (!order.accessToken) throw new Error('server')
   const controller = new AbortController()
   const timer = setTimeout(() => controller.abort(), 20_000)
@@ -163,11 +162,6 @@ async function call(order, position, init, read = async () => null) {
  */
 export async function saveAttendeePhoto(order, position, blob) {
   const src = await blobToDataUrl(blob)
-  if (!isLive(order)) {
-    const version = `local-${Date.now().toString(36)}`
-    remember(order.id, position, src, version)
-    return { src, version, public: order.publicListing }
-  }
   const { data } = await call(order, position, { method: 'PUT', headers: { 'Content-Type': 'image/jpeg' }, body: blob }, (res) =>
     res.json().catch(() => null),
   )
@@ -178,10 +172,8 @@ export async function saveAttendeePhoto(order, position, blob) {
 
 /** Retire la photo d'un participant (serveur et appareil). */
 export async function removeAttendeePhoto(order, position) {
-  if (isLive(order)) {
-    const { res } = await call(order, position, { method: 'DELETE', headers: {} })
-    if (!res.ok && res.status !== 404) throw new Error('server')
-  }
+  const { res } = await call(order, position, { method: 'DELETE', headers: {} })
+  if (!res.ok && res.status !== 404) throw new Error('server')
   forget(order.id, position)
 }
 
@@ -193,7 +185,6 @@ export async function removeAttendeePhoto(order, position) {
  */
 export async function loadAttendeePhoto(order, position, serverVersion) {
   const local = localPhoto(order.id, position)
-  if (!isLive(order)) return local?.src ?? null
   if (local && (!serverVersion || local.version === serverVersion)) return local.src
   if (!serverVersion) return null
   try {

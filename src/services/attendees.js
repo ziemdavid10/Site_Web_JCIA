@@ -1,20 +1,18 @@
-import { ATTENDEES, ATTENDEE_PROFILES } from '@/data/attendees'
+import { ATTENDEE_PROFILES } from '@/data/attendees'
 import { CONFIG } from '@/data/config'
 import { listOrders, isConfirmed } from './orders'
-import { apiRequest, PAYMENT_MODE } from './payment'
+import { apiRequest } from './payment'
 import { attendeeKey, localPhoto, publicPhotoUrl } from './photos'
 import { cleanText } from '@/security/sanitize'
 
 /**
- * Liste publique des participants.
+ * Liste publique des participants « Ils y seront ».
  *
- * Mode réel : la liste fait foi sur le SERVEUR (GET /attendees) — inscrits
- * confirmés ayant donné leur consentement explicite ; les commandes de cet
- * appareil sont mises en tête (« c'est vous »).
- * Mode démonstration : commandes locales consenties + liste d'exemple
- * (src/data/attendees.js). Aucun e-mail, téléphone ni
- * numéro de billet n'apparaît ici — uniquement ce que la personne accepte de
- * montrer : nom, organisation, ville, profil et photo.
+ * Elle fait foi sur le SERVEUR (GET /attendees) : inscrits confirmés ayant
+ * donné leur consentement explicite. Les commandes de cet appareil sont mises
+ * en tête (« c'est vous »). Aucun e-mail, téléphone ni numéro de billet
+ * n'apparaît ici — uniquement ce que la personne accepte de montrer : nom,
+ * organisation, ville, profil et photo.
  *
  * Un participant = un nom d'une commande confirmée (cmd-<commande>-<position>),
  * comme sur le serveur : une commande de 3 billets donne 3 fiches, chacune avec
@@ -51,21 +49,14 @@ export function localAttendees() {
     .filter((a) => a.name)
 }
 
-/** Fusion sans doublon : même identifiant, ou même nom pour la liste d'exemple */
+/** Fusion sans doublon (même identifiant) */
 function withoutDuplicates(mine, others) {
   const ids = new Set(mine.map((a) => a.id))
-  const names = new Set(mine.map((a) => a.name.toLowerCase()))
-  return [...mine, ...others.filter((a) => !ids.has(a.id) && !(a.example && names.has(a.name.toLowerCase())))]
-}
-
-/** Liste complète, participants de cet appareil en tête */
-export function allAttendees() {
-  return withoutDuplicates(localAttendees(), ATTENDEES)
+  return [...mine, ...others.filter((a) => !ids.has(a.id))]
 }
 
 /** Liste publique servie par le serveur, nettoyée (liste blanche des champs). */
 export async function fetchPublicAttendees() {
-  if (PAYMENT_MODE !== 'live') return null
   const res = await apiRequest('/attendees', { timeoutMs: 8000 })
   if (!res.ok || !Array.isArray(res.data)) return null
   return res.data
@@ -85,9 +76,12 @@ export async function fetchPublicAttendees() {
 
 /** Fusionne la liste du serveur et les commandes de cet appareil (sans doublon). */
 export function mergeAttendees(server) {
-  if (!server) return allAttendees()
+  const mine = localAttendees()
+  if (!server) return mine
   // Les fiches de cet appareil en tête ; la photo du serveur prime si l'appareil n'en a pas
   const byId = new Map(server.map((a) => [a.id, a]))
-  const mine = localAttendees().map((a) => ({ ...a, photo: a.photo ?? byId.get(a.id)?.photo ?? null }))
-  return withoutDuplicates(mine, server)
+  return withoutDuplicates(
+    mine.map((a) => ({ ...a, photo: a.photo ?? byId.get(a.id)?.photo ?? null })),
+    server,
+  )
 }

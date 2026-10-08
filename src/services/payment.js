@@ -5,11 +5,14 @@ import { cleanText } from '@/security/sanitize'
  * Service de paiement — Mobile Money (MTN MoMo / Orange Money) via le serveur
  * de billetterie JCIA, lui-même branché sur l'API Partenaire TIKORA.
  *
- * ─── MODE RÉEL (VITE_PAYMENT_API_URL défini) ─────────────────────────────────
+ * AUCUN PAIEMENT N'EST SIMULÉ : chaque commande passe par le serveur
+ * (VITE_PAYMENT_API_URL), qui passe par TIKORA. Sans serveur joignable, la
+ * billetterie s'affiche « momentanément indisponible » au lieu de faire semblant.
+ *
  * Le navigateur ne parle JAMAIS à TIKORA : la clé partenaire reste sur le
  * serveur. Routes utilisées (voir backend/src/routes) :
  *
- *   GET  {API}/tickets            tarifs, frais TIKORA, places restantes, moyens acceptés
+ *   GET  {API}/tickets            tarifs, frais TIKORA, places restantes, vente ouverte ou non
  *   POST {API}/payments           → { paymentId, status, accessToken, amount, subtotal, fees }
  *        corps : { orderId, amount, currency, method, operator, phone, tierId, quantity,
  *                  customer, attendees, publicListing, lang, description }
@@ -20,15 +23,7 @@ import { cleanText } from '@/security/sanitize'
  * Le serveur recalcule le prix, crée la commande TIKORA (réservation 15 min,
  * frais de service ajoutés par TIKORA) puis déclenche la demande de paiement
  * sur le téléphone du payeur. Le client interroge le statut toutes les 3 s.
- *
- * ─── CARTES BANCAIRES ────────────────────────────────────────────────────────
- * TIKORA n'encaisse que Mobile Money : en mode réel, le moyen « carte » est
- * masqué (le serveur renvoie `methods: ['momo']`) et AUCUNE donnée de carte
- * n'est transmise. La carte reste simulable en mode démonstration uniquement.
- *
- * ─── MODE DÉMONSTRATION (VITE_PAYMENT_API_URL vide) ──────────────────────────
- * Paiement SIMULÉ, aucun débit. Numéro (ou carte) finissant par « 0000 » =
- * refus, pour tester l'écran d'échec.
+ * TIKORA n'encaisse que Mobile Money : aucune donnée de carte n'existe sur le site.
  */
 
 /** L'API doit être en HTTPS (sauf localhost en développement). */
@@ -42,19 +37,20 @@ function secureApiUrl(url) {
   }
 }
 
+/** Adresse du serveur de billetterie ('' si VITE_PAYMENT_API_URL est absente ou refusée). */
 export const API = secureApiUrl(CONFIG.payment.apiUrl)
-export const PAYMENT_MODE = API ? 'live' : 'demo'
 
-// Développement : indique dans la console à quel serveur parle le site
-if (import.meta.env.DEV) {
-  console.info(
-    API
-      ? `[JCIA] Paiement en mode réel → ${API}`
-      : `[JCIA] Paiement en mode DÉMONSTRATION${CONFIG.payment.apiUrl ? ` (URL refusée : ${CONFIG.payment.apiUrl})` : ' — VITE_PAYMENT_API_URL absent (.env.development.local)'}`,
+// Configuration manquante : erreur visible dans la console (la billetterie s'affiche indisponible)
+if (!API) {
+  console.error(
+    CONFIG.payment.apiUrl
+      ? `[JCIA] VITE_PAYMENT_API_URL refusée (${CONFIG.payment.apiUrl}) : HTTPS obligatoire hors localhost. Billetterie indisponible.`
+      : '[JCIA] VITE_PAYMENT_API_URL absente : le site ne peut pas joindre le serveur de billetterie. ' +
+          'En local, créez .env.development.local avec VITE_PAYMENT_API_URL=http://localhost:5000',
   )
+} else if (import.meta.env.DEV) {
+  console.info(`[JCIA] Serveur de billetterie : ${API}`)
 }
-/** Conservé pour compatibilité : la saisie de carte n'existe qu'en démonstration. */
-export const CARD_FIELDS_MODE = 'form'
 
 const PAYMENT_ID_RE = /^[\w-]{1,100}$/
 const TOKEN_RE = /^[\w-]{20,100}$/
@@ -67,7 +63,7 @@ const POLL_FOR_MS = 3 * 60 * 1000
  * @returns {Promise<{ ok: boolean, status: number, data: any }>}
  */
 export async function apiRequest(path, { method = 'GET', body, idempotencyKey, token, timeoutMs = 15_000 } = {}) {
-  if (!API) return { ok: false, status: 0, data: null }
+  if (!API) return { ok: false, status: 0, data: null, unconfigured: true }
   const controller = new AbortController()
   const timer = setTimeout(() => controller.abort(), timeoutMs)
   try {
@@ -97,7 +93,11 @@ export async function apiRequest(path, { method = 'GET', body, idempotencyKey, t
 const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
 
 /** Code d'erreur lisible renvoyé par le serveur (liste blanche côté affichage) */
-const reasonOf = (res, fallback) => cleanText(res?.data?.code || res?.data?.reason || fallback, 40)
+const reasonOf = (res, fallback) => {
+  if (res?.unconfigured) return 'UNCONFIGURED' // VITE_PAYMENT_API_URL absente
+  if (res?.status === 0) return 'network' // serveur injoignable (éteint, hors ligne, CORS)
+  return cleanText(res?.data?.code || res?.data?.reason || fallback, 40)
+}
 
 /**
  * Adresse de redirection renvoyée par le serveur : HTTPS et même origine que
@@ -114,8 +114,8 @@ export function safeRedirectUrl(url) {
 }
 
 /**
- * Catalogue servi par le backend (frais TIKORA, stock, moyens acceptés).
- * Mode démonstration : null (le site utilise sa configuration locale).
+ * Catalogue servi par le serveur (frais TIKORA, stock, vente ouverte).
+ * @returns {Promise<object|null>} null si le serveur est injoignable ou non configuré
  */
 export async function fetchCatalog() {
   if (!API) return null
@@ -125,14 +125,31 @@ export async function fetchCatalog() {
 
 /** Commande vue par le serveur (billets officiels inclus), ou null. */
 export async function fetchServerOrder(orderId, token) {
-  if (!API || !TOKEN_RE.test(token ?? '')) return null
+  if (!TOKEN_RE.test(token ?? '')) return null
   const res = await apiRequest(`/orders/${encodeURIComponent(orderId)}`, { token })
   return res.ok && res.data?.id === orderId ? res.data : null
 }
 
+/**
+ * Billet payé sur la page TIKORA : vérification par le serveur (numéro de commande
+ * TIKORA + e-mail utilisé sur TIKORA), qui renvoie la commande JCIA correspondante.
+ * @returns {Promise<{ ok: true, orderId: string, accessToken: string, order: object } | { ok: false, reason: string }>}
+ */
+export async function claimTikoraOrder({ orderNumber, email, publicListing, lang }) {
+  if (!API) return { ok: false, reason: 'unavailable' }
+  const res = await apiRequest('/orders/tikora-claim', {
+    method: 'POST',
+    body: { orderNumber: cleanText(orderNumber, 40), email: cleanText(email, 254), publicListing: publicListing === true, lang },
+    timeoutMs: 30_000,
+  })
+  if (res.ok && TOKEN_RE.test(res.data?.accessToken ?? '') && res.data?.order) return { ok: true, ...res.data }
+  const reason =
+    res.status === 0 ? 'network' : res.status === 429 ? 'rate' : { ORDER_NOT_FOUND: 'notFound', ORDER_NOT_PAID: 'notPaid', INVALID_CLAIM: 'invalid' }[res.data?.code] ?? 'server'
+  return { ok: false, reason }
+}
+
 /** Inscription gratuite enregistrée par le serveur. */
 export async function registerFreeOrder(order) {
-  if (!API) return { status: 'free', mode: 'demo' }
   const res = await apiRequest('/orders/free', {
     method: 'POST',
     idempotencyKey: order.id,
@@ -146,43 +163,19 @@ export async function registerFreeOrder(order) {
       lang: order.lang,
     },
   })
-  if (!res.ok || !TOKEN_RE.test(res.data?.accessToken ?? '')) return { status: 'FAILED', reason: reasonOf(res, 'init'), mode: 'live' }
-  return { status: 'free', accessToken: res.data.accessToken, mode: 'live' }
+  if (!res.ok || !TOKEN_RE.test(res.data?.accessToken ?? '')) return { status: 'FAILED', reason: reasonOf(res, 'init') }
+  return { status: 'free', accessToken: res.data.accessToken }
 }
 
 /**
- * Lance un paiement et suit son avancement.
- * @param {object}   params  { orderId, amount, currency, method, operator, phone, tierId, quantity, customer, attendees, publicListing, lang, description, card? }
+ * Lance un paiement Mobile Money via le serveur (TIKORA) et suit son avancement.
+ * @param {object}   params  { orderId, amount, currency, operator, phone, tierId, quantity, customer, attendees, publicListing, lang, description }
  * @param {function} onStep  (step, info) — step : 'initiating' | 'awaiting' | 'confirming' ;
- *                           info (mode réel) : { amount, fees } réellement débités
- * @returns {Promise<{ status: 'SUCCESSFUL'|'FAILED'|'PENDING', transactionId?, reason?, mode, accessToken?, amount?, fees? }>}
+ *                           info : { amount, fees } réellement débités
+ * @returns {Promise<{ status: 'SUCCESSFUL'|'FAILED'|'PENDING', transactionId?, reason?, accessToken?, amount?, fees? }>}
  */
 export async function processPayment(params, onStep = () => {}) {
-  return PAYMENT_MODE === 'live' ? processLive(params, onStep) : processDemo(params, onStep)
-}
-
-/** Paiement simulé : reproduit les étapes et délais d'un vrai paiement mobile. */
-async function processDemo({ orderId, method, operator, phone = '', card }, onStep) {
   onStep('initiating')
-  await wait(1200)
-  onStep('awaiting')
-  await wait(2600)
-  const tail = method === 'card' ? String(card?.number ?? '').replace(/\D/g, '') : String(phone)
-  if (tail.endsWith('0000')) return { status: 'FAILED', reason: 'INSUFFICIENT_BALANCE', mode: 'demo' }
-  onStep('confirming')
-  await wait(900)
-  return {
-    status: 'SUCCESSFUL',
-    transactionId: `DEMO-${(method === 'card' ? 'CARD' : operator?.toUpperCase?.()) ?? 'MM'}-${orderId.slice(-6)}-${Date.now().toString(36).toUpperCase()}`,
-    mode: 'demo',
-  }
-}
-
-/** Paiement réel via le serveur de billetterie (TIKORA). */
-async function processLive(params, onStep) {
-  onStep('initiating')
-  if (params.method === 'card') return { status: 'FAILED', reason: 'CARD_NOT_SUPPORTED', mode: 'live' }
-
   // Strict nécessaire (minimisation des données) — jamais de données de carte
   const created = await apiRequest('/payments', {
     method: 'POST',
@@ -210,10 +203,9 @@ async function processLive(params, onStep) {
   })
   const paymentId = created.data?.paymentId
   if (!created.ok || typeof paymentId !== 'string' || !PAYMENT_ID_RE.test(paymentId)) {
-    return { status: 'FAILED', reason: reasonOf(created, 'init'), mode: 'live' }
+    return { status: 'FAILED', reason: reasonOf(created, 'init') }
   }
   const extra = {
-    mode: 'live',
     accessToken: TOKEN_RE.test(created.data.accessToken ?? '') ? created.data.accessToken : undefined,
     amount: Number.isFinite(created.data.amount) ? created.data.amount : undefined,
     fees: Number.isFinite(created.data.fees) ? created.data.fees : undefined,
