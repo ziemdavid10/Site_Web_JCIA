@@ -12,7 +12,7 @@ import { cleanText } from '@/security/sanitize'
  * donné leur consentement explicite. Les commandes de cet appareil sont mises
  * en tête (« c'est vous »). Aucun e-mail, téléphone ni numéro de billet
  * n'apparaît ici — uniquement ce que la personne accepte de montrer : nom,
- * organisation, ville, profil et photo.
+ * rôle, organisation, ville, profil et photo.
  *
  * Un participant = un nom d'une commande confirmée (cmd-<commande>-<position>),
  * comme sur le serveur : une commande de 3 billets donne 3 fiches, chacune avec
@@ -38,6 +38,7 @@ export function localAttendees() {
         id: attendeeKey(o.id, i + 1),
         name: cleanText(name, 80),
         org: cleanText(o.customer.org, 120),
+        role: i === 0 ? cleanText(o.customer.role, 80) : '',
         city: '',
         profile: profileOfTier(o.tierId),
         tier: o.tierId,
@@ -65,6 +66,7 @@ export async function fetchPublicAttendees() {
       id: cleanText(a?.id, 40).replace(/[^\w-]/g, ''),
       name: cleanText(a?.name, 80),
       org: cleanText(a?.org, 120),
+      role: cleanText(a?.role, 80),
       city: cleanText(a?.city, 60),
       profile: PROFILE_IDS.includes(a?.profile) ? a.profile : 'entreprise',
       tier: TIER_IDS.includes(a?.tier) ? a.tier : undefined,

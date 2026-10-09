@@ -16,12 +16,14 @@ import { ORDER_ID_RE, cleanText } from '@/security/sanitize'
  * {
  *   id, createdAt, lang,
  *   tierId, quantity, unitPrice, total, currency,
- *   customer: { name, email, phone, org, school? },
+ *   customer: { name, firstName, lastName, email, phone (WhatsApp), org, role },
  *   attendees: [ 'Nom 1', 'Nom 2', … ],
  *   publicListing: true | false,   // accord pour figurer dans la liste publique
  *   payment: { method: 'momo', operator, phone,
- *              status: 'free'|'pending'|'paid'|'failed', transactionId, paidAt, mode: 'live',
- *              fees, amountPaid },
+ *              status: 'free'|'registered'|'pending'|'paid'|'failed', transactionId, paidAt, mode: 'live',
+ *              fees, amountPaid,
+ *              via: 'tikora' (billet payé sur la page TIKORA), tikoraOrderNumber },
+ *           'registered' = billet payant : inscription enregistrée, paiement TIKORA attendu
  *   accessToken: jeton remis par le serveur (consultation des billets),
  *   tickets: [{ code, qrToken, holder, status }]  billets officiels (mode réel),
  *   photos: [{ position, version }]  photos des participants connues du serveur
@@ -32,7 +34,7 @@ import { ORDER_ID_RE, cleanText } from '@/security/sanitize'
 const KEY = CONFIG.storage.orders
 const MAX_ORDERS = 20 // limite la taille des données gardées sur l'appareil
 const TIER_IDS = CONFIG.tickets.tiers.map((t) => t.id)
-const STATUSES = ['free', 'pending', 'paid', 'failed']
+const STATUSES = ['free', 'registered', 'pending', 'paid', 'failed']
 const OPERATORS = CONFIG.payment.operators.map((o) => o.id)
 const TOKEN_RE = /^[\w-]{20,100}$/
 const TICKET_STATUSES = ['valid', 'used', 'cancelled', 'expired']
@@ -79,9 +81,12 @@ function sanitizeOrder(o) {
     currency: CONFIG.tickets.currency,
     customer: {
       name: cleanText(o.customer?.name, 80),
+      firstName: cleanText(o.customer?.firstName, 40),
+      lastName: cleanText(o.customer?.lastName, 40),
       email: cleanText(o.customer?.email, 254),
-      phone: cleanText(o.customer?.phone, 20).replace(/\D/g, ''),
+      phone: cleanText(o.customer?.phone, 20).replace(/(?!^\+)[^\d]/g, ''), // numéro WhatsApp (+… si étranger)
       org: cleanText(o.customer?.org, 120),
+      role: cleanText(o.customer?.role, 80),
     },
     attendees,
     // Consentement explicite pour apparaître dans la liste publique des participants
@@ -105,11 +110,14 @@ function sanitizeOrder(o) {
       // Frais de service TIKORA et montant réellement débité (mode réel)
       fees: amountOrUndefined(p.fees),
       amountPaid: amountOrUndefined(p.amountPaid),
+      // Billet payé sur la page TIKORA (inscription faite sur le site)
+      via: p.via === 'tikora' ? 'tikora' : undefined,
+      tikoraOrderNumber: /^[A-Z0-9][A-Z0-9-]{3,39}$/.test(p.tikoraOrderNumber ?? '') ? p.tikoraOrderNumber : undefined,
     },
   }
 }
 
-const SERVER_STATUS = { paid: 'paid', free: 'free', pending: 'pending', failed: 'failed', expired: 'failed', cancelled: 'failed' }
+const SERVER_STATUS = { paid: 'paid', free: 'free', registered: 'registered', pending: 'pending', failed: 'failed', expired: 'failed', cancelled: 'failed' }
 
 /**
  * Convertit la commande renvoyée par le serveur (GET /orders/:id) au format
@@ -134,6 +142,7 @@ export function saveServerOrder(server, accessToken) {
       quantity: server.quantity,
       total: Number(server.unitPrice) * Number(server.quantity),
       customer: { ...server.customer, phone: local?.customer?.phone ?? '' },
+      // (le numéro WhatsApp n'est pas renvoyé par le serveur : celui de l'appareil est conservé)
       attendees: server.attendees?.length === server.quantity ? server.attendees : Array.from({ length: server.quantity }, () => server.customer?.name ?? ''),
       publicListing: server.publicListing === true,
       accessToken,
@@ -150,6 +159,8 @@ export function saveServerOrder(server, accessToken) {
         mode: 'live',
         fees: server.fees,
         amountPaid: server.total,
+        via: server.payment?.mode === 'tikora_page' ? 'tikora' : undefined,
+        tikoraOrderNumber: server.payment?.tikoraOrderNumber,
       },
     })
   } catch {
@@ -178,6 +189,11 @@ export function saveOrder(order) {
 /** Commande confirmée = payée, ou billet gratuit validé */
 export function isConfirmed(order) {
   return ['paid', 'free'].includes(order?.payment?.status)
+}
+
+/** Billet payant dont le paiement sur la page TIKORA est attendu. */
+export function isAwaitingPayment(order) {
+  return order?.payment?.status === 'registered'
 }
 
 /**

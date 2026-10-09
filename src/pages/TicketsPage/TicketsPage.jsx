@@ -9,7 +9,7 @@ import { CONFIG } from '@/data/config'
 import { formatXAF } from '@/utils/money'
 import { formatSeats, getTicketPricing, isLowStock, isPromotionActive, isSoldOut, isUnlimitedQuota, remainingSeats } from '@/utils/tickets'
 import useDocumentMeta from '@/hooks/useDocumentMeta'
-import useTicketCatalog, { tierAvailability, tikoraAvailability } from '@/hooks/useTicketCatalog'
+import useTicketCatalog, { tierAvailability } from '@/hooks/useTicketCatalog'
 import './TicketsPage.scss'
 
 /**
@@ -74,7 +74,7 @@ export default function TicketsPage() {
             <span>{tp.promotion.text}</span>
           </Reveal>
         )}
-        {/* Billets payants : paiement sur la page TIKORA, puis e-mail avec le formulaire */}
+        {/* Même parcours pour tous : inscription sur le site, puis (billets payants) paiement sur TIKORA */}
         {open && !soon && (
           <Reveal className="tickets-tikora">
             <span className="tickets-tikora__icon" aria-hidden="true">
@@ -133,9 +133,8 @@ export default function TicketsPage() {
         <ul className="tier-grid">
           {tickets.tiers.map((tier, i) => {
             const tt = t.tickets.tiers[tier.id]
-            // Billet payant : paiement sur la page TIKORA (indépendante de notre serveur)
-            const paid = tier.price > 0
-            const availability = paid ? tikoraAvailability(tier, catalog) : tierAvailability(tier, catalog)
+            // Même parcours pour tous les billets : formulaire du site (puis paiement TIKORA si payant)
+            const availability = tierAvailability(tier, catalog)
             const blocked = ['soon', 'unavailable', 'loading'].includes(availability)
             return (
               <Reveal
@@ -207,22 +206,6 @@ export default function TicketsPage() {
                   >
                     {availability === 'unavailable' ? tp.unavailableCta : tp.chooseClosed}
                   </Button>
-                ) : paid ? (
-                  <>
-                    <Button
-                      href={payment.tikoraEventUrl}
-                      external
-                      variant="secondary"
-                      icon="arrow-up-right"
-                      className="tier-card__cta"
-                      aria-label={`${tp.payOnTikora} — ${tt.name} (${tp.newTab})`}
-                    >
-                      {tp.payOnTikora}
-                    </Button>
-                    <Link to={`${routes.checkout}/${tier.id}`} className="tier-card__how">
-                      {tp.howItWorks}
-                    </Link>
-                  </>
                 ) : (
                   <Button
                     as={Link}

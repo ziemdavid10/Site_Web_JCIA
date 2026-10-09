@@ -1,0 +1,591 @@
+@use '@/styles/abstracts' as *;
+
+// =============================================================================
+// BILLET PAYANT — inscription enregistrée, paiement sur la page TIKORA de l'événement
+// =============================================================================
+.tikora-handoff {
+  display: grid;
+  gap: $space-5;
+  padding-block: $space-7 $space-9;
+
+  @include mq('lg') {
+    grid-template-columns: minmax(0, 1.4fr) minmax(300px, 1fr);
+    align-items: start;
+    gap: $space-6;
+  }
+}
+
+.th-card {
+  --cat: #{$orange};
+
+  padding: $space-5;
+  background: $surface;
+  border: 1px solid $border;
+  border-top: 6px solid var(--cat);
+  border-radius: $radius-lg;
+  box-shadow: $shadow-md;
+
+  @include mq('md') {
+    padding: $space-6;
+  }
+
+  &--teal {
+    --cat: #{$teal};
+  }
+
+  &--purple {
+    --cat: #{$purple};
+  }
+
+  &--rust {
+    --cat: #{$rust};
+  }
+
+  &__tier {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    gap: $space-3 $space-4;
+
+    @include mq('sm') {
+      grid-template-columns: auto minmax(0, 1fr) auto;
+    }
+
+    h2 {
+      font-size: 1.5rem;
+    }
+  }
+
+  &__icon {
+    display: grid;
+    place-items: center;
+    width: 52px;
+    height: 52px;
+    color: $white;
+    background: var(--cat);
+    border-radius: $radius-md;
+  }
+
+  &__eyebrow {
+    font-size: 0.75rem;
+    font-weight: $fw-bold;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: $text-muted;
+  }
+
+  &__price {
+    display: flex;
+    flex-direction: column;
+    grid-column: 1 / -1;
+
+    @include mq('sm') {
+      grid-column: auto;
+      align-items: flex-end;
+      text-align: right;
+    }
+
+    s {
+      font-size: 0.85rem;
+      color: $text-muted;
+    }
+
+    strong {
+      font-size: 1.5rem;
+      line-height: 1.1;
+    }
+
+    small {
+      font-size: 0.75rem;
+      color: $text-muted;
+    }
+  }
+
+  &__cta {
+    width: 100%;
+    margin-top: $space-5;
+  }
+
+  &__note {
+    display: flex;
+    justify-content: center;
+    gap: $space-2;
+    margin-top: $space-3;
+    font-size: 0.8rem;
+    line-height: 1.45;
+    color: $text-muted;
+    text-align: center;
+
+    .icon {
+      flex-shrink: 0;
+      margin-top: 2px;
+      color: $flag-green;
+    }
+  }
+}
+
+.th-steps {
+  display: flex;
+  flex-direction: column;
+  gap: $space-4;
+  margin-top: $space-5;
+  padding-top: $space-5;
+  border-top: 1px dashed $border-strong;
+
+  li {
+    display: flex;
+    gap: $space-3;
+
+    > span {
+      flex-shrink: 0;
+      display: grid;
+      place-items: center;
+      width: 30px;
+      height: 30px;
+      font-size: 0.85rem;
+      font-weight: $fw-bold;
+      color: $inverse-text;
+      background: $inverse-bg;
+      border-radius: 50%;
+    }
+
+    strong {
+      display: block;
+      font-size: 0.95rem;
+    }
+
+    p {
+      margin-top: 2px;
+      font-size: 0.86rem;
+      line-height: 1.5;
+      color: $text-soft;
+    }
+  }
+}
+
+.th-mail {
+  padding: $space-5;
+  color: $white;
+  background:
+    radial-gradient(circle at 100% 0%, rgba($orange, 0.45), transparent 55%),
+    radial-gradient(circle at 0% 100%, rgba($teal, 0.3), transparent 55%),
+    $navy;
+  border-radius: $radius-lg;
+
+  @include mq('lg') {
+    position: sticky;
+    top: calc(#{$header-height} + #{$space-4});
+  }
+
+  &__icon {
+    display: inline-grid;
+    place-items: center;
+    width: 52px;
+    height: 52px;
+    margin-bottom: $space-3;
+    color: $navy;
+    background: $orange;
+    border-radius: $radius-md;
+    transform: rotate(-6deg);
+  }
+
+  h2 {
+    font-size: 1.25rem;
+  }
+
+  > p {
+    margin-top: $space-2;
+    font-size: 0.9rem;
+    line-height: 1.55;
+    color: rgba($white, 0.82);
+  }
+
+  ul {
+    display: flex;
+    flex-direction: column;
+    gap: $space-2;
+    margin-top: $space-4;
+
+    li {
+      display: flex;
+      gap: $space-2;
+      font-size: 0.88rem;
+      line-height: 1.45;
+
+      .icon {
+        flex-shrink: 0;
+        margin-top: 2px;
+        color: $orange;
+      }
+    }
+  }
+
+  &__spam {
+    font-size: 0.8rem !important;
+    color: rgba($white, 0.65) !important;
+  }
+
+  &__flyer {
+    display: inline-flex;
+    align-items: center;
+    gap: $space-2;
+    margin-top: $space-4;
+    font-size: 0.9rem;
+    font-weight: $fw-semibold;
+    color: $orange;
+
+    &:hover {
+      text-decoration: underline;
+    }
+
+    &:focus-visible {
+      @include focus-ring($orange);
+    }
+  }
+}
+
+// =============================================================================
+// INSCRIPTION ENREGISTRÉE — en attente du paiement TIKORA
+// =============================================================================
+.th-steps li {
+  &.is-done > span {
+    color: $white;
+    background: $flag-green;
+  }
+
+  &.is-current > span {
+    color: $navy;
+    background: $orange;
+    box-shadow: 0 0 0 4px rgba($orange, 0.25);
+  }
+}
+
+// Adresse e-mail à utiliser sur TIKORA (copiable)
+.th-email {
+  margin-top: $space-3;
+  padding: $space-3;
+  background: $surface-muted;
+  border: 1px solid $border;
+  border-radius: $radius-md;
+
+  &__label {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: $fw-bold;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: $text-muted;
+  }
+
+  &__value {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: $space-2;
+    margin-top: 4px;
+
+    strong {
+      min-width: 0;
+      font-size: 1rem;
+      overflow-wrap: anywhere;
+    }
+
+    button {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 0.35rem 0.75rem;
+      font-size: 0.8rem;
+      font-weight: $fw-semibold;
+      color: $teal-text;
+      border: 1.5px solid rgba($teal, 0.5);
+      border-radius: $radius-pill;
+
+      &:hover {
+        background: rgba($teal, 0.1);
+      }
+
+      &:focus-visible {
+        @include focus-ring($teal);
+      }
+    }
+  }
+
+  small {
+    display: block;
+    margin-top: 6px;
+    font-size: 0.78rem;
+    line-height: 1.45;
+    color: $text-soft;
+  }
+}
+
+// Détection automatique du paiement
+.th-watch {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: $space-2 $space-3;
+  margin-top: $space-5;
+  padding: $space-3 $space-4;
+  background: rgba($teal, 0.08);
+  border: 1px solid rgba($teal, 0.3);
+  border-radius: $radius-md;
+
+  > div {
+    flex: 1 1 200px;
+    min-width: 0;
+  }
+
+  strong {
+    display: block;
+    font-size: 0.9rem;
+  }
+
+  small {
+    font-size: 0.78rem;
+    color: $text-soft;
+  }
+
+  button {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    margin-left: auto;
+    padding: $space-2;
+    font-size: 0.8rem;
+    font-weight: $fw-semibold;
+    color: $teal-text;
+    border-radius: $radius-sm;
+
+    &:hover:not(:disabled) {
+      text-decoration: underline;
+    }
+
+    &:disabled {
+      opacity: 0.5;
+    }
+
+    &:focus-visible {
+      @include focus-ring($teal);
+    }
+  }
+
+  &__dot {
+    position: relative;
+    flex-shrink: 0;
+    width: 12px;
+    height: 12px;
+    background: $teal;
+    border-radius: 50%;
+
+    &::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      background: $teal;
+      animation: th-pulse 1.8s ease-out infinite;
+    }
+
+    &.is-checking::after {
+      animation-duration: 0.9s;
+    }
+
+    @include reduced-motion {
+      &::after {
+        animation: none;
+      }
+    }
+  }
+}
+
+@keyframes th-pulse {
+  to {
+    opacity: 0;
+    transform: scale(2.6);
+  }
+}
+
+// Paiement fait avec une autre adresse e-mail
+.th-link {
+  margin-top: $space-5;
+  padding-top: $space-4;
+  border-top: 1px solid rgba($white, 0.15);
+
+  &__toggle {
+    display: flex;
+    align-items: center;
+    gap: $space-2;
+    width: 100%;
+    font-size: 0.88rem;
+    font-weight: $fw-semibold;
+    color: $white;
+    text-align: left;
+
+    .icon:last-child {
+      margin-left: auto;
+      transition: transform $duration-fast;
+
+      &.is-open {
+        transform: rotate(180deg);
+      }
+    }
+
+    &:focus-visible {
+      @include focus-ring($orange);
+    }
+  }
+
+  &__form {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: $space-3;
+
+    p {
+      margin-bottom: $space-2;
+      font-size: 0.82rem;
+      line-height: 1.5;
+      color: rgba($white, 0.75);
+    }
+
+    label {
+      margin-top: $space-2;
+      font-size: 0.8rem;
+      font-weight: $fw-semibold;
+    }
+
+    input {
+      min-height: 46px;
+      padding: 0.65rem 0.9rem;
+      font-size: 1rem;
+      color: $text;
+      background: $bg-elevated;
+      border: 1.5px solid transparent;
+      border-radius: $radius-sm;
+
+      &:focus {
+        outline: none;
+        border-color: $orange;
+      }
+    }
+
+    .btn {
+      margin-top: $space-3;
+    }
+  }
+
+  &__error {
+    display: flex;
+    gap: 6px;
+    margin-top: $space-2;
+    font-size: 0.82rem;
+    font-weight: $fw-semibold;
+    color: #ffb3a8;
+  }
+}
+
+// Étape 3 : code du billet TIKORA (ORD-…) à coller
+.th-code {
+  margin-top: $space-3;
+  padding: $space-4;
+  background: rgba($orange, 0.08);
+  border: 1.5px solid rgba($orange, 0.45);
+  border-radius: $radius-md;
+
+  label {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 0.82rem;
+    font-weight: $fw-semibold;
+  }
+
+  input {
+    width: 100%;
+    min-width: 0;
+    min-height: 48px;
+    padding: 0.7rem 0.9rem;
+    font-size: 1rem;
+    letter-spacing: 0.04em;
+    color: $text;
+    background: $bg-elevated;
+    border: 1.5px solid $border-strong;
+    border-radius: $radius-sm;
+
+    &:focus {
+      outline: none;
+      border-color: $teal;
+      box-shadow: 0 0 0 4px rgba($teal, 0.18);
+    }
+
+    &[aria-invalid='true'] {
+      border-color: $flag-red;
+    }
+  }
+
+  &__row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: $space-2;
+
+    input {
+      flex: 1 1 180px;
+      text-transform: uppercase;
+    }
+
+    .btn {
+      flex: 0 0 auto;
+    }
+  }
+
+  > small {
+    display: block;
+    margin-top: 6px;
+    font-size: 0.78rem;
+    line-height: 1.45;
+    color: $text-soft;
+  }
+
+  &__other {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: $space-3;
+    font-size: 0.8rem;
+    font-weight: $fw-semibold;
+    color: $teal-text;
+
+    .icon {
+      transition: transform $duration-fast;
+
+      &.is-open {
+        transform: rotate(180deg);
+      }
+    }
+
+    &:focus-visible {
+      @include focus-ring($teal);
+    }
+  }
+
+  &__email {
+    margin-top: $space-2;
+
+    input {
+      text-transform: none;
+      letter-spacing: 0;
+    }
+  }
+
+  &__error {
+    display: flex;
+    gap: 6px;
+    margin-top: $space-3;
+    font-size: 0.82rem;
+    font-weight: $fw-semibold;
+    color: $flag-red;
+  }
+}

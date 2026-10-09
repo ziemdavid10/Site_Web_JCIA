@@ -1,0 +1,133 @@
+@use '@/styles/abstracts' as *;
+
+// =============================================================================
+// APERÇU DU VISUEL « J'Y SERAI » (formulaire d'inscription)
+// Reprend la composition du visuel définitif (flyerRenderer.js) en HTML/CSS.
+// =============================================================================
+.visual-preview {
+  margin: $space-4 0 0;
+
+  &__card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    aspect-ratio: 4 / 5;
+    overflow: hidden;
+    padding: 14% 8% 6%;
+    container-type: inline-size;
+    color: var(--vp-text);
+    text-align: center;
+    background:
+      radial-gradient(circle at 85% 12%, rgba(255, 255, 255, 0.14), transparent 40%),
+      radial-gradient(circle at 10% 95%, rgba(0, 0, 0, 0.18), transparent 45%),
+      linear-gradient(160deg, var(--vp-bg-a), var(--vp-bg-b) 55%, var(--vp-bg-c));
+    border-radius: $radius-md;
+    box-shadow: $shadow-md;
+    transition: background $duration;
+  }
+
+  // Lisière tissée (bandes aux couleurs de la marque)
+  &__band {
+    position: absolute;
+    inset: 0 0 auto;
+    height: 3.2cqi;
+    background: repeating-linear-gradient(90deg, $orange 0 12.5%, $teal 12.5% 25%, $rust 25% 37.5%, $purple 37.5% 50%);
+  }
+
+  &__headline {
+    font-size: 11cqi;
+    font-weight: $fw-black;
+    line-height: 1;
+    letter-spacing: -0.01em;
+    background: linear-gradient(90deg, var(--vp-head-a), var(--vp-head-b));
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
+  }
+
+  &__photo {
+    position: relative;
+    width: 46cqi;
+    aspect-ratio: 1;
+    margin-top: 6cqi;
+    padding: 1.4cqi;
+    background: linear-gradient(135deg, var(--vp-head-a), var(--vp-accent));
+    border-radius: 50%;
+
+    img,
+    svg {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 50%;
+    }
+  }
+
+  &__badge {
+    position: absolute;
+    left: 50%;
+    bottom: -3.5cqi;
+    padding: 1.2cqi 3.6cqi;
+    font-size: 3.4cqi;
+    font-style: normal;
+    font-weight: $fw-black;
+    letter-spacing: 0.08em;
+    white-space: nowrap;
+    color: var(--vp-badge-text);
+    background: var(--vp-badge-bg);
+    border-radius: 999px;
+    transform: translateX(-50%);
+    box-shadow: 0 1cqi 3cqi rgba(0, 0, 0, 0.25);
+  }
+
+  &__name {
+    max-width: 100%;
+    margin-top: 8cqi;
+    overflow: hidden;
+    font-size: 6.4cqi;
+    font-weight: $fw-bold;
+    line-height: 1.15;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__role {
+    max-width: 100%;
+    margin-top: 1.4cqi;
+    overflow: hidden;
+    font-size: 3.8cqi;
+    line-height: 1.3;
+    color: var(--vp-soft);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__name.is-empty,
+  &__role.is-empty {
+    opacity: 0.5;
+  }
+
+  &__date {
+    margin-top: auto;
+    font-size: 4.4cqi;
+    font-weight: $fw-black;
+    color: var(--vp-accent);
+  }
+
+  &__tag {
+    margin-top: 1cqi;
+    font-size: 3.6cqi;
+    font-weight: $fw-black;
+    color: var(--vp-accent);
+  }
+
+  figcaption {
+    margin-top: $space-2;
+    font-size: 0.78rem;
+    line-height: 1.45;
+    text-align: center;
+    color: $text-muted;
+  }
+}

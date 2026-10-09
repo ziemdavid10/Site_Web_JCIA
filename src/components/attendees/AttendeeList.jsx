@@ -76,7 +76,7 @@ export default function AttendeeList({ mode = 'home', limit = 8 }) {
       .filter((p) => {
         if (!q) return true
         const d = t.attendeeDetails?.[p.id]
-        return normalize(`${p.name} ${p.org} ${p.city} ${d?.role ?? ''}`).includes(q)
+        return normalize(`${p.name} ${p.org} ${p.city} ${p.role ?? ''} ${d?.role ?? ''}`).includes(q)
       })
   }, [people, profile, query, t.attendeeDetails])
 

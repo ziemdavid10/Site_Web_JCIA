@@ -58,7 +58,7 @@ export default function AttendeeDialog({ attendee, profile, profileLabel, onClos
 
           <h2 id="attendee-dialog-name">{attendee.name}</h2>
           <p className="attendee-card__role">
-            {d?.role ?? a.defaultRole}
+            {attendee.role || d?.role || a.defaultRole}
             {attendee.org && (
               <>
                 {' · '}

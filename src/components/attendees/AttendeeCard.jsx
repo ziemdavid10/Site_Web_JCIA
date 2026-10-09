@@ -31,7 +31,7 @@ export default function AttendeeCard({ attendee, profile, profileLabel, onOpen }
       <div className="attendee-card__body">
         <h3 className="attendee-card__name">{attendee.name}</h3>
         <p className="attendee-card__role">
-          {d?.role ?? a.defaultRole}
+          {attendee.role || d?.role || a.defaultRole}
           {attendee.org && (
             <>
               {' · '}

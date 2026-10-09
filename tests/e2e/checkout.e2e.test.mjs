@@ -70,11 +70,34 @@ async function newPage() {
   return { context, page }
 }
 
-async function fillBuyer(page, { name, email, phone }) {
-  await page.getByLabel('Nom et prénom *').fill(name)
+const SHOTS = process.env.E2E_SHOTS // dossier de captures d'écran (vérification visuelle), facultatif
+async function shot(page, name) {
+  if (!SHOTS) return
+  fs.mkdirSync(SHOTS, { recursive: true })
+  await page.screenshot({ path: path.join(SHOTS, `${name}.png`), fullPage: true })
+}
+
+/** Formulaire d'inscription (le même pour tous les billets) : fiche + photo + conditions. */
+async function fillRegistration(page, { firstName, lastName, email, whatsapp, org, role, photo = true }) {
+  await page.getByLabel('Prénom *').fill(firstName)
+  await page.getByLabel('Nom *', { exact: true }).fill(lastName)
   await page.getByLabel('E-mail *').fill(email)
-  await page.getByLabel('Téléphone *').fill(phone)
-  await page.getByLabel(/J’accepte les/).check()
+  await page.getByLabel('Numéro WhatsApp *').fill(whatsapp)
+  await page.locator('input[autocomplete="organization"]').fill(org)
+  await page.locator('input[autocomplete="organization-title"]').fill(role)
+  if (photo) {
+    await page.getByRole('button', { name: 'Ajouter ma photo' }).click()
+    const dialog = page.locator('dialog.photo-dialog')
+    await dialog.locator('input[type=file]').setInputFiles(path.join(BACK, 'tests/fixtures/photo.jpg'))
+    await dialog.locator('canvas').waitFor()
+    await dialog.getByRole('button', { name: 'Utiliser cette photo' }).click()
+    await dialog.waitFor({ state: 'detached' })
+    await page.getByText('Belle photo !').waitFor()
+  }
+  // Conditions obligatoires : déjà cochées, impossibles à décocher
+  const terms = page.getByLabel(/J’accepte les/)
+  assert.equal(await terms.isChecked(), true)
+  assert.equal(await terms.isDisabled(), true)
 }
 
 test.before(async () => {
@@ -92,6 +115,9 @@ test.before(async () => {
       ALLOWED_ORIGIN: WEB,
       PUBLIC_SITE_URL: WEB,
       RATE_LIMIT_MULTIPLIER: '50',
+      TIKORA_LOOKUP_MIN_INTERVAL_MS: '0', // recherche du paiement à chaque vérification de la page
+      // Page de réservation de chaque billet chez TIKORA (modèle avec l'identifiant de catégorie)
+      TIKORA_CHECKOUT_URL: 'https://tikora.proditech.online/evenements/jcia-2027-journees-camerounaises-de-l-intelligence-artificielle/reserver?categorie={categoryId}',
       ...mockEnv(mock.url),
     },
   })
@@ -113,27 +139,112 @@ test.after(async () => {
   await mock?.close()
 })
 
-test('E2E - billet payant : paiement poursuivi sur la page TIKORA de l’événement', async () => {
-  const TIKORA = 'https://tikora.proditech.online/evenements/jcia-2027-journees-camerounaises-de-l-intelligence-artificielle'
+test('E2E - billetterie : tous les billets mènent au même formulaire d’inscription', async () => {
   const { context, page } = await newPage()
   try {
-    // Page billetterie : chaque billet payant mène directement à TIKORA (nouvel onglet)
     await page.goto(`${WEB}/billetterie`)
-    await page.getByText('Billets payants : paiement sur TIKORA, puis consultez votre boîte mail').waitFor()
-    const links = page.getByRole('link', { name: /^Payer sur TIKORA — / })
-    assert.equal(await links.count(), 4)
-    for (const link of await links.all()) {
-      assert.equal(await link.getAttribute('href'), TIKORA)
-      assert.equal(await link.getAttribute('target'), '_blank')
-      assert.match((await link.getAttribute('rel')) ?? '', /noopener/)
-    }
+    await page.getByText('Un seul parcours pour tous les billets').waitFor()
+    const links = page.getByRole('link', { name: /^Choisir ce billet — / })
+    await links.nth(4).waitFor() // le temps que le catalogue du serveur soit lu
+    assert.equal(await links.count(), 5)
+    for (const link of await links.all()) assert.match(await link.getAttribute('href'), /^\/billetterie\/commande\/[a-z-]+$/)
+    await shot(page, '01-billetterie')
+  } finally {
+    await context.close()
+  }
+})
 
-    // Ancien lien de commande d'un billet payant : explications, puis lien vers TIKORA, aucun formulaire
+test('E2E - billet payant : inscription avec photo, paiement TIKORA détecté automatiquement, liste des participants', async () => {
+  const TIKORA = 'https://tikora.proditech.online/evenements/jcia-2027-journees-camerounaises-de-l-intelligence-artificielle'
+  const { MOCK_EVENT_ID } = await import(path.join(BACK, 'tests/helpers/mock-tikora-server.js'))
+  const { context, page } = await newPage()
+  try {
     await page.goto(`${WEB}/billetterie/commande/standard`)
-    await page.getByText('Après le paiement, consultez votre boîte mail').waitFor()
-    await page.getByText(/choisissez « Standard — lancement »|choisissez « Standard »/).waitFor()
-    assert.equal(await page.getByRole('link', { name: 'Payer sur TIKORA' }).getAttribute('href'), TIKORA)
-    assert.equal(await page.locator('#checkout-form').count(), 0)
+    // Formulaire incomplet : erreurs, dont la photo
+    await page.getByRole('button', { name: 'Continuer vers le paiement' }).click()
+    await page.getByText('Ajoutez votre photo : elle compose votre visuel « J’y serai ».').waitFor()
+
+    await fillRegistration(page, {
+      firstName: 'Serge', lastName: 'Atangana', email: 'serge.e2e@example.com', whatsapp: '677 11 22 33', org: 'Orange Digital Center', role: 'Ingénieur données',
+    })
+    // Aperçu du visuel en direct : nom, rôle et organisation saisis
+    await page.locator('.co-summary .visual-preview__name', { hasText: 'Serge Atangana' }).waitFor()
+    await page.locator('.co-summary .visual-preview__role', { hasText: 'Ingénieur données · Orange Digital Center' }).waitFor()
+    await shot(page, '02-formulaire-payant')
+    await page.getByRole('button', { name: 'Continuer vers le paiement' }).click()
+
+    // Inscription enregistrée : il reste à payer sur TIKORA, avec la même adresse
+    await page.waitForURL(/\/billetterie\/confirmation\/JCIA27-[A-Z0-9]{6}$/, { timeout: 15_000 })
+    const orderId = page.url().split('/').pop()
+    await page.getByRole('heading', { name: /Plus qu’une étape/ }).waitFor()
+    // « Payer sur TIKORA » mène directement à la réservation du billet choisi
+    const { MOCK_CATEGORIES } = await import(path.join(BACK, 'tests/helpers/mock-tikora-server.js'))
+    const pay = page.getByRole('link', { name: 'Payer sur TIKORA' })
+    assert.equal(await pay.getAttribute('href'), `${TIKORA}/reserver?categorie=${MOCK_CATEGORIES.standard}`)
+    await page.getByText('ouvre directement la réservation du billet').waitFor()
+    assert.equal(await pay.getAttribute('target'), '_blank')
+    await page.locator('.th-email__value', { hasText: 'serge.e2e@example.com' }).waitFor()
+    await shot(page, '03-attente-paiement')
+    let list = await (await fetch(`${API}/attendees`)).json()
+    assert.equal(list.some((a) => a.id === `cmd-${orderId}-1`), false, 'pas dans la liste avant le paiement')
+
+    // Paiement fait sur la page TIKORA (même adresse, casse différente)
+    await fetch(`${mock.base}/__mock/web-order`, {
+      method: 'POST',
+      body: JSON.stringify({ eventId: MOCK_EVENT_ID, tier: 'standard', name: 'Serge A.', email: 'Serge.E2E@example.com' }),
+    })
+    // Retour sur l'onglet du site : la page vérifie et confirme d'elle-même
+    await page.getByRole('button', { name: 'Vérifier maintenant' }).click()
+    await page.getByRole('heading', { name: /C’est confirmé/ }).waitFor({ timeout: 20_000 })
+    await page.getByText('QR code envoyé par TIKORA').waitFor()
+    await page.getByRole('link', { name: 'Remplir le formulaire' }).waitFor()
+    await shot(page, '04-confirme-payant')
+
+    // Liste publique : photo, nom, rôle, organisation, billet
+    list = await (await fetch(`${API}/attendees`)).json()
+    const me = list.find((a) => a.id === `cmd-${orderId}-1`)
+    assert.equal(me.name, 'Serge Atangana')
+    assert.equal(me.role, 'Ingénieur données')
+    assert.equal(me.org, 'Orange Digital Center')
+    assert.equal(me.tier, 'standard')
+    assert.match(me.photo ?? '', new RegExp(`^/attendees/cmd-${orderId}-1/photo\\?v=`))
+
+    // Visuel « J'y serai » : charte du billet, photo, rôle · organisation déjà remplis
+    await page.getByRole('link', { name: 'Créer mon visuel' }).click()
+    await page.getByText('Couleurs du billet Standard').waitFor()
+    assert.equal(await page.getByLabel('Titre (facultatif)').inputValue(), 'Ingénieur données · Orange Digital Center')
+    await page.locator('.fx-actions > button.btn:not([disabled])').first().waitFor({ timeout: 10_000 })
+    await shot(page, '05-visuel-payant')
+  } finally {
+    await context.close()
+  }
+})
+
+test('E2E - billet payant réglé avec une autre adresse : rattachement par numéro de commande TIKORA', async () => {
+  const { MOCK_EVENT_ID } = await import(path.join(BACK, 'tests/helpers/mock-tikora-server.js'))
+  const { context, page } = await newPage()
+  try {
+    await page.goto(`${WEB}/billetterie/commande/etudiant`)
+    await page.getByLabel('Filière et niveau *').waitFor() // libellés adaptés au billet étudiant
+    await fillRegistration(page, {
+      firstName: 'Linda', lastName: 'Ewane', email: 'linda.e2e@example.com', whatsapp: '+33 6 12 34 56 78', org: 'ENSPY', role: 'Master 1 IA',
+    })
+    await page.getByRole('button', { name: 'Continuer vers le paiement' }).click()
+    await page.getByRole('heading', { name: /Plus qu’une étape/ }).waitFor({ timeout: 15_000 })
+
+    const web = await (
+      await fetch(`${mock.base}/__mock/web-order`, {
+        method: 'POST',
+        body: JSON.stringify({ eventId: MOCK_EVENT_ID, tier: 'etudiant', name: 'Papa Ewane', email: 'papa.ewane@example.com' }),
+      })
+    ).json()
+    // Code du billet reçu de TIKORA, collé sur la page ; paiement fait avec une autre adresse
+    await page.getByLabel('Code de votre billet TIKORA').fill(web.orderNumber)
+    await page.getByRole('button', { name: 'Vous avez payé avec une autre adresse e-mail ?' }).click()
+    await page.getByLabel('Adresse e-mail utilisée sur TIKORA').fill('papa.ewane@example.com')
+    await shot(page, '06-autre-adresse')
+    await page.getByRole('button', { name: 'Valider mon code' }).click()
+    await page.getByRole('heading', { name: /C’est confirmé/ }).waitFor({ timeout: 20_000 })
   } finally {
     await context.close()
   }
@@ -181,16 +292,54 @@ test('E2E - billet payé sur TIKORA : vérifié, visuel aux couleurs du billet, 
   }
 })
 
-test('E2E - inscription gratuite : enregistrée par le serveur avec QR signé', async () => {
+test('E2E - billet gratuit : même formulaire, photo, QR signé, liste publique et visuel', async () => {
   const { context, page } = await newPage()
   try {
     await page.goto(`${WEB}/billetterie/commande/gratuit`)
-    await fillBuyer(page, { name: 'Marie Ngo', email: 'marie.e2e@example.com', phone: '699000001' })
-    await page.locator('.co-summary__submit').click()
-    await page.waitForURL(/\/billetterie\/confirmation\/JCIA27-/, { timeout: 15_000 })
+    await fillRegistration(page, {
+      firstName: 'Nadia', lastName: 'Fotso', email: 'nadia.e2e@example.com', whatsapp: '699000002', org: 'CRTV', role: 'Journaliste',
+    })
+    const listing = page.getByLabel('Je figurerai dans la liste publique des participants')
+    assert.equal(await listing.isChecked(), true)
+    assert.equal(await listing.isDisabled(), true)
+    await shot(page, '07-formulaire-gratuit')
+    await page.getByRole('button', { name: 'Confirmer ma présence' }).click()
+    await page.waitForURL(/\/billetterie\/confirmation\/JCIA27-[A-Z0-9]{6}$/, { timeout: 15_000 })
+    const orderId = page.url().split('/').pop()
     await page.locator('.e-ticket__official').first().waitFor({ timeout: 15_000 })
-    const code = await page.locator('.e-ticket__id').first().textContent()
-    assert.match(code, /^JCIA27-[A-Z0-9]{6}-1$/)
+    assert.match(await page.locator('.e-ticket__id').first().textContent(), /^JCIA27-[A-Z0-9]{6}-1$/)
+    await page.getByRole('link', { name: 'Remplir le formulaire' }).waitFor()
+    await shot(page, '08-confirme-gratuit')
+
+    // Liste publique : la fiche porte la photo du formulaire, servie sans métadonnées
+    const list = await (await fetch(`${API}/attendees`)).json()
+    const me = list.find((a) => a.id === `cmd-${orderId}-1`)
+    assert.equal(me.role, 'Journaliste')
+    assert.match(me.photo, new RegExp(`^/attendees/cmd-${orderId}-1/photo\\?v=`))
+    const img = Buffer.from(await (await fetch(`${API}${me.photo}`)).arrayBuffer())
+    assert.deepEqual([...img.subarray(0, 2)], [0xff, 0xd8])
+    assert.equal(img.includes('TestCam'), false)
+
+    // Un autre visiteur voit la fiche : photo, rôle · organisation
+    const { context: c2, page: p2 } = await newPage()
+    await p2.goto(`${WEB}/participants`)
+    const card = p2.locator('.attendee-card', { hasText: 'Nadia Fotso' }).first()
+    await card.waitFor({ timeout: 10_000 })
+    assert.equal(await card.locator('img').getAttribute('src'), `${API}${me.photo}`)
+    await card.getByText('Journaliste').waitFor()
+    if (SHOTS) {
+      await card.scrollIntoViewIfNeeded()
+      await p2.waitForTimeout(800)
+      await p2.screenshot({ path: path.join(SHOTS, '09-liste-participants.png') })
+    }
+    await c2.close()
+
+    // Visuel « J'y serai » : ouvert au billet gratuit, photo de la fiche
+    await page.getByRole('link', { name: 'Créer mon visuel' }).click()
+    await page.getByText('Couleurs du billet Gratuit').waitFor()
+    await page.locator('.fx-actions > button.btn:not([disabled])').first().waitFor({ timeout: 10_000 })
+    const [download] = await Promise.all([page.waitForEvent('download'), page.getByRole('button', { name: 'Télécharger le visuel' }).click()])
+    assert.match(download.suggestedFilename(), /^JCIA-2027-jy-serai-Nadia-Fotso-portrait\.png$/)
   } finally {
     await context.close()
   }
@@ -235,56 +384,24 @@ test('E2E - lien du reçu sur un autre appareil : billets retrouvés, jeton reti
   }
 })
 
-test('E2E - photo de participant : liste publique et visuel « J’y serai » ouvert au billet gratuit', async () => {
-  const { context, page } = await newPage()
+test('E2E - téléphone : formulaire et attente du paiement (captures)', { skip: !SHOTS }, async () => {
+  const context = await browser.newContext({ locale: 'fr-FR', viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true })
+  await context.addInitScript(() => {
+    localStorage.setItem('jcia-consent', JSON.stringify({ version: 1, date: new Date().toISOString(), choices: { necessary: true, media: false } }))
+    localStorage.setItem('jcia-lang', 'fr')
+  })
+  const page = await context.newPage()
   try {
-    await page.goto(`${WEB}/billetterie/commande/gratuit`)
-    await fillBuyer(page, { name: 'Nadia Fotso', email: 'nadia.e2e@example.com', phone: '699000002' })
-    await page.getByLabel('Afficher mon nom dans la liste publique des participants').check()
-    await page.locator('.co-summary__submit').click()
-    await page.waitForURL(/\/billetterie\/confirmation\/JCIA27-[A-Z0-9]{6}$/, { timeout: 15_000 })
-    const orderId = page.url().split('/').pop()
-
-    // Photo ajoutée depuis la confirmation : recadrée dans le navigateur, envoyée au serveur
-    await page.getByRole('button', { name: 'Ajouter une photo — Nadia Fotso' }).click()
-    const dialog = page.locator('dialog.photo-dialog')
-    await dialog.locator('input[type=file]').setInputFiles(path.join(BACK, 'tests/fixtures/photo.jpg'))
-    await dialog.locator('canvas').waitFor()
-    await dialog.getByRole('button', { name: 'Enregistrer la photo' }).click()
-    await dialog.waitFor({ state: 'detached', timeout: 15_000 })
-    await page.getByText('Photo enregistrée.').waitFor()
-
-    // Liste publique : la fiche porte la photo, servie sans métadonnées
-    const list = await (await fetch(`${API}/attendees`)).json()
-    const me = list.find((a) => a.id === `cmd-${orderId}-1`)
-    assert.match(me.photo, new RegExp(`^/attendees/cmd-${orderId}-1/photo\\?v=`))
-    const img = Buffer.from(await (await fetch(`${API}${me.photo}`)).arrayBuffer())
-    assert.deepEqual([...img.subarray(0, 2)], [0xff, 0xd8])
-    assert.equal(img.includes('TestCam'), false)
-
-    // Même billet ouvert sur un AUTRE appareil (lien du reçu) : la photo est relue sur le serveur
-    const token = await page.evaluate((id) => JSON.parse(localStorage.getItem('jcia-orders')).find((o) => o.id === id).accessToken, orderId)
-    const { context: c3, page: p3 } = await newPage()
-    await p3.goto(`${WEB}/billetterie/confirmation/${orderId}#t=${token}`)
-    const avatar = p3.locator('.pp-row__avatar').first()
-    await p3.waitForFunction(() => document.querySelector('.pp-row__avatar')?.tagName === 'IMG', null, { timeout: 15_000 })
-    assert.match(await avatar.getAttribute('src'), /^data:image\/jpeg;base64,/)
-    await c3.close()
-
-    // Un autre visiteur voit la photo dans la liste des participants
-    const { context: c2, page: p2 } = await newPage()
-    await p2.goto(`${WEB}/participants`)
-    const card = p2.locator('.attendee-card', { hasText: 'Nadia Fotso' }).first()
-    await card.waitFor({ timeout: 10_000 })
-    assert.equal(await card.locator('img').getAttribute('src'), `${API}${me.photo}`)
-    await c2.close()
-
-    // Visuel « J’y serai » : ouvert au billet gratuit, charte du billet, photo de la fiche
-    await page.getByRole('link', { name: 'Créer mon visuel' }).click()
-    await page.getByText('Couleurs du billet Gratuit').waitFor()
-    await page.locator('.fx-actions > button.btn:not([disabled])').first().waitFor({ timeout: 10_000 })
-    const [download] = await Promise.all([page.waitForEvent('download'), page.getByRole('button', { name: 'Télécharger le visuel' }).click()])
-    assert.match(download.suggestedFilename(), /^JCIA-2027-jy-serai-Nadia-Fotso-portrait\.png$/)
+    await page.goto(`${WEB}/billetterie/commande/vip`)
+    await fillRegistration(page, {
+      firstName: 'Grâce', lastName: 'Nkoulou', email: 'grace.e2e@example.com', whatsapp: '655 44 33 22', org: 'Banque Atlantique', role: 'Directrice de l’innovation',
+    })
+    await page.waitForTimeout(600)
+    await page.screenshot({ path: path.join(SHOTS, '10-mobile-formulaire.png'), fullPage: true })
+    await page.getByRole('button', { name: 'Continuer', exact: true }).click()
+    await page.getByRole('heading', { name: /Plus qu’une étape/ }).waitFor({ timeout: 15_000 })
+    await page.waitForTimeout(800)
+    await page.screenshot({ path: path.join(SHOTS, '11-mobile-attente.png'), fullPage: true })
   } finally {
     await context.close()
   }

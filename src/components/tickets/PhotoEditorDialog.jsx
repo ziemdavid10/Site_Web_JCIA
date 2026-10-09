@@ -17,8 +17,11 @@ const MIN_SIDE = 200 // même minimum que le serveur
  * La photo enregistrée est LA photo du participant : fiche de la liste publique
  * (si la personne a accepté d'y figurer) et visuel « J'y serai ».
  * Fenêtre modale native (<dialog>) : focus piégé, Échap, retour du focus.
+ *
+ * Formulaire d'inscription (la commande n'existe pas encore) : `onCrop(blob)` reçoit
+ * la photo recadrée, envoyée au serveur une fois l'inscription enregistrée.
  */
-export default function PhotoEditorDialog({ order, position, name, onClose, onSaved }) {
+export default function PhotoEditorDialog({ order, position, name, onClose, onSaved, onCrop, publicListing = false }) {
   const { t } = useI18n()
   const p = t.tickets.photo
   const uid = useId()
@@ -122,6 +125,10 @@ export default function PhotoEditorDialog({ order, position, name, onClose, onSa
     setError('')
     try {
       const blob = await cropToBlob(image.img, zoom, offset)
+      if (onCrop) {
+        onCrop(blob)
+        return
+      }
       const result = await saveAttendeePhoto(order, position, blob)
       setOrderPhoto(order.id, position, result.version)
       onSaved(result)
@@ -144,7 +151,8 @@ export default function PhotoEditorDialog({ order, position, name, onClose, onSa
   }
   const errorText = error ? (p.errors[error] ?? p.errors.server) : ''
   // Où la photo sera visible : liste publique (si consentement) ou visuel seulement
-  const visibility = { public: order.publicListing, text: order.publicListing ? p.public : p.private }
+  const listed = order ? order.publicListing : publicListing
+  const visibility = { public: listed, text: listed ? p.public : p.private }
 
   return (
     <dialog
@@ -262,7 +270,7 @@ export default function PhotoEditorDialog({ order, position, name, onClose, onSa
             {p.cancel}
           </Button>
           <Button onClick={save} disabled={!image || saving} iconLeft={saving ? 'clock' : 'check'}>
-            {saving ? p.saving : p.save}
+            {saving ? p.saving : onCrop ? p.use : p.save}
           </Button>
         </footer>
       </div>

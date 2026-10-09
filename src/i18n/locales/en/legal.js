@@ -37,8 +37,8 @@ export default {
           'We only collect the data we need:',
           {
             list: [
-              '**Ticketing**: full name, e-mail address, phone, organisation or institution (optional), names of other attendees on the same order, ticket type and quantity.',
-              '**Payment**: paid tickets are bought and paid for on the TIKORA platform (MTN Mobile Money or Orange Money), which processes the payment under its own terms. To send you the link to the attendee form and, at your request, link your ticket to our website (“I’ll be there” visual, photo, attendee list), our server receives from TIKORA the order number, name, e-mail address and amount of your purchase. We **never** collect your Mobile Money PIN.',
+              '**Ticketing** (registration form, all tickets): first and last name, e-mail address, WhatsApp number, organisation or institution, role in the organisation, photo (cropped, metadata removed) and ticket type. Your photo, name, role and organisation are only published in the attendee list with your consent.',
+              '**Payment**: after you register on our website, paid tickets are paid for on the TIKORA platform (MTN Mobile Money or Orange Money), which processes the payment under its own terms. To confirm your registration, send you the attendee form link and unlock your “I’ll be there” visual, our server receives from TIKORA the order number, name, e-mail address, ticket and amount of your purchase. We **never** collect your Mobile Money PIN.',
               '**Attendee photo (optional)**: the photo you add after registering, cropped and stripped of its metadata (including GPS location). It illustrates your “I’ll be there” visual and only appears in the public attendee list **if you agreed to be listed**. You can remove it at any time.',
               '**Exchanges with the secretariat**: information you send us by e-mail or phone (stand booking, partnership, press accreditation, speaker proposal…).',
               '**CAIA 2027 applications**: submitted on the dedicated platform (awards.jcia.cm) and governed by the Terms of Reference of the call for applications.',
@@ -191,7 +191,7 @@ export default {
         blocks: [
           {
             list: [
-              'Tickets are sold in CFA francs (XAF), all taxes included. The free ticket is booked on this website. Paid tickets are sold and paid for on the TIKORA platform (MTN Mobile Money or Orange Money), whose terms apply to payment and ticket issuing; a TIKORA service fee may be added to the ticket price. The order is confirmed once the payment is approved.',
+              'Tickets are sold in CFA francs (XAF), all taxes included. All tickets are booked on this website (registration form). Paid tickets are then paid for on the TIKORA platform (MTN Mobile Money or Orange Money), whose terms apply to payment and ticket issuing; a TIKORA service fee may be added to the ticket price. The registration is confirmed once TIKORA approves the payment.',
               'The “Online” ticket gives access to the live stream and to session replays for 30 days; it does not give access to the Hilton Hotel.',
               'Each ticket is sold within a quota published on the Tickets page. Once the quota is reached, the ticket is marked “sold out”.',
               // Free option disabled: 'The “Online” ticket is free.' — see src/data/config.js

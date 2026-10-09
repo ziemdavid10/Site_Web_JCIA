@@ -18,6 +18,9 @@ import { cleanText } from '@/security/sanitize'
  *                  customer, attendees, publicListing, lang, description }
  *   GET  {API}/payments/:id       → { status: 'PENDING' | 'SUCCESSFUL' | 'FAILED', transactionId?, reason? }
  *   POST {API}/orders/free        inscription gratuite → { orderId, status: 'free', accessToken }
+ *   POST {API}/orders/register    billet payant : inscription AVANT le paiement sur la page TIKORA
+ *                                 → { orderId, status: 'registered', accessToken }
+ *   POST {API}/orders/:id/tikora-link  { orderNumber, email } paiement TIKORA rattaché à la main
  *   GET  {API}/orders/:id         commande + billets officiels (en-tête X-Order-Token)
  *
  * Le serveur recalcule le prix, crée la commande TIKORA (réservation 15 min,
@@ -148,6 +151,18 @@ export async function claimTikoraOrder({ orderNumber, email, publicListing, lang
   return { ok: false, reason }
 }
 
+/** Fiche participant envoyée au serveur (mêmes champs pour tous les billets). */
+const customerBody = (c) => ({
+  name: c.name,
+  firstName: c.firstName,
+  lastName: c.lastName,
+  email: c.email,
+  whatsapp: c.phone,
+  phone: c.phone,
+  org: c.org,
+  role: c.role,
+})
+
 /** Inscription gratuite enregistrée par le serveur. */
 export async function registerFreeOrder(order) {
   const res = await apiRequest('/orders/free', {
@@ -157,7 +172,7 @@ export async function registerFreeOrder(order) {
       orderId: order.id,
       tierId: order.tierId,
       quantity: order.quantity,
-      customer: order.customer,
+      customer: customerBody(order.customer),
       attendees: order.attendees,
       publicListing: order.publicListing,
       lang: order.lang,
@@ -165,6 +180,51 @@ export async function registerFreeOrder(order) {
   })
   if (!res.ok || !TOKEN_RE.test(res.data?.accessToken ?? '')) return { status: 'FAILED', reason: reasonOf(res, 'init') }
   return { status: 'free', accessToken: res.data.accessToken }
+}
+
+/**
+ * Billet payant : inscription enregistrée AVANT le paiement, qui se fait ensuite
+ * sur la page TIKORA de l'événement (avec la même adresse e-mail).
+ * @returns {Promise<{ status: 'registered'|'paid', accessToken: string } | { status: 'FAILED', reason: string }>}
+ */
+export async function registerPaidOrder(order) {
+  const res = await apiRequest('/orders/register', {
+    method: 'POST',
+    idempotencyKey: order.id,
+    body: {
+      orderId: order.id,
+      tierId: order.tierId,
+      quantity: 1,
+      customer: customerBody(order.customer),
+      publicListing: order.publicListing,
+      lang: order.lang,
+    },
+  })
+  if (!res.ok || !TOKEN_RE.test(res.data?.accessToken ?? '')) return { status: 'FAILED', reason: reasonOf(res, 'init') }
+  return { status: res.data.status === 'paid' ? 'paid' : 'registered', accessToken: res.data.accessToken }
+}
+
+/**
+ * Paiement fait sur TIKORA avec une autre adresse e-mail : le participant donne
+ * le numéro de sa commande TIKORA et l'adresse utilisée ; le serveur vérifie.
+ * @returns {Promise<{ ok: true, order: object } | { ok: false, reason: string }>}
+ */
+export async function linkTikoraPayment(order, { orderNumber, email }) {
+  if (!API) return { ok: false, reason: 'unavailable' }
+  const res = await apiRequest(`/orders/${encodeURIComponent(order.id)}/tikora-link`, {
+    method: 'POST',
+    token: order.accessToken,
+    body: { orderNumber: cleanText(orderNumber, 40), email: cleanText(email, 254) },
+    timeoutMs: 30_000,
+  })
+  if (res.ok && res.data?.id === order.id) return { ok: true, order: res.data }
+  const reason =
+    res.status === 0
+      ? 'network'
+      : res.status === 429
+        ? 'rate'
+        : { ORDER_NOT_FOUND: 'notFound', ORDER_NOT_PAID: 'notPaid', INVALID_CLAIM: 'invalid', ORDER_ALREADY_USED: 'used' }[res.data?.code] ?? 'server'
+  return { ok: false, reason }
 }
 
 /**

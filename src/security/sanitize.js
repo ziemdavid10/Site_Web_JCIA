@@ -56,6 +56,12 @@ export function isValidPersonName(value) {
   return v.length >= 3 && /^[\p{L}\p{M}][\p{L}\p{M}' .’-]*$/u.test(v)
 }
 
+/** Prénom ou nom seul : au moins 2 caractères (même règle que le serveur). */
+export function isValidNamePart(value) {
+  const v = cleanText(value, 40)
+  return v.length >= 2 && /^[\p{L}\p{M}][\p{L}\p{M}' .’-]*$/u.test(v)
+}
+
 /** E-mail : forme simple et longueur raisonnable (la vraie vérification = e-mail envoyé). */
 export function isValidEmail(value) {
   const v = cleanText(value, 254)

@@ -43,8 +43,8 @@ export default {
           'Nous ne collectons que les données nécessaires :',
           {
             list: [
-              '**Billetterie** : nom et prénom, adresse e-mail, téléphone, organisation ou établissement (facultatif), noms des autres participants d’une même commande, type et nombre de billets.',
-              '**Paiement** : les billets payants sont achetés et réglés sur la plateforme TIKORA (MTN Mobile Money ou Orange Money), qui traite le paiement selon ses propres conditions. Pour vous envoyer le lien du formulaire participant et, à votre demande, rattacher votre billet à notre site (visuel « J’y serai », photo, liste des participants), notre serveur reçoit de TIKORA le numéro de commande, le nom, l’adresse e-mail et le montant de votre achat. Nous ne collectons **jamais** votre code secret Mobile Money.',
+              '**Billetterie** (formulaire d’inscription, tous billets) : prénom et nom, adresse e-mail, numéro WhatsApp, organisation ou établissement, rôle dans l’organisation, photo (recadrée, sans métadonnées) et type de billet. La photo, le nom, le rôle et l’organisation ne sont publiés dans la liste des participants qu’avec votre accord.',
+              '**Paiement** : après votre inscription sur notre site, les billets payants sont réglés sur la plateforme TIKORA (MTN Mobile Money ou Orange Money), qui traite le paiement selon ses propres conditions. Pour confirmer votre inscription, vous envoyer le lien du formulaire participant et débloquer votre visuel « J’y serai », notre serveur reçoit de TIKORA le numéro de commande, le nom, l’adresse e-mail, le billet et le montant de votre achat. Nous ne collectons **jamais** votre code secret Mobile Money.',
               '**Photo de participant (facultative)** : la photo que vous ajoutez après votre inscription, recadrée et débarrassée de ses métadonnées (dont la position GPS). Elle illustre votre visuel « J’y serai » et n’apparaît dans la liste publique des participants **que si vous avez accepté d’y figurer**. Vous pouvez la retirer à tout moment.',
               '**Échanges avec le secrétariat** : les informations que vous nous transmettez par e-mail ou téléphone (demande de stand, partenariat, accréditation presse, proposition d’intervention…).',
               '**Candidatures aux CAIA 2027** : elles sont déposées sur la plateforme dédiée (awards.jcia.cm) et régies par les Termes de Référence de l’appel à candidatures.',
@@ -197,7 +197,7 @@ export default {
         blocks: [
           {
             list: [
-              'Les billets sont vendus en francs CFA (XAF), toutes taxes comprises. Le billet gratuit se réserve sur ce site. Les billets payants sont vendus et réglés sur la plateforme TIKORA (MTN Mobile Money ou Orange Money), dont les conditions s’appliquent au paiement et à l’émission des billets ; des frais de service TIKORA peuvent s’ajouter au prix du billet. La commande est confirmée dès la validation du paiement.',
+              'Les billets sont vendus en francs CFA (XAF), toutes taxes comprises. Tous les billets se réservent sur ce site (formulaire d’inscription). Les billets payants sont ensuite réglés sur la plateforme TIKORA (MTN Mobile Money ou Orange Money), dont les conditions s’appliquent au paiement et à l’émission des billets ; des frais de service TIKORA peuvent s’ajouter au prix du billet. L’inscription est confirmée dès que le paiement est validé par TIKORA.',
               'Le billet « En ligne » donne accès à la retransmission des travaux et au replay pendant 30 jours ; il ne donne pas accès au Hilton Hotel.',
               'Chaque tarif est vendu dans la limite d’un quota annoncé sur la page Billetterie. Lorsque le quota est atteint, le tarif est signalé « épuisé ».',
               'Le billet « Étudiant » est soumis à la présentation d’une carte d’étudiant en cours de validité à l’accueil.',

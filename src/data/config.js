@@ -135,9 +135,10 @@ export const CONFIG = {
   payment: {
     apiUrl: import.meta.env.VITE_PAYMENT_API_URL || '',
     /**
-     * Billets PAYANTS : le paiement se fait sur la page de l'événement chez TIKORA
-     * (Mobile Money). Après le paiement, TIKORA envoie les billets et le serveur
-     * JCIA envoie à l'acheteur le lien du formulaire participant.
+     * Billets PAYANTS : le participant s'inscrit d'abord sur le site (même formulaire
+     * que le billet gratuit, avec sa photo), puis paie sur la page de l'événement
+     * chez TIKORA (Mobile Money) AVEC LA MÊME ADRESSE E-MAIL. Le serveur JCIA retrouve
+     * le paiement, confirme le billet et envoie l'e-mail de confirmation.
      */
     tikoraEventUrl: 'https://tikora.proditech.online/evenements/jcia-2027-journees-camerounaises-de-l-intelligence-artificielle',
     operators: [
@@ -146,6 +147,13 @@ export const CONFIG = {
       { id: 'orange', name: 'Orange Money', short: 'OM', color: '#ff7900', text: '#ffffff', prefixes: ['69', '655', '656', '657', '658', '659', '640'] },
     ],
   },
+
+  /**
+   * Formulaire participant (Google Forms) : lien envoyé par e-mail à chaque
+   * participant confirmé, quel que soit son billet, et rappelé sur la page de
+   * confirmation. Même adresse que ATTENDEE_FORM_URL côté serveur.
+   */
+  attendeeFormUrl: 'https://docs.google.com/forms/d/1jpOGg8oab-88-x19JbFD2-s9IMjPXvjN2XXoOQH-7v8/previewResponse',
 
   /** Version de la politique de cookies : l'incrémenter redemande le consentement */
   consentVersion: 1,

@@ -41,3 +41,26 @@ export function formatCmPhone(value) {
   if (d.length !== 9) return value
   return `+237 ${d[0]} ${d.slice(1, 3)} ${d.slice(3, 5)} ${d.slice(5, 7)} ${d.slice(7, 9)}`
 }
+
+/**
+ * Numéro WhatsApp : mobile camerounais (6XX XX XX XX, avec ou sans +237) ou numéro
+ * international +<indicatif><numéro> (8 à 15 chiffres). Même règle que le serveur
+ * (backend/src/utils/validation.js#normalizeWhatsapp).
+ * @returns {string} 9 chiffres pour le Cameroun, « +… » sinon, '' si invalide
+ */
+export function normalizeWhatsapp(value = '') {
+  const raw = String(value ?? '').replace(/[\s().-]/g, '')
+  if (/^(\+|00)/.test(raw)) {
+    const digits = raw.replace(/^(\+|00)/, '')
+    if (!/^\d+$/.test(digits)) return ''
+    if (digits.startsWith('237')) return isValidCmPhone(digits.slice(3)) ? digits.slice(3) : ''
+    return /^\d{8,15}$/.test(digits) ? `+${digits}` : ''
+  }
+  const national = normalizePhone(raw)
+  return isValidCmPhone(national) ? national : ''
+}
+
+export const isValidWhatsapp = (value) => normalizeWhatsapp(value) !== ''
+
+/** Affichage d'un numéro WhatsApp enregistré (camerounais ou international). */
+export const formatWhatsapp = (value) => (String(value ?? '').startsWith('+') ? value : formatCmPhone(value))

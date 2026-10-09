@@ -77,17 +77,3 @@ export function tierAvailability(tier, catalog) {
   if (tier.price > 0 && !catalog.salesOpen) return 'soon'
   return tier.onSale === false ? 'soon' : 'open'
 }
-
-/**
- * Billet PAYANT : le paiement se fait sur la page TIKORA de l'événement, qui ne
- * dépend pas de notre serveur. Le lien reste donc ouvert même si notre serveur
- * ne répond pas ; il n'est fermé que si la vente n'est pas ouverte chez TIKORA
- * ou si le tarif est épuisé (informations lues sur notre serveur quand il répond).
- *   'open' | 'soldout' | 'soon'
- */
-export function tikoraAvailability(tier, catalog) {
-  if (!CONFIG.features.payment || !CONFIG.payment.tikoraEventUrl) return 'soon'
-  if (isSoldOut(tier)) return 'soldout'
-  if (catalog.ready && !catalog.salesOpen) return 'soon'
-  return 'open'
-}

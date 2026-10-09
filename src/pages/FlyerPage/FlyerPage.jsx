@@ -74,7 +74,9 @@ function FlyerEditor({ order }) {
   const photo = usePhotoImage(photoSrc)
   const attendeeName = order.attendees[position - 1] ?? order.customer.name
   const name = names[position] ?? attendeeName
-  const role = roles[position] ?? (position === 1 ? order.customer.org : '')
+  // Titre du visuel : rôle et organisation saisis à l'inscription (modifiables ici)
+  const defaultRole = position === 1 ? [order.customer.role, order.customer.org].filter(Boolean).join(' · ') : ''
+  const role = roles[position] ?? defaultRole
 
   // Préchargement des polices et des images de la marque
   useEffect(() => {
@@ -101,7 +103,7 @@ function FlyerEditor({ order }) {
       tier: tierId,
       photo,
       name: cleanText(name, 40),
-      role: cleanText(role, 50),
+      role: cleanText(role, 70),
       text: f.art,
       assets,
       placeholder: f.noPhoto,
@@ -263,7 +265,7 @@ function FlyerEditor({ order }) {
             <input
               id={`${uid}-role`}
               type="text"
-              maxLength={50}
+              maxLength={70}
               value={role}
               placeholder={f.rolePlaceholder}
               onChange={(e) => setRoles((r) => ({ ...r, [position]: e.target.value }))}
