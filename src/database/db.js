@@ -189,6 +189,13 @@ async function initializeDatabase() {
   await ensureColumn('orders', 'receipt_last_at', 'INTEGER')
   await ensureColumn('orders', 'payment_mode', 'TEXT')
   await ensureColumn('orders', 'updated_at', 'DATETIME')
+  // Fiche participant (formulaire d'inscription, tous tarifs) : prénom, nom, rôle.
+  // customer_phone = numéro WhatsApp ; customer_org = organisation / établissement.
+  await ensureColumn('orders', 'first_name', 'TEXT')
+  await ensureColumn('orders', 'last_name', 'TEXT')
+  await ensureColumn('orders', 'customer_role', 'TEXT')
+  // Billet payant : e-mail « finalisez votre paiement sur TIKORA » envoyé (une fois)
+  await ensureColumn('orders', 'registration_mail_at', 'TEXT')
 
   // Anciennes bases : plusieurs paiements par commande avaient tous attempt = 1.
   // On les renumérote (1, 2, 3… par ordre de création) avant de créer l'index unique.

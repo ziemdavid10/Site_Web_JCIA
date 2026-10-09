@@ -127,6 +127,20 @@ export function loadConfig(env = process.env) {
       // Commandes antérieures à cette date ignorées (évite d'écrire aux achats de test)
       since: Date.parse(env.TIKORA_WEB_SYNC_SINCE || '') || 0,
       maxPages: parseIntSafe(env.TIKORA_WEB_SYNC_MAX_PAGES, 20),
+      // Page TIKORA de l'événement (lien des e-mails « finalisez votre paiement »)
+      eventUrl: String(env.TIKORA_EVENT_URL || 'https://tikora.proditech.online/evenements/jcia-2027-journees-camerounaises-de-l-intelligence-artificielle').trim(),
+      // Page de RÉSERVATION TIKORA d'un billet (bouton « Payer sur TIKORA ») :
+      //  • TIKORA_CHECKOUT_URLS : adresse copiée pour chaque tarif, format de TIKORA_CATEGORY_MAP
+      //    ({"vip":"https://…"} ou {"vip":{"promo":"https://…","default":"https://…"}}) ;
+      //  • sinon TIKORA_CHECKOUT_URL : modèle commun, {categoryId} remplacé par la catégorie
+      //    TIKORA du tarif (ex. https://…/evenements/<slug>/reserver?categorie={categoryId}) ;
+      //  • sinon : page de l'événement (le participant y choisit son billet).
+      checkoutUrls: parseCategoryMap(env.TIKORA_CHECKOUT_URLS),
+      checkoutUrlTemplate: String(env.TIKORA_CHECKOUT_URL || '').trim(),
+      // Recherche du paiement quand le participant attend sur la page du site (au plus 1 parcours / N ms)
+      lookupMinIntervalMs: parseIntSafe(env.TIKORA_LOOKUP_MIN_INTERVAL_MS, 20_000),
+      // Inscriptions payantes en attente de paiement par adresse e-mail (anti-abus)
+      maxPendingPerEmail: parseIntSafe(env.REGISTRATION_MAX_PENDING_PER_EMAIL, 5),
     },
 
     receipt: {
@@ -202,6 +216,35 @@ export function validateConfig(config) {
     warnings.push('TIKORA_WEBHOOK_SECRET absent : les webhooks sont acceptés comme simple signal et re-vérifiés auprès de TIKORA.')
   }
 
+  // Pages de réservation TIKORA : HTTPS, même site que la page de l'événement
+  {
+    const w = config.webOrders
+    const host = (() => {
+      try {
+        return new URL(w.eventUrl).host
+      } catch {
+        return ''
+      }
+    })()
+    const urls = [
+      ...(w.checkoutUrlTemplate ? [w.checkoutUrlTemplate.replaceAll('{categoryId}', 'x')] : []),
+      ...Object.values(w.checkoutUrls).flatMap((e) => (typeof e === 'string' ? [e] : e && typeof e === 'object' ? Object.values(e) : [])),
+    ]
+    if (w.checkoutUrls.__invalid) errors.push('TIKORA_CHECKOUT_URLS n’est pas un JSON valide.')
+    for (const u of urls) {
+      try {
+        const x = new URL(String(u))
+        if (x.protocol !== 'https:' || x.host !== host) errors.push(`Page de réservation TIKORA refusée (HTTPS, site ${host} attendu) : ${u}`)
+      } catch {
+        if (u !== true) errors.push(`Page de réservation TIKORA invalide : ${u}`)
+      }
+    }
+  }
+  try {
+    if (new URL(config.webOrders.eventUrl).protocol !== 'https:') errors.push('TIKORA_EVENT_URL doit être en HTTPS.')
+  } catch {
+    errors.push('TIKORA_EVENT_URL invalide.')
+  }
   try {
     const f = new URL(config.webOrders.formUrl)
     if (f.protocol !== 'https:') errors.push('ATTENDEE_FORM_URL doit être en HTTPS.')
@@ -209,6 +252,22 @@ export function validateConfig(config) {
     errors.push('ATTENDEE_FORM_URL invalide.')
   }
 
+  {
+    const { host = '', port, secure, user = '', from = '' } = config.smtp
+    const h = String(host).trim().toLowerCase()
+    if (/^(email|imap|pop|pop3)\.secureserver\.net$/.test(h)) {
+      errors.push(`SMTP_HOST=${host} n’est pas le serveur d’ENVOI GoDaddy : mettez SMTP_HOST=smtpout.secureserver.net (ou smtp.office365.com pour Microsoft 365).`)
+    }
+    if ((port === 465 && !secure) || ([587, 25, 2525].includes(port) && secure)) {
+      warnings.push(`SMTP_PORT=${port} et SMTP_SECURE=${secure} sont incohérents : le chiffrement est réglé d’après le port (465 → SSL, 587 → STARTTLS).`)
+    }
+    const fromAddress = (String(from).match(/<([^>]+)>/)?.[1] ?? from).trim().toLowerCase()
+    if (from && !fromAddress.includes('@')) {
+      warnings.push('MAIL_FROM sans adresse e-mail (mettez la valeur entre apostrophes : MAIL_FROM=\'"Billetterie JCIA 2027" <contact@jciacm.com>\') : l’adresse SMTP_USER sera utilisée.')
+    } else if (user && fromAddress && fromAddress !== String(user).trim().toLowerCase()) {
+      warnings.push(`MAIL_FROM (${fromAddress}) diffère de SMTP_USER : l’adresse du compte SMTP sera utilisée comme expéditeur.`)
+    }
+  }
   if (!config.smtp.host || !config.smtp.user || !config.smtp.pass) {
     ;(config.isProduction ? errors : warnings).push('SMTP_HOST / SMTP_USER / SMTP_PASS incomplets : aucun reçu ne pourra être envoyé.')
   }

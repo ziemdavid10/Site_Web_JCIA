@@ -38,6 +38,12 @@ export async function startStack({ env = {}, mockOptions = {} } = {}) {
     return true
   }
 
+  const registrationsSent = []
+  mailerService.sendRegistrationEmail = async (args) => {
+    registrationsSent.push(args)
+    return true
+  }
+
   const server = await new Promise((resolve) => {
     const s = app.listen(0, '127.0.0.1', () => resolve(s))
   })
@@ -79,6 +85,7 @@ export async function startStack({ env = {}, mockOptions = {} } = {}) {
     catalog,
     sent,
     formsSent,
+    registrationsSent,
     failNextForms(n = 1) {
       formFailures = n
     },

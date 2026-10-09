@@ -27,7 +27,7 @@ export function buildFormEmail({ name, orderNumber, total, formUrl, siteUrl = 'h
     'Dernière étape : complétez votre fiche participant en remplissant ce formulaire :',
     formUrl,
     '',
-    `Créez aussi votre visuel « J’y serai » (avec votre photo, dans la liste des participants si vous le souhaitez) : ${flyerUrl}`,
+    `Revenez ensuite sur le site pour finaliser votre inscription — visuel « J’y serai », photo, liste des participants : ${flyerUrl}`,
     `Il vous sera demandé votre numéro de commande (${orderNumber}) et cette adresse e-mail.`,
     '',
     `Une question ? Écrivez à ${contactEmail}.`,
@@ -35,6 +35,7 @@ export function buildFormEmail({ name, orderNumber, total, formUrl, siteUrl = 'h
     '— English —',
     `Thank you! Your JCIA 2027 payment is confirmed (TIKORA order ${orderNumber}). Your tickets are sent by TIKORA in a separate e-mail.`,
     `Last step: please fill in the attendee form: ${formUrl}`,
+    `Then come back to the website to finish your registration: ${flyerUrl}`,
   ].join('\n')
 
   const html = `<!doctype html><html lang="fr"><body style="margin:0;background:${BRAND.sand};font-family:Arial,Helvetica,sans-serif;color:${BRAND.text}">
@@ -48,7 +49,9 @@ export function buildFormEmail({ name, orderNumber, total, formUrl, siteUrl = 'h
 <p style="margin:0 0 14px;font-size:15px;line-height:1.55"><strong>Dernière étape :</strong> complétez votre fiche participant.</p>
 <p style="margin:0 0 26px" align="center"><a href="${esc(formUrl)}" style="display:inline-block;background:${BRAND.orange};color:${BRAND.navy};font-weight:bold;font-size:15px;text-decoration:none;padding:14px 26px;border-radius:999px">Remplir le formulaire participant</a></p>
 <p style="margin:0 0 22px;font-size:12px;line-height:1.5;color:${BRAND.muted}">Si le bouton ne fonctionne pas : <a href="${esc(formUrl)}" style="color:${BRAND.text}">${esc(formUrl)}</a></p>
-<p style="margin:0 0 22px;font-size:14px;line-height:1.55">Créez aussi votre <a href="${esc(flyerUrl)}" style="color:${BRAND.text};font-weight:bold">visuel « J’y serai »</a> aux couleurs de votre billet, avec votre photo. Il vous sera demandé votre numéro de commande (<strong>${esc(orderNumber)}</strong>) et cette adresse e-mail.</p>
+<p style="margin:0 0 10px;font-size:15px;line-height:1.55"><strong>Puis revenez sur le site pour finaliser votre inscription</strong> : votre visuel « J’y serai » aux couleurs de votre billet, votre photo et votre place dans la liste des participants.</p>
+<p style="margin:0 0 22px" align="center"><a href="${esc(flyerUrl)}" style="display:inline-block;background:${BRAND.navy};color:#ffffff;font-weight:bold;font-size:15px;text-decoration:none;padding:13px 24px;border-radius:999px">Finaliser sur le site</a></p>
+<p style="margin:0 0 22px;font-size:13px;line-height:1.55;color:${BRAND.muted}">Il vous sera demandé votre numéro de commande (<strong>${esc(orderNumber)}</strong>) et cette adresse e-mail.</p>
 <p style="margin:0;font-size:13px;color:${BRAND.muted}">Une question ? Écrivez à <a href="mailto:${esc(contactEmail)}" style="color:${BRAND.text}">${esc(contactEmail)}</a>.</p>
 <hr style="border:0;border-top:1px solid #eee;margin:22px 0">
 <p style="margin:0;font-size:12px;line-height:1.5;color:${BRAND.muted}" lang="en">Thank you! Your JCIA 2027 payment is confirmed (TIKORA order ${esc(orderNumber)}). Your tickets are sent by TIKORA separately. Last step: <a href="${esc(formUrl)}" style="color:${BRAND.text}">fill in the attendee form</a>.</p>

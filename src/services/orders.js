@@ -11,8 +11,10 @@ import {
   cleanText,
   isPlainObject,
   isValidCmPhone,
+  isValidNamePart,
   isValidPersonName,
   normalizePhone,
+  normalizeWhatsapp,
   validEmail,
 } from '../utils/validation.js'
 import { logger, maskPhone } from '../utils/logger.js'
@@ -75,19 +77,49 @@ function parseAttendees(raw, buyerName, quantity) {
 }
 
 /**
- * Valide et normalise le corps de POST /payments (contrat du frontend,
- * src/services/payment.js) et de POST /orders/free.
+ * Fiche participant envoyée par le formulaire d'inscription (tous tarifs) :
+ * prénom, nom, numéro WhatsApp, organisation / établissement, rôle.
+ * `strict` : tous les champs sont obligatoires (inscription aux billets payants) ;
+ * sinon ils restent facultatifs (anciens clients, API de paiement direct).
  */
-export function parseOrderRequest(body, { free = false } = {}) {
+function parseProfile(customer, { strict }) {
+  const firstName = cleanText(customer?.firstName, 40)
+  const lastName = cleanText(customer?.lastName, 40)
+  const hasParts = Boolean(firstName || lastName)
+  if ((strict || hasParts) && (!isValidNamePart(firstName) || !isValidNamePart(lastName))) {
+    throw new HttpError(400, 'Prénom ou nom invalide', 'INVALID_NAME')
+  }
+  const whatsappRaw = customer?.whatsapp ?? customer?.phone
+  const whatsapp = normalizeWhatsapp(whatsappRaw)
+  if (strict && !whatsapp) throw new HttpError(400, 'Numéro WhatsApp invalide', 'INVALID_PHONE')
+  const org = cleanText(customer?.org, 120)
+  const role = cleanText(customer?.role, 80)
+  if (strict && org.length < 2) throw new HttpError(400, 'Organisation ou établissement manquant', 'INVALID_ORG')
+  if (strict && role.length < 2) throw new HttpError(400, 'Rôle dans l’organisation manquant', 'INVALID_ROLE')
+  return { firstName: hasParts ? firstName : '', lastName: hasParts ? lastName : '', whatsapp, org, role }
+}
+
+/**
+ * Valide et normalise le corps de POST /payments (contrat du frontend,
+ * src/services/payment.js), de POST /orders/free et de POST /orders/register.
+ *
+ * @param {object} body
+ * @param {{ free?: boolean, register?: boolean }} mode
+ *        free     : tarif gratuit ;
+ *        register : billet payant, inscription AVANT le paiement sur la page TIKORA
+ *                   (un participant par inscription, fiche complète obligatoire).
+ */
+export function parseOrderRequest(body, { free = false, register = false } = {}) {
   if (!isPlainObject(body)) throw new HttpError(400, 'Corps de requête invalide', 'INVALID_BODY')
+  const direct = !free && !register // paiement Mobile Money lancé par notre serveur (API TIKORA)
   const {
-    orderId, amount, currency = 'XAF', method = free ? undefined : body.method, operator, phone,
+    orderId, amount, currency = 'XAF', method = direct ? body.method : undefined, operator, phone,
     customer, tierId, quantity = 1, publicListing = false, attendees, lang = 'fr', card,
   } = body
 
   if (!ORDER_ID_RE.test(String(orderId || ''))) throw new HttpError(400, 'Identifiant de commande invalide', 'INVALID_ORDER_ID')
 
-  if (!free) {
+  if (direct) {
     // Un montant doit être explicitement fourni (contrôle de cohérence)
     if (amount === undefined || amount === null || amount === '') throw new HttpError(400, 'Montant obligatoire', 'AMOUNT_REQUIRED')
     const numericAmount = Number(amount)
@@ -102,7 +134,8 @@ export function parseOrderRequest(body, { free = false } = {}) {
   }
 
   if (!validEmail(customer?.email)) throw new HttpError(400, 'Adresse e-mail invalide', 'INVALID_EMAIL')
-  const name = cleanText(customer?.name, 80)
+  const profile = parseProfile(customer, { strict: register })
+  const name = profile.firstName ? cleanText(`${profile.firstName} ${profile.lastName}`, 80) : cleanText(customer?.name, 80)
   if (!isValidPersonName(name)) throw new HttpError(400, 'Nom invalide', 'INVALID_NAME')
 
   // Tarif : le nouveau frontend envoie tierId + quantity ; l'ancien n'envoyait que le montant
@@ -110,16 +143,17 @@ export function parseOrderRequest(body, { free = false } = {}) {
   if (!tier) throw new HttpError(400, 'Tarif inconnu ou montant incohérent', 'INVALID_TIER')
   if (free && tier !== 'gratuit') throw new HttpError(400, 'Seul le tarif gratuit est accepté ici', 'INVALID_TIER')
   if (!free && tier === 'gratuit') throw new HttpError(400, 'Le tarif gratuit ne passe pas par le paiement', 'INVALID_TIER')
+  if (register && Number(quantity) !== 1) throw new HttpError(400, 'Une inscription = un participant', 'INVALID_QUANTITY')
   if (!isValidQuantity(tier, quantity)) throw new HttpError(400, 'Quantité invalide', 'INVALID_QUANTITY')
   const qty = Number(quantity)
   const unitPrice = getTicketPricing(tier).price
-  if (!free && Number(amount) !== unitPrice * qty) {
+  if (direct && Number(amount) !== unitPrice * qty) {
     throw new HttpError(400, 'Montant de la commande incohérent ou invalide', 'AMOUNT_MISMATCH')
   }
 
   const payPhone = normalizePhone(phone || customer?.phone)
-  if (!free && !isValidCmPhone(payPhone)) throw new HttpError(400, 'Numéro Mobile Money invalide', 'INVALID_PHONE')
-  const buyerPhone = normalizePhone(customer?.phone || phone)
+  if (direct && !isValidCmPhone(payPhone)) throw new HttpError(400, 'Numéro Mobile Money invalide', 'INVALID_PHONE')
+  const buyerPhone = profile.whatsapp || normalizePhone(customer?.phone || phone)
 
   return {
     orderId,
@@ -128,15 +162,18 @@ export function parseOrderRequest(body, { free = false } = {}) {
     unitPrice,
     subtotal: unitPrice * qty,
     method: 'momo',
-    operator: free ? null : operator,
-    payPhone: free ? null : payPhone,
+    operator: direct ? operator : null,
+    payPhone: direct ? payPhone : null,
     customer: {
       name,
+      firstName: profile.firstName,
+      lastName: profile.lastName,
       email: customer.email.trim(),
-      phone: isValidCmPhone(buyerPhone) ? buyerPhone : payPhone || '',
-      org: cleanText(customer?.org, 120),
+      phone: buyerPhone && (buyerPhone.startsWith('+') || isValidCmPhone(buyerPhone)) ? buyerPhone : payPhone || '',
+      org: profile.org,
+      role: profile.role,
     },
-    attendees: parseAttendees(attendees, name, qty),
+    attendees: register ? [name] : parseAttendees(attendees, name, qty),
     // Consentement EXPLICITE pour la liste publique (jamais présumé)
     publicListing: publicListing === true,
     lang: lang === 'en' ? 'en' : 'fr',
@@ -205,17 +242,21 @@ export async function createPayment(body) {
       }
       if (order.status === 'paid' && previous) return paymentResponse(previous, order)
       await run(
-        `UPDATE orders SET customer_name = ?, customer_phone = ?, customer_org = ?, attendees_json = ?, public_listing = ?, lang = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`,
-        [req.customer.name, req.customer.phone, req.customer.org, JSON.stringify(req.attendees), req.publicListing ? 1 : 0, req.lang, req.orderId],
+        `UPDATE orders SET customer_name = ?, customer_phone = ?, customer_org = ?, attendees_json = ?, public_listing = ?, lang = ?,
+           first_name = ?, last_name = ?, customer_role = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`,
+        [req.customer.name, req.customer.phone, req.customer.org, JSON.stringify(req.attendees), req.publicListing ? 1 : 0, req.lang,
+          req.customer.firstName, req.customer.lastName, req.customer.role, req.orderId],
       )
     } else {
       await run(
         `INSERT INTO orders (id, customer_name, customer_email, customer_phone, customer_org, tier_id, quantity,
-           unit_price, subtotal, total, fees, currency, status, public_listing, attendees_json, lang, payment_mode, created_at, updated_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 'XAF', 'pending', ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
+           unit_price, subtotal, total, fees, currency, status, public_listing, attendees_json, lang, payment_mode,
+           first_name, last_name, customer_role, created_at, updated_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 'XAF', 'pending', ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
         [
           req.orderId, req.customer.name, req.customer.email, req.customer.phone, req.customer.org, req.tierId, req.quantity,
           req.unitPrice, req.subtotal, req.subtotal, req.publicListing ? 1 : 0, JSON.stringify(req.attendees), req.lang, CONFIG.payment.mode,
+          req.customer.firstName, req.customer.lastName, req.customer.role,
         ],
       )
     }
@@ -421,10 +462,12 @@ export async function createFreeOrder(body) {
     }
     await run(
       `INSERT INTO orders (id, customer_name, customer_email, customer_phone, customer_org, tier_id, quantity, unit_price, subtotal,
-         total, fees, currency, status, public_listing, attendees_json, lang, payment_mode, paid_at, created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?, 'gratuit', ?, 0, 0, 0, 0, 'XAF', 'free', ?, ?, ?, 'free', ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
+         total, fees, currency, status, public_listing, attendees_json, lang, payment_mode, paid_at,
+         first_name, last_name, customer_role, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, 'gratuit', ?, 0, 0, 0, 0, 'XAF', 'free', ?, ?, ?, 'free', ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
       [req.orderId, req.customer.name, req.customer.email, req.customer.phone, req.customer.org, req.quantity,
-        req.publicListing ? 1 : 0, JSON.stringify(req.attendees), req.lang, new Date().toISOString()],
+        req.publicListing ? 1 : 0, JSON.stringify(req.attendees), req.lang, new Date().toISOString(),
+        req.customer.firstName, req.customer.lastName, req.customer.role],
     )
     await storeTickets(
       req.orderId,
@@ -442,6 +485,94 @@ export async function createFreeOrder(body) {
     dispatchReceipt(req.orderId).catch(() => {})
     return { orderId: req.orderId, status: 'free', accessToken: orderAccessToken(req.orderId) }
   })
+}
+
+// ─── Billets payants : inscription AVANT le paiement sur la page TIKORA ─────
+
+/** Statut d'une inscription payante dont le paiement TIKORA n'est pas encore rattaché. */
+export const REGISTERED = 'registered'
+/** payment_mode des billets payés sur la page TIKORA de l'événement. */
+export const TIKORA_PAGE = 'tikora_page'
+
+/**
+ * Inscription à un billet payant : même formulaire que le billet gratuit (fiche
+ * participant + photo). La commande attend ensuite le paiement, fait sur la page
+ * TIKORA de l'événement avec la même adresse e-mail ; le serveur l'y retrouve
+ * (services/webOrders.js) et la confirme. Elle n'apparaît dans la liste publique
+ * qu'une fois payée.
+ *
+ * @returns {Promise<{ orderId: string, status: 'registered'|'paid', accessToken: string }>}
+ */
+export async function createRegistration(body) {
+  await dbReady
+  const req = parseOrderRequest(body, { register: true })
+  return withOrderLock(req.orderId, async () => {
+    const existing = await getOrderRow(req.orderId)
+    if (existing) {
+      // Double clic, reprise réseau : même inscription
+      if (sameBuyer(existing, req) && [REGISTERED, 'paid'].includes(existing.status)) {
+        return { orderId: existing.id, status: existing.status, accessToken: orderAccessToken(existing.id) }
+      }
+      throw new HttpError(409, 'Cette commande existe déjà', 'ORDER_CONFLICT')
+    }
+    const pending = await get(`SELECT COUNT(*) AS n FROM orders WHERE status = ? AND lower(customer_email) = lower(?)`, [REGISTERED, req.customer.email])
+    if (Number(pending?.n) >= CONFIG.webOrders.maxPendingPerEmail) {
+      throw new HttpError(429, 'Trop d’inscriptions en attente de paiement pour cette adresse', 'REGISTRATION_LIMIT')
+    }
+    await run(
+      `INSERT INTO orders (id, customer_name, customer_email, customer_phone, customer_org, tier_id, quantity, unit_price, subtotal,
+         total, fees, currency, status, public_listing, attendees_json, lang, payment_mode, first_name, last_name, customer_role,
+         created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, 1, ?, ?, ?, 0, 'XAF', ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
+      [req.orderId, req.customer.name, req.customer.email, req.customer.phone, req.customer.org, req.tierId, req.unitPrice, req.unitPrice,
+        req.unitPrice, REGISTERED, req.publicListing ? 1 : 0, JSON.stringify(req.attendees), req.lang, TIKORA_PAGE,
+        req.customer.firstName, req.customer.lastName, req.customer.role],
+    )
+    logger.info('order.registered', { orderId: req.orderId, tierId: req.tierId })
+    dispatchRegistrationMail(req.orderId).catch(() => {})
+    return { orderId: req.orderId, status: REGISTERED, accessToken: orderAccessToken(req.orderId) }
+  })
+}
+
+/**
+ * Paiement TIKORA retrouvé pour une inscription : la commande devient « payée »
+ * (transition conditionnelle : une seule fois), puis l'e-mail de confirmation part.
+ * Le tarif retenu est celui du billet réellement acheté chez TIKORA.
+ *
+ * @param {string} orderId
+ * @param {{ id: string, orderNumber?: string, confirmedAt?: string }} tikoraOrder
+ * @param {string} tierId  tarif JCIA de la catégorie TIKORA achetée
+ * @returns {Promise<boolean>} true si la commande vient d'être confirmée
+ */
+export async function markRegistrationPaid(orderId, tikoraOrder, tierId) {
+  const unitPrice = getTicketPricing(tierId).price
+  const changed = await run(
+    `UPDATE orders SET status = 'paid', paid_at = ?, tikora_order_id = ?, tikora_order_number = ?, tier_id = ?,
+       unit_price = ?, subtotal = ?, total = ?, updated_at = CURRENT_TIMESTAMP
+     WHERE id = ? AND status = ?`,
+    [tikoraOrder.confirmedAt || new Date().toISOString(), tikoraOrder.id, tikoraOrder.orderNumber ?? null, tierId,
+      unitPrice, unitPrice, unitPrice, orderId, REGISTERED],
+  )
+  if (changed.changes !== 1) return false
+  logger.info('order.registration_paid', { orderId, orderNumber: tikoraOrder.orderNumber })
+  dispatchReceipt(orderId).catch(() => {})
+  return true
+}
+
+/** E-mail « finalisez votre inscription : paiement sur TIKORA » — une seule fois. */
+export async function dispatchRegistrationMail(orderId) {
+  const claim = await run(`UPDATE orders SET registration_mail_at = ? WHERE id = ? AND registration_mail_at IS NULL`, [new Date().toISOString(), orderId])
+  if (claim.changes !== 1) return false
+  try {
+    const order = await getOrderRow(orderId)
+    const view = await toPublicOrder(order)
+    await mailerService.sendRegistrationEmail({ email: order.customer_email, lang: view.lang, order: view, accessToken: orderAccessToken(orderId) })
+    return true
+  } catch (error) {
+    await run('UPDATE orders SET registration_mail_at = NULL WHERE id = ?', [orderId])
+    logger.warn('registration.mail.failed', { orderId, error })
+    return false
+  }
 }
 
 // ─── Vue publique d'une commande (propriétaire muni du jeton) ────────────────
@@ -474,7 +605,14 @@ export async function toPublicOrder(order) {
     currency: order.currency || 'XAF',
     lang: order.lang === 'en' ? 'en' : 'fr',
     createdAt: order.created_at,
-    customer: { name: order.customer_name, email: order.customer_email, org: order.customer_org || '' },
+    customer: {
+      name: order.customer_name,
+      firstName: order.first_name || '',
+      lastName: order.last_name || '',
+      email: order.customer_email,
+      org: order.customer_org || '',
+      role: order.customer_role || '',
+    },
     attendees: parseJsonArray(order.attendees_json),
     publicListing: order.public_listing === 1,
     free,
@@ -489,6 +627,8 @@ export async function toPublicOrder(order) {
           paidAt: order.paid_at ?? undefined,
           mode: order.payment_mode,
           reason: payment?.status === 'FAILED' ? payment.reason : undefined,
+          // Billet payé sur la page TIKORA : numéro de la commande TIKORA (billets QR envoyés par TIKORA)
+          tikoraOrderNumber: order.payment_mode === TIKORA_PAGE ? order.tikora_order_number ?? undefined : undefined,
         },
     tickets: tickets.map((t) => ({
       code: t.ticket_code,

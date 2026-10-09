@@ -10,6 +10,10 @@
  *   npm run tikora -- forms          e-mails « formulaire participant » envoyés / en attente
  *   npm run tikora -- sync           repère tout de suite les achats payés et envoie les formulaires
  *   npm run tikora -- resend <ORD-…> renvoie le formulaire à l'acheteur d'une commande
+ *   npm run tikora -- inscriptions   inscriptions payantes en attente du paiement TIKORA
+ *   npm run tikora -- link <JCIA27-…> <ORD-…>
+ *                                    rattache à la main un paiement TIKORA à une inscription
+ *                                    (acheteur ayant payé avec une autre adresse e-mail)
  *
  * « create » est idempotent : relancé avec le même fichier, il ne crée pas de doublon.
  */
@@ -207,7 +211,7 @@ async function forms() {
 async function sync() {
   const { syncWebOrders } = await import('../src/services/webOrders.js')
   const stats = await syncWebOrders()
-  ok(`${stats.scanned} commande(s) lue(s) · ${stats.sent} formulaire(s) envoyé(s) · ${stats.failed} échec(s)`)
+  ok(`${stats.scanned} commande(s) lue(s) · ${stats.linked} inscription(s) confirmée(s) · ${stats.sent} formulaire(s) envoyé(s) · ${stats.failed} échec(s)`)
 }
 
 async function resend(orderNumber) {
@@ -220,8 +224,30 @@ async function resend(orderNumber) {
   ok(`Formulaire renvoyé pour ${orderNumber} (voir : npm run tikora -- forms)`)
 }
 
-const [command = 'check', arg] = process.argv.slice(2)
-const commands = { check, create, events, env: () => env(arg), orders, forms, sync, resend: () => resend(arg) }
+async function inscriptions() {
+  const { pendingRegistrations } = await import('../src/services/webOrders.js')
+  const rows = await pendingRegistrations()
+  console.log(`\nInscriptions en attente du paiement TIKORA — ${rows.length}`)
+  for (const r of rows) {
+    console.log(`  ${r.id}  ${String(r.tier_id).padEnd(9)} ${String(r.customer_name).padEnd(26).slice(0, 26)} ${mask(r.customer_email).padEnd(28)} ${String(r.created_at).slice(0, 16)}`)
+  }
+}
+
+async function link(orderId, orderNumber) {
+  const { linkRegistrationByNumber } = await import('../src/services/webOrders.js')
+  try {
+    const order = await linkRegistrationByNumber({ orderId: String(orderId ?? '').toUpperCase(), orderNumber, admin: true })
+    ok(`${order.id} confirmée (billet ${order.tierId}, commande TIKORA ${order.payment.tikoraOrderNumber}) — e-mail de confirmation envoyé`)
+  } catch (error) {
+    ko(`${error.message} (usage : npm run tikora -- link JCIA27-XXXXXX ORD-XXXXXXXX)`)
+    process.exit(1)
+  }
+}
+
+const [command = 'check', arg, arg2] = process.argv.slice(2)
+const commands = {
+  check, create, events, env: () => env(arg), orders, forms, sync, resend: () => resend(arg), inscriptions, link: () => link(arg, arg2),
+}
 
 if (!CONFIG.payment.apiKey) {
   console.error('TIKORA_API_KEY absent de backend/.env')
@@ -233,7 +259,7 @@ if (!/\/api\/v1\/partner$/.test(CONFIG.payment.apiUrl)) {
   console.error('  TIKORA_API_URL=https://tikoraapi.totiokamdem.uk/api/v1/partner')
 }
 if (!commands[command]) {
-  console.error(`Commande inconnue « ${command} ». Commandes : check, create, events, env <eventId>, orders, forms, sync, resend <ORD-…>`)
+  console.error(`Commande inconnue « ${command} ». Commandes : check, create, events, env <eventId>, orders, forms, sync, resend <ORD-…>, inscriptions, link <JCIA27-…> <ORD-…>`)
   process.exit(1)
 }
 try {

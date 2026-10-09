@@ -7,7 +7,7 @@ import { logger } from '../utils/logger.js'
 import { HttpError } from '../utils/errors.js'
 import { getTicketPricing } from '../utils/pricing.js'
 import { orderAccessToken } from './security.js'
-import { getOrderRow, toPublicOrder } from './orders.js'
+import { REGISTERED, getOrderRow, markRegistrationPaid, toPublicOrder } from './orders.js'
 
 /**
  * Achats faits sur la PAGE TIKORA de l'événement (le site renvoie les acheteurs
@@ -31,6 +31,7 @@ const MAX_ATTEMPTS = 5
 const OUR_REFERENCE = /^JCIA27-[A-Z0-9]{6}$/
 const EMAIL_RE = /^[^\s@<>()[\]\\,;:"]+@[^\s@<>()[\]\\,;:"]+\.[a-z]{2,}$/i
 let running = null
+let lastSyncAt = 0
 
 /** La commande TIKORA concerne-t-elle un achat à traiter ? */
 export function isWebOrderToNotify(o) {
@@ -53,6 +54,14 @@ export async function processWebOrder(o) {
      VALUES (?, ?, ?, ?, ?, ?, ?)`,
     [o.id, o.orderNumber ?? null, String(o.buyer?.fullName ?? '').slice(0, 120), email, Number(o.total) || 0, o.createdAt ?? null, new Date().toISOString()],
   )
+  // Inscription(s) faite(s) sur le site avec la même adresse : le paiement leur est
+  // rattaché et l'e-mail de confirmation (lien du formulaire inclus) part pour chacune.
+  // L'e-mail générique ci-dessous n'est alors pas nécessaire.
+  const linked = await linkRegistrations(o)
+  if (await linkedCount(o.id)) {
+    await run('UPDATE tikora_web_orders SET form_sent_at = COALESCE(form_sent_at, ?), sending_at = NULL WHERE tikora_order_id = ?', [new Date().toISOString(), o.id])
+    return linked ? 'linked' : 'already_done'
+  }
   // Réservation atomique de l'envoi : sondage et webhook simultanés n'envoient qu'un e-mail.
   // Une réservation de plus de 10 min (arrêt brutal pendant l'envoi) peut être reprise.
   const now = Date.now()
@@ -80,9 +89,10 @@ export async function processWebOrder(o) {
  * @returns {Promise<{ scanned: number, sent: number, failed: number }>}
  */
 export function syncWebOrders() {
-  // Un seul parcours à la fois (minuterie + webhooks)
+  // Un seul parcours à la fois (minuterie + webhooks + participants qui attendent sur le site)
   running ??= (async () => {
-    const stats = { scanned: 0, sent: 0, failed: 0 }
+    lastSyncAt = Date.now()
+    const stats = { scanned: 0, sent: 0, failed: 0, linked: 0 }
     for (let page = 1; page <= CONFIG.webOrders.maxPages; page += 1) {
       const res = await tikora.listOrders({ page, limit: 100 })
       const items = Array.isArray(res?.items) ? res.items : Array.isArray(res) ? res : []
@@ -91,11 +101,12 @@ export function syncWebOrders() {
         const result = await processWebOrder(o)
         if (result === 'sent') stats.sent += 1
         if (result === 'failed') stats.failed += 1
+        if (result === 'linked') stats.linked += 1
       }
       const totalPages = Number(res?.meta?.totalPages) || 1
       if (items.length < 100 || page >= totalPages) break
     }
-    if (stats.sent || stats.failed) logger.info('web_orders.synced', stats)
+    if (stats.sent || stats.failed || stats.linked) logger.info('web_orders.synced', stats)
     return stats
   })().finally(() => {
     running = null
@@ -114,6 +125,15 @@ export async function handleWebOrderWebhook(tikoraOrderId) {
     throw error
   }
   return processWebOrder(order)
+}
+
+/** Inscriptions payantes en attente du paiement TIKORA (outil d'administration). */
+export async function pendingRegistrations() {
+  await dbReady
+  return all(
+    `SELECT id, customer_name, customer_email, tier_id, created_at FROM orders WHERE status = ? ORDER BY datetime(created_at) DESC`,
+    [REGISTERED],
+  )
 }
 
 /** État des envois (outil d'administration). */
@@ -197,13 +217,21 @@ export async function claimWebOrder({ orderNumber, email, publicListing, lang })
      VALUES (?, ?, ?, ?, ?, ?, ?)`,
     [o.id, o.orderNumber, String(o.buyer?.fullName ?? '').slice(0, 120), String(o.buyer.email).trim(), Number(o.total) || 0, o.createdAt ?? null, new Date().toISOString()],
   )
-  const link = await get('SELECT jcia_order_id FROM tikora_web_orders WHERE tikora_order_id = ?', [o.id])
-  let orderId = link?.jcia_order_id
+  // Commande JCIA déjà liée à cet achat pour cette adresse (inscription du site confirmée,
+  // ou rattachement précédent depuis un autre appareil) : on la renvoie.
+  const mine = await get(
+    'SELECT id FROM orders WHERE tikora_order_id = ? AND lower(customer_email) = ? ORDER BY datetime(created_at) LIMIT 1',
+    [o.id, mail],
+  )
+  let orderId = mine?.id
 
-  if (orderId && (await getOrderRow(orderId))) {
-    // Déjà rattachée (autre appareil) : le choix de figurer dans la liste peut être mis à jour
+  if (orderId) {
+    // Le choix de figurer dans la liste peut être mis à jour
     if (typeof publicListing === 'boolean') await run('UPDATE orders SET public_listing = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?', [publicListing ? 1 : 0, orderId])
   } else {
+    if ((await linkedCount(o.id)) >= ticketCount(o)) {
+      throw new HttpError(409, 'Tous les billets de cette commande TIKORA sont déjà attribués', 'ORDER_ALREADY_USED')
+    }
     orderId = newOrderId()
     const name = String(o.buyer?.fullName ?? '').trim().slice(0, 80) || 'Participant'
     const unitPrice = getTicketPricing(tier).price
@@ -211,12 +239,108 @@ export async function claimWebOrder({ orderNumber, email, publicListing, lang })
       `INSERT INTO orders (id, customer_name, customer_email, customer_phone, customer_org, tier_id, quantity, unit_price, subtotal,
          total, fees, currency, status, public_listing, attendees_json, lang, payment_mode, tikora_order_id, tikora_order_number,
          paid_at, created_at, updated_at)
-       VALUES (?, ?, ?, '', '', ?, 1, ?, ?, ?, ?, 'XAF', 'paid', ?, ?, ?, 'live', ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
-      [orderId, name, String(o.buyer.email).trim(), tier, unitPrice, unitPrice, Number(o.total) || unitPrice, Number(o.buyerFee) || 0,
+       VALUES (?, ?, ?, '', '', ?, 1, ?, ?, ?, ?, 'XAF', 'paid', ?, ?, ?, 'tikora_page', ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
+      [orderId, name, String(o.buyer.email).trim(), tier, unitPrice, unitPrice, unitPrice, 0,
         publicListing ? 1 : 0, JSON.stringify([name]), lang === 'en' ? 'en' : 'fr', o.id, o.orderNumber, o.payment?.confirmedAt ?? new Date().toISOString()],
     )
-    await run('UPDATE tikora_web_orders SET jcia_order_id = ? WHERE tikora_order_id = ?', [orderId, o.id])
+    await run('UPDATE tikora_web_orders SET jcia_order_id = COALESCE(jcia_order_id, ?) WHERE tikora_order_id = ?', [orderId, o.id])
     logger.info('web_order.claimed', { orderNumber: o.orderNumber, orderId })
   }
   return { orderId, accessToken: orderAccessToken(orderId), order: await toPublicOrder(await getOrderRow(orderId)) }
+}
+
+// ─── Inscriptions du site ↔ paiements faits sur la page TIKORA ────────────────
+
+const lower = (v) => String(v ?? '').trim().toLowerCase()
+
+/** Nombre de billets de la commande TIKORA (une inscription du site par billet au plus). */
+export function ticketCount(o) {
+  const n = (Array.isArray(o?.items) ? o.items : []).reduce((sum, item) => sum + (Number(item?.quantity) || 0), 0)
+  return Math.max(1, n)
+}
+
+/** Commandes JCIA déjà rattachées à une commande TIKORA. */
+async function linkedCount(tikoraOrderId) {
+  const row = await get('SELECT COUNT(*) AS n FROM orders WHERE tikora_order_id = ?', [tikoraOrderId])
+  return Number(row?.n) || 0
+}
+
+/** Tarif JCIA du billet acheté chez TIKORA (première ligne de la commande). */
+const tierOfOrder = (o) => tierOfCategory(o?.items?.[0]?.ticketCategoryId)
+
+/**
+ * Rattache automatiquement un paiement TIKORA aux inscriptions faites sur le site
+ * avec la MÊME adresse e-mail (les plus anciennes d'abord, celles du même tarif en
+ * priorité), dans la limite du nombre de billets achetés.
+ * @returns {Promise<number>} inscriptions confirmées
+ */
+export async function linkRegistrations(o) {
+  if (!isWebOrderToNotify(o)) return 0
+  const tier = tierOfOrder(o)
+  if (!tier) {
+    logger.warn('web_order.unknown_category', { orderNumber: o.orderNumber })
+    return 0
+  }
+  const remaining = ticketCount(o) - (await linkedCount(o.id))
+  if (remaining <= 0) return 0
+  const candidates = await all(
+    `SELECT id FROM orders WHERE status = ? AND lower(customer_email) = ?
+     ORDER BY CASE WHEN tier_id = ? THEN 0 ELSE 1 END, datetime(created_at) ASC LIMIT ?`,
+    [REGISTERED, lower(o.buyer?.email), tier, remaining],
+  )
+  let linked = 0
+  for (const { id } of candidates) {
+    if (await markRegistrationPaid(id, { id: o.id, orderNumber: o.orderNumber, confirmedAt: o.payment?.confirmedAt }, tier)) linked += 1
+  }
+  return linked
+}
+
+/**
+ * Participant qui attend sur la page du site après avoir payé : le serveur relit
+ * les commandes TIKORA (au plus une fois toutes les TIKORA_LOOKUP_MIN_INTERVAL_MS,
+ * tous participants confondus — un parcours confirme toutes les inscriptions).
+ */
+export async function refreshRegistration(order) {
+  if (order?.status !== REGISTERED) return order
+  if (Date.now() - lastSyncAt >= CONFIG.webOrders.lookupMinIntervalMs) {
+    const sync = syncWebOrders().catch((error) => logger.warn('registration.lookup_failed', { code: error.code }))
+    await Promise.race([sync, new Promise((resolve) => setTimeout(resolve, 10_000).unref?.())])
+  }
+  return getOrderRow(order.id)
+}
+
+/**
+ * Rattachement MANUEL : le participant indique le numéro de sa commande TIKORA
+ * (ORD-…) et l'adresse e-mail utilisée sur TIKORA (utile s'il en a utilisé une
+ * autre que celle de son inscription). Vérifié chez TIKORA.
+ * @returns {Promise<object>} commande au format public (payée)
+ */
+export async function linkRegistrationByNumber({ orderId, orderNumber, email, admin = false }) {
+  const number = String(orderNumber ?? '').trim().toUpperCase()
+  const mail = lower(email)
+  // admin : rattachement fait par l'équipe (npm run tikora -- link), sans contrôle de l'e-mail
+  if (!ORDER_NUMBER_RE.test(number) || (!admin && !EMAIL_RE.test(mail))) throw new HttpError(400, 'Numéro de commande ou e-mail invalide', 'INVALID_CLAIM')
+  await dbReady
+  const order = await getOrderRow(orderId)
+  if (!order) throw new HttpError(404, 'Commande introuvable', 'ORDER_NOT_FOUND')
+  if (order.status === 'paid') return toPublicOrder(order) // déjà confirmée (automatiquement, entre-temps)
+  if (order.status !== REGISTERED) throw new HttpError(409, 'Cette inscription ne peut pas être rattachée', 'ORDER_CONFLICT')
+
+  const o = await findTikoraOrder(number)
+  if (!o || o.eventId !== CONFIG.payment.eventId || o.livemode === false || (!admin && lower(o.buyer?.email) !== mail)) throw notFound()
+  if (typeof o.reference === 'string' && OUR_REFERENCE.test(o.reference)) throw notFound()
+  if (o.status !== 'paid') throw new HttpError(409, 'Cette commande n’est pas encore payée', 'ORDER_NOT_PAID')
+  const tier = tierOfOrder(o)
+  if (!tier) throw new HttpError(422, 'Billet non reconnu', 'UNKNOWN_TICKET')
+  await run(
+    `INSERT OR IGNORE INTO tikora_web_orders (tikora_order_id, order_number, buyer_name, buyer_email, total, tikora_created_at, seen_at, form_sent_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+    [o.id, o.orderNumber, String(o.buyer?.fullName ?? '').slice(0, 120), String(o.buyer.email).trim(), Number(o.total) || 0, o.createdAt ?? null,
+      new Date().toISOString(), new Date().toISOString()],
+  )
+  if ((await linkedCount(o.id)) >= ticketCount(o)) {
+    throw new HttpError(409, 'Tous les billets de cette commande TIKORA sont déjà attribués', 'ORDER_ALREADY_USED')
+  }
+  await markRegistrationPaid(orderId, { id: o.id, orderNumber: o.orderNumber, confirmedAt: o.payment?.confirmedAt }, tier)
+  return toPublicOrder(await getOrderRow(orderId))
 }

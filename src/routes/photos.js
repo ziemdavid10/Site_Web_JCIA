@@ -70,11 +70,13 @@ router.put(
       if (!Buffer.isBuffer(req.body) || !req.body.length) {
         throw new HttpError(415, 'Photo au format JPEG attendue', 'UNSUPPORTED_MEDIA_TYPE')
       }
-      if (!['paid', 'free'].includes(order.status)) {
+      // Inscription payante en attente du paiement TIKORA : la photo est gardée,
+      // mais n'est publiée qu'une fois le billet payé (services/photos.js#getPublicPhoto).
+      if (!['paid', 'free', 'registered'].includes(order.status)) {
         throw new HttpError(409, 'La photo peut être ajoutée une fois la commande confirmée', 'ORDER_NOT_CONFIRMED')
       }
       const saved = await savePhoto(orderId, position, req.body)
-      const isPublic = order.public_listing === 1
+      const isPublic = order.public_listing === 1 && order.status !== 'registered'
       return res.json({
         attendeeId: attendeeId(orderId, position),
         position,

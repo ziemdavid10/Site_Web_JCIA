@@ -10,7 +10,7 @@ import { attendeeId, attendeeNames, publicPhotoPath, publicPhotoVersions } from 
  * GET /attendees — liste publique « Ils y seront ».
  *
  * Uniquement : commandes confirmées (payées ou gratuites) ET consentement
- * explicite (public_listing = 1). Champs publiés : nom, organisation, profil,
+ * explicite (public_listing = 1). Champs publiés : nom, organisation, rôle, profil,
  * tarif et, si la personne en a ajouté une, sa photo (chemin /attendees/<id>/photo).
  * Jamais d'e-mail, de téléphone ni de numéro de billet.
  *
@@ -31,7 +31,7 @@ router.get('/', limiters.read, async (req, res) => {
     await dbReady
     const [rows, photos] = await Promise.all([
       all(`
-        SELECT id, customer_name, customer_org AS org, tier_id AS tierId, attendees_json
+        SELECT id, customer_name, customer_org AS org, customer_role AS role, tier_id AS tierId, attendees_json
         FROM orders
         WHERE status IN ('paid', 'free') AND public_listing = 1
           -- commandes de l'ancien mode démonstration (paiements simulés) : jamais publiées
@@ -53,6 +53,8 @@ router.get('/', limiters.read, async (req, res) => {
           id: attendeeId(row.id, position),
           name: clean,
           org: cleanText(row.org, 120),
+          // Rôle dans l'organisation : saisi par la personne qui s'inscrit (1er participant)
+          role: position === 1 ? cleanText(row.role, 80) : '',
           city: '',
           profile: profileOfTier(row.tierId),
           tier: normalizeTierId(row.tierId) ?? 'standard',

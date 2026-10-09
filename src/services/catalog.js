@@ -20,6 +20,24 @@ export function resetCatalogCache() {
   cache = { at: 0, event: null, pending: null }
 }
 
+/**
+ * URL de réservation TIKORA pour un tarif (bouton « Payer sur TIKORA »).
+ * Priorité : TIKORA_CHECKOUT_URLS > TIKORA_CHECKOUT_URL (modèle) > page de l'événement.
+ */
+export function checkoutUrlFor(tierId, now = new Date()) {
+  const w = CONFIG.webOrders
+  const entry = w.checkoutUrls[tierId]
+  if (entry) {
+    if (typeof entry === 'string') return entry
+    if (typeof entry === 'object') return (isPromotionActive(now) ? entry.promo : entry.default) ?? entry.default ?? w.eventUrl
+  }
+  if (w.checkoutUrlTemplate) {
+    const categoryId = categoryIdFor(tierId, now)
+    if (categoryId) return w.checkoutUrlTemplate.replaceAll('{categoryId}', categoryId)
+  }
+  return w.eventUrl
+}
+
 /** Identifiant de catégorie TIKORA pour un tarif, selon la période (promo ou non). */
 export function categoryIdFor(tierId, now = new Date()) {
   const id = normalizeTierId(tierId)

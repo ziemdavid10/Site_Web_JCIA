@@ -24,7 +24,7 @@ export function formatXAF(amount, locale = 'fr-FR') {
   return `${new Intl.NumberFormat(locale).format(Number(amount) || 0)} FCFA`
 }
 
-const TIER_NAMES = {
+export const TIER_NAMES = {
   fr: { gratuit: 'Gratuit', etudiant: 'Étudiant', standard: 'Standard', 'en-ligne': 'En ligne', vip: 'VIP' },
   en: { gratuit: 'Free', etudiant: 'Student', standard: 'Standard', 'en-ligne': 'Online', vip: 'VIP' },
 }
@@ -37,9 +37,17 @@ const T = {
     thanks: (id) => `Merci ! Votre commande ${id} est confirmée pour les Journées Camerounaises de l'Intelligence Artificielle (JCIA 2027).`,
     order: 'Commande', ticket: 'Billet', unit: 'Prix unitaire', fees: 'Frais de service', total: 'Total payé',
     method: 'Moyen de paiement', tx: 'Transaction', dates: 'Dates', venue: 'Lieu', free: 'Gratuit',
-    attendees: 'Participants', codes: 'Billets', cta: 'Voir mes billets et leurs QR codes',
+    attendees: 'Participants', codes: 'Billets', cta: 'Mon billet et mon visuel « J’y serai »',
     question: (e, p) => `Une question ? Écrivez à ${e} ou appelez le ${p}.`,
     dateLabel: '27 & 28 avril 2027', momo: 'Mobile Money',
+    tikora: 'TIKORA (Mobile Money)', tikoraOrder: 'Commande TIKORA',
+    tikoraTickets: 'Vos billets (QR codes) vous sont envoyés par TIKORA dans un e-mail séparé.',
+    formTitle: 'Dernière étape : complétez votre fiche participant',
+    formText: 'Quelques minutes suffisent : ce formulaire nous permet de préparer votre accueil.',
+    formCta: 'Remplir le formulaire participant',
+    siteTitle: 'Puis revenez sur le site pour finaliser',
+    siteText: 'Retrouvez votre billet et partagez votre visuel « J’y serai », aux couleurs de votre billet et avec votre photo.',
+    fallback: 'Si le bouton ne fonctionne pas, copiez ce lien :',
   },
   en: {
     subject: (id) => `JCIA 2027 — your order summary ${id}`,
@@ -48,9 +56,17 @@ const T = {
     thanks: (id) => `Thank you! Your order ${id} is confirmed for the Cameroon Artificial Intelligence Days (JCIA 2027).`,
     order: 'Order', ticket: 'Ticket', unit: 'Unit price', fees: 'Service fee', total: 'Total paid',
     method: 'Payment method', tx: 'Transaction', dates: 'Dates', venue: 'Venue', free: 'Free',
-    attendees: 'Attendees', codes: 'Tickets', cta: 'View my tickets and QR codes',
+    attendees: 'Attendees', codes: 'Tickets', cta: 'My ticket and my “I’ll be there” visual',
     question: (e, p) => `Any question? Write to ${e} or call ${p}.`,
     dateLabel: 'April 27 & 28, 2027', momo: 'Mobile Money',
+    tikora: 'TIKORA (Mobile Money)', tikoraOrder: 'TIKORA order',
+    tikoraTickets: 'Your tickets (QR codes) are sent by TIKORA in a separate e-mail.',
+    formTitle: 'Last step: complete your attendee form',
+    formText: 'It only takes a few minutes and helps us prepare your welcome.',
+    formCta: 'Fill in the attendee form',
+    siteTitle: 'Then come back to the website to finish',
+    siteText: 'Find your ticket and share your “I’ll be there” visual, in your ticket’s colours and with your photo.',
+    fallback: 'If the button does not work, copy this link:',
   },
 }
 
@@ -69,7 +85,10 @@ export function buildReceipt(order, options = {}) {
     contactEmail = 'contact@jciacm.com',
     contactPhone = '+237 699 089 937',
     venue = 'Hilton Hotel, Yaoundé',
+    formUrl = '',
   } = options
+  // Billet payé sur la page TIKORA de l'événement (inscription faite sur le site)
+  const viaTikora = order.payment?.mode === 'tikora_page'
   const tierName = TIER_NAMES[lang][order.tierId] ?? order.tierId
   const op = order.payment?.operator === 'orange' ? 'Orange Money' : order.payment?.operator === 'mtn' ? 'MTN Mobile Money' : t.momo
   const link = `${siteUrl}/billetterie/confirmation/${encodeURIComponent(order.id)}${accessToken ? `#t=${encodeURIComponent(accessToken)}` : ''}`
@@ -78,9 +97,11 @@ export function buildReceipt(order, options = {}) {
     [t.order, order.id],
     [t.ticket, `${tierName} × ${order.quantity}`],
     [t.unit, order.free ? t.free : formatXAF(order.unitPrice, locale)],
-    ...(order.free ? [] : [[t.fees, formatXAF(order.fees, locale)]]),
+    ...(order.free || viaTikora ? [] : [[t.fees, formatXAF(order.fees, locale)]]),
     [t.total, order.free ? t.free : formatXAF(order.total, locale)],
-    ...(order.free ? [] : [[t.method, op], [t.tx, order.payment?.transactionId ?? '—']]),
+    ...(viaTikora
+      ? [[t.method, t.tikora], [t.tikoraOrder, order.payment?.tikoraOrderNumber ?? '—']]
+      : order.free ? [] : [[t.method, op], [t.tx, order.payment?.transactionId ?? '—']]),
     [t.dates, t.dateLabel],
     [t.venue, venue],
   ]
@@ -98,8 +119,10 @@ export function buildReceipt(order, options = {}) {
     `${t.attendees} :`,
     ...attendees.map((a, i) => `  ${i + 1}. ${a}`),
     ...(codes.length ? ['', `${t.codes} :`, ...codes.map((c) => `  • ${c}`)] : []),
+    ...(viaTikora ? ['', t.tikoraTickets] : []),
+    ...(formUrl ? ['', `${t.formTitle} :`, formUrl] : []),
     '',
-    `${t.cta} : ${link}`,
+    `${t.siteTitle} — ${t.cta} : ${link}`,
     '',
     t.question(contactEmail, contactPhone),
     '',
@@ -130,6 +153,15 @@ export function buildReceipt(order, options = {}) {
   <p style="margin:22px 0 8px;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:${BRAND.muted}">${esc(t.attendees)}</p>
   <ol style="margin:0 0 18px;padding-left:20px;line-height:1.7">${attendees.map((a) => `<li>${esc(a)}</li>`).join('')}</ol>
   ${codes.length ? `<p style="margin:0 0 8px;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:${BRAND.muted}">${esc(t.codes)}</p><ul style="margin:0 0 22px;padding-left:20px;line-height:1.7;font-family:Consolas,monospace">${codes.map((c) => `<li>${esc(c)}</li>`).join('')}</ul>` : ''}
+  ${viaTikora ? `<p style="margin:0 0 20px;font-size:14px;line-height:1.6;color:${BRAND.muted}">${esc(t.tikoraTickets)}</p>` : ''}
+  ${formUrl ? `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin:0 0 18px;background:${BRAND.sand};border-radius:12px"><tr><td style="padding:18px 20px">
+    <p style="margin:0 0 6px;font-size:15px;font-weight:700">${esc(t.formTitle)}</p>
+    <p style="margin:0 0 14px;font-size:14px;line-height:1.55;color:${BRAND.muted}">${esc(t.formText)}</p>
+    <a href="${esc(formUrl)}" style="display:inline-block;padding:12px 20px;background:${BRAND.navy};color:#fff;font-weight:700;text-decoration:none;border-radius:999px">${esc(t.formCta)}</a>
+    <p style="margin:12px 0 0;font-size:12px;line-height:1.5;color:${BRAND.muted}">${esc(t.fallback)} <a href="${esc(formUrl)}" style="color:${BRAND.text};word-break:break-all">${esc(formUrl)}</a></p>
+  </td></tr></table>` : ''}
+  <p style="margin:0 0 6px;font-size:15px;font-weight:700">${esc(t.siteTitle)}</p>
+  <p style="margin:0 0 14px;font-size:14px;line-height:1.55;color:${BRAND.muted}">${esc(t.siteText)}</p>
   <p style="margin:0 0 24px"><a href="${esc(link)}" style="display:inline-block;padding:13px 22px;background:${BRAND.orange};color:${BRAND.navy};font-weight:700;text-decoration:none;border-radius:999px">${esc(t.cta)}</a></p>
   <p style="margin:0 0 6px;font-size:13px;line-height:1.6;color:${BRAND.muted}">${esc(t.question(contactEmail, contactPhone))}</p>
 </td></tr>
