@@ -15,6 +15,7 @@ import './PartnersPage.scss'
  */
 export default function PartnersPage() {
   const { t } = useI18n()
+  const { links } = CONFIG
   const p = t.pages.partners
   const b = t.partners.become
   const { contact } = CONFIG
@@ -24,7 +25,7 @@ export default function PartnersPage() {
   const actions = (variant) => (
     <>
       {/* Dossier de partenariat : téléchargement bloqué (CONFIG.features) */}
-      {/* {CONFIG.features.documentDownloads ? (
+      {CONFIG.features.documentDownloads ? (
         <Button href={links.partnershipPdf} external size="lg" iconLeft="download">
           {b.download}
         </Button>
@@ -32,7 +33,7 @@ export default function PartnersPage() {
         <Button size="lg" iconLeft="download" disabled title={t.soonDoc}>
           {b.download} <span className="btn__soon">{t.soonShort}</span>
         </Button>
-      )} */}
+      )}
       <Button href={contactHref} size="lg" variant={variant} icon="arrow-right">
         {b.contact}
       </Button>

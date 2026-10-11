@@ -25,7 +25,8 @@ export default function AwardsPage() {
   const { t } = useI18n()
   const a = t.pages.awards
   const aw = t.awards
-  const { links } = CONFIG
+  const { links, features } = CONFIG
+  const downloads = features?.documentDownloads ?? false
   useDocumentMeta(`${a.title} | ${t.event.shortName}`)
 
   return (
@@ -42,15 +43,15 @@ export default function AwardsPage() {
           {aw.ctaApply}
         </Button>
         {/* TDR : téléchargement bloqué (CONFIG.features.documentDownloads) */}
-        {/* {features.documentDownloads ? (
+        {features.documentDownloads ? (
           <Button href={links.tdrPdf} external size="lg" variant="ghost" iconLeft="download">
             {aw.ctaTdr}
           </Button>
         ) : (
-          <Button size="lg" variant="ghost" iconLeft="download" disabled title={t.soonDoc}>
+          <Button size="lg" variant="ghost" iconLeft="download" >
             {aw.ctaTdr} <span className="btn__soon">{t.soonShort}</span>
           </Button>
-        )} */}
+        )}
       </PageHero>
       <Toc items={a.toc} />
 

@@ -25,6 +25,7 @@ import './Awards.scss'
  */
 export default function Awards() {
   const { t } = useI18n()
+  const downloads = CONFIG.features?.documentDownloads ?? false
   const aw = t.awards
 
   return (
@@ -53,7 +54,7 @@ export default function Awards() {
               </Button>
               {/* Téléchargement du TDR bloqué tant que le PDF n'est pas définitif
                   (CONFIG.features.documentDownloads) */}
-              {/* {downloads ? (
+              {downloads ? (
                 <Button href={CONFIG.links.tdrPdf} external size="lg" variant="ghost" iconLeft="download">
                   {aw.ctaTdr}
                 </Button>
@@ -61,7 +62,7 @@ export default function Awards() {
                 <Button size="lg" variant="ghost" iconLeft="download" disabled title={t.soonDoc}>
                   {aw.ctaTdr} <span className="btn__soon">{t.soonShort}</span>
                 </Button>
-              )} */}
+              )}
             </Reveal>
           </div>
 

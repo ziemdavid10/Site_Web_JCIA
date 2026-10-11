@@ -3,7 +3,7 @@
  * Les textes traduisibles se trouvent dans src/i18n/locales/{fr,en}/.
  */
 export const CONFIG = {
-  siteUrl: 'https://www.jcia.cm',
+  siteUrl: 'https://www.jciacm.com',
 
   // Dates ISO avec fuseau du Cameroun (WAT, UTC+1)
   startDate: '2027-04-27T08:00:00+01:00',
@@ -32,10 +32,10 @@ export const CONFIG = {
 
   contact: {
     // Numéros du secrétariat : affichés en clair, cliquables pour appeler.
-    phones: ['+237 699 089 937', '+237 677 238 022'],
-    emails: ['contact@jciacm.com', 'jcia@iacameroun.com'],
+    phones: ['+237 699 089 937', '+237 677 238 022', 'https://wa.me/237699089937'],
+    emails: ['contact@jciacm.com'],
     privacyEmail: 'contact@jciacm.com',
-    websites: ['www.jcia.cm', 'www.iacameroun.com'],
+    websites: ['www.jciacm.com', 'www.iacameroun.com'],
     // Comptes officiels de l'IAC – CAIPI
     socials: [
       { name: 'LinkedIn', url: 'https://www.linkedin.com/company/iacameroun/', icon: 'linkedin' },

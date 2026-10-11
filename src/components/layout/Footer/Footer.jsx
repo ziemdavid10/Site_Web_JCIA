@@ -15,7 +15,8 @@ import './Footer.scss'
 export default function Footer() {
   const { t } = useI18n()
   const { openPanel } = useConsent()
-  const { contact, links, routes } = CONFIG
+  const { contact, links, routes, features } = CONFIG
+  const downloads = features?.documentDownloads ?? false
   const f = t.footer
   const year = new Date().getFullYear()
 
@@ -100,7 +101,7 @@ export default function Footer() {
             {/* TDR et dossier de partenariat : liens neutralisés tant que les PDF
                 ne sont pas définitifs (CONFIG.features.documentDownloads) */}
             <li>
-              {/* {downloads ? (
+              {downloads ? (
                 <a href={links.tdrPdf} target="_blank" rel="noopener noreferrer">
                   {f.docs.tdr}
                 </a>
@@ -108,10 +109,10 @@ export default function Footer() {
                 <span className="footer__soon" aria-disabled="true">
                   {f.docs.tdr} <em>{t.soon}</em>
                 </span>
-              )} */}
+              )}
             </li>
             <li>
-              {/* {downloads ? (
+              {downloads ? (
                 <a href={links.partnershipPdf} target="_blank" rel="noopener noreferrer">
                   {f.docs.partnership}
                 </a>
@@ -119,7 +120,7 @@ export default function Footer() {
                 <span className="footer__soon" aria-disabled="true">
                   {f.docs.partnership} <em>{t.soon}</em>
                 </span>
-              )} */}
+              )}
             </li>
             <li>
               <a href={links.awards} target="_blank" rel="noopener noreferrer">
