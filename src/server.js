@@ -16,9 +16,10 @@ import { logger } from './utils/logger.js'
  */
 export async function start() {
   const { errors, warnings } = validateConfig(CONFIG)
-  warnings.forEach((w) => logger.warn('config.warning', { detail: w }))
+    // Motif dans le message : lisible même dans les consoles qui n'affichent que « msg »
+  warnings.forEach((w) => logger.warn(`config.warning : ${w}`))
   if (errors.length) {
-    errors.forEach((e) => logger.error('config.error', { detail: e }))
+    errors.forEach((e) => logger.error(`config.error : ${e}`))
     throw new Error(`Configuration invalide (${errors.length} erreur(s)) — voir les logs`)
   }
 
