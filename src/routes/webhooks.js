@@ -1,7 +1,8 @@
 import express from 'express'
 import { CONFIG } from '../config/env.js'
 import { run } from '../database/db.js'
-import { syncFromWebhook } from '../services/orders.js'
+import { REGISTERED, syncFromWebhook } from '../services/orders.js'
+import { checkRegistrationByIds } from '../services/cardCheckout.js'
 import { handleWebOrderWebhook } from '../services/webOrders.js'
 import { sha256, verifyWebhookSignature } from '../services/security.js'
 import { limiters } from '../middleware/security.js'
@@ -59,6 +60,8 @@ export async function handleTikoraWebhook(req, res) {
 
   try {
     let result = await syncFromWebhook(ids)
+    // Inscription payée par carte / PayPal (commande TIKORA créée par notre serveur)
+    if (result === REGISTERED) result = `card:${await checkRegistrationByIds(ids)}`
     // Commande inconnue de notre site : achat fait sur la page TIKORA de l'événement
     if (result === 'unknown_order' && ids.tikoraOrderId) result = `web:${await handleWebOrderWebhook(ids.tikoraOrderId)}`
     await run('UPDATE webhook_events SET result = ? WHERE event_key = ?', [result, key])

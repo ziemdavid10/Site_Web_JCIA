@@ -187,6 +187,24 @@ export function createMockTikora({
     state.timers.add(timer)
   }
 
+  /** Paiement carte / PayPal (Stripe Checkout) confirmé : même effet que Mobile Money. */
+  function markPaidByCard(o, method = 'card') {
+    if (o.status === 'paid') return false
+    o.status = 'paid'
+    o.payment = { status: 'confirmed', method: method === 'paypal' ? 'paypal' : 'card', failureCode: null, failureReason: null, confirmedAt: now() }
+    o.tickets = Array.from({ length: o.quantity }, (_, i) => ({
+      id: crypto.randomUUID(),
+      ticketCode: `TKT-${crypto.randomBytes(3).toString('hex').toUpperCase()}`,
+      qrToken: `tikora.qr.${crypto.randomBytes(16).toString('base64url')}`,
+      qrCodeImageUrl: `https://cdn.tikora.example/qr/${o.id}-${i + 1}.png`,
+      holderFullName: o.buyer.fullName,
+      category: o.tier,
+      status: 'valid',
+    }))
+    onEvent('payment.confirmed', { reference: o.reference, orderNumber: o.orderNumber, total: o.total, method: o.payment.method })
+    return true
+  }
+
   async function readBody(req) {
     const chunks = []
     for await (const c of req) chunks.push(c)
@@ -245,6 +263,13 @@ export function createMockTikora({
       }
       state.orders.set(o.id, o)
       return send(res, 201, { id: o.id, orderNumber: o.orderNumber })
+    }
+    const cardPay = p.match(/^\/__mock\/orders\/([^/]+)\/card-paid$/)
+    if (cardPay) {
+      const o = state.orders.get(cardPay[1])
+      const done = o ? markPaidByCard(o, o.checkout?.method) : false
+      if (done && url.searchParams.get('webhook') !== '0') await fireWebhook(o, 'order.paid')
+      return send(res, 200, { paid: done })
     }
     const expire = p.match(/^\/__mock\/orders\/([^/]+)\/expire$/)
     if (expire) {
@@ -459,6 +484,41 @@ export function createMockTikora({
       onEvent('payment.requested', { reference: o.reference, phone, total: o.total, outcome, delayMs: payDelayMs })
       if (outcome !== 'never') settle(o, phone)
       return reply(201, { orderId: o.id, depositId, status: 'ACCEPTED', amount: o.total, currency: 'XAF', message: 'Demande envoyée sur le téléphone du payeur' })
+    }
+
+    const coMatch = route.match(/^\/orders\/([^/]+)\/checkout$/)
+    if (req.method === 'POST' && coMatch) {
+      const o = state.orders.get(coMatch[1])
+      if (!o) return replyError(404, 'ORDER_NOT_FOUND', 'Commande introuvable')
+      orderView(o)
+      if (o.status === 'paid') return replyError(409, 'ORDER_ALREADY_PAID', 'Commande déjà payée')
+      if (o.status === 'expired') return replyError(400, 'ORDER_EXPIRED', 'Commande expirée')
+      if (!['pending', 'awaiting_payment'].includes(o.status)) return replyError(400, 'ORDER_NOT_PAYABLE', 'Commande non payable')
+      const method = body.method
+      if (!['card', 'paypal'].includes(method)) return replyError(400, undefined, 'method invalide')
+      if (state.checkoutUnavailable?.[method]) return replyError(503, method === 'paypal' ? 'PAYPAL_UNAVAILABLE' : 'STRIPE_UNAVAILABLE', 'Moyen indisponible')
+      for (const k of ['successUrl', 'cancelUrl']) {
+        if (body[k] != null && !/^https:\/\//.test(body[k])) return replyError(400, 'INSECURE_REDIRECT_URL', `${k} doit être en HTTPS`)
+      }
+      const sessionId = `cs_test_${crypto.randomBytes(8).toString('hex')}`
+      o.checkout = { method, sessionId, successUrl: body.successUrl ?? null, cancelUrl: body.cancelUrl ?? null, locale: body.locale ?? 'auto' }
+      onEvent('checkout.created', { reference: o.reference, method, sessionId })
+      const fee = Math.round(o.total * 0.03)
+      const charged = method === 'paypal' ? Number(((o.total + fee) / 655.957).toFixed(2)) : o.total + fee
+      return reply(201, {
+        orderId: o.id,
+        method,
+        sessionId,
+        checkoutUrl: `https://checkout.stripe.example/c/pay/${sessionId}`,
+        expiresAt: new Date(Date.now() + 30 * 60_000).toISOString(),
+        amount: o.total,
+        currency: 'XAF',
+        paymentFee: fee,
+        chargedAmount: charged,
+        chargedCurrency: method === 'paypal' ? 'EUR' : 'XAF',
+        livemode: true,
+        message: 'Session de paiement créée',
+      })
     }
 
     return replyError(404, 'NOT_FOUND', 'Route inconnue')

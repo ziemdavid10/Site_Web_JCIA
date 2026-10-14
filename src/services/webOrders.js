@@ -2,6 +2,7 @@ import crypto from 'node:crypto'
 import { CONFIG } from '../config/env.js'
 import { all, get, run, dbReady } from '../database/db.js'
 import { tikora } from './tikoraClient.js'
+import { applyOwnPaidOrder, checkRegistrationPayment } from './cardCheckout.js'
 import { mailerService } from './mailer.js'
 import { logger } from '../utils/logger.js'
 import { HttpError } from '../utils/errors.js'
@@ -98,6 +99,11 @@ export function syncWebOrders() {
       const items = Array.isArray(res?.items) ? res.items : Array.isArray(res) ? res : []
       for (const o of items) {
         stats.scanned += 1
+        // Commande créée par notre serveur (carte / PayPal), référence JCIA27-… : inscription confirmée
+        if (typeof o?.reference === 'string' && OUR_REFERENCE.test(o.reference)) {
+          if (await applyOwnPaidOrder(o)) stats.linked += 1
+          continue
+        }
         const result = await processWebOrder(o)
         if (result === 'sent') stats.sent += 1
         if (result === 'failed') stats.failed += 1
@@ -302,6 +308,11 @@ export async function linkRegistrations(o) {
  */
 export async function refreshRegistration(order) {
   if (order?.status !== REGISTERED) return order
+  // Paiement carte / PayPal (commande TIKORA créée par notre serveur) : relecture directe
+  if (order.tikora_order_id) {
+    const r = await checkRegistrationPayment(order).catch((error) => logger.warn('registration.card_check_failed', { code: error.code }))
+    if (r === 'paid') return getOrderRow(order.id)
+  }
   if (Date.now() - lastSyncAt >= CONFIG.webOrders.lookupMinIntervalMs) {
     const sync = syncWebOrders().catch((error) => logger.warn('registration.lookup_failed', { code: error.code }))
     await Promise.race([sync, new Promise((resolve) => setTimeout(resolve, 10_000).unref?.())])

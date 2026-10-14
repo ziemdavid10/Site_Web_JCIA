@@ -87,7 +87,8 @@ const liveProvider = {
       {
         eventId: CONFIG.payment.eventId,
         items: [{ ticketCategoryId: resolved.category.id, quantity }],
-        buyer: { fullName: customer.name, email: customer.email, phone: toE164(customer.phone) },
+        // Numéro WhatsApp étranger déjà au format international (+33…) ; sinon numéro camerounais
+        buyer: { fullName: customer.name, email: customer.email, phone: String(customer.phone ?? '').startsWith('+') ? customer.phone : toE164(customer.phone) },
         reference: orderId,
       },
       `jcia-${orderId}-order-${sequence}`,

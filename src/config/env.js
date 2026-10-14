@@ -1,4 +1,6 @@
 import crypto from 'node:crypto'
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 import dotenv from 'dotenv'
 
 /**
@@ -15,7 +17,17 @@ import dotenv from 'dotenv'
 
 // SKIP_DOTENV=1 : tests qui démarrent le serveur avec une configuration maîtrisée
 // (le .env du poste — vraie clé, vrai SMTP — ne doit pas s'y mêler)
-if (process.env.NODE_ENV !== 'test' && process.env.SKIP_DOTENV !== '1') dotenv.config({ quiet: true })
+// Fichier .env cherché dans le dossier courant, dans le dossier de l'application, puis
+// dans son dossier parent (hébergeurs qui placent le .env des secrets à la racine du
+// déploiement alors que l'application est dans un sous-dossier). Les variables déjà
+// fournies par l'hébergeur ne sont jamais écrasées.
+const APP_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..')
+if (process.env.NODE_ENV !== 'test' && process.env.SKIP_DOTENV !== '1') {
+  dotenv.config({
+    quiet: true,
+    path: [...new Set([path.join(process.cwd(), '.env'), path.join(APP_DIR, '.env'), path.join(APP_DIR, '..', '.env')])],
+  })
+}
 
 const DEFAULT_TIKORA_URL = 'https://tikoraapi.totiokamdem.uk/api/v1/partner'
 

@@ -47,7 +47,7 @@ const PAYABLE_PROVIDER_STATUSES = new Set(['pending', 'awaiting_payment'])
 
 // ─── Verrou par commande (double clic, onglets multiples) ───────────────────
 const locks = new Map()
-async function withOrderLock(orderId, fn) {
+export async function withOrderLock(orderId, fn) {
   const previous = locks.get(orderId) ?? Promise.resolve()
   let release
   const current = new Promise((resolve) => {

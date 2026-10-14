@@ -3,6 +3,7 @@ import { fileURLToPath } from 'node:url'
 import { CONFIG, validateConfig } from './config/env.js'
 import { closeDb, dbReady, dbPath } from './database/db.js'
 import { reconcilePending } from './services/orders.js'
+import { reconcileRegistrations } from './services/cardCheckout.js'
 import { syncWebOrders } from './services/webOrders.js'
 import { logger } from './utils/logger.js'
 
@@ -17,6 +18,9 @@ import { logger } from './utils/logger.js'
 export async function start() {
   const { errors, warnings } = validateConfig(CONFIG)
     // Motif dans le message : lisible même dans les consoles qui n'affichent que « msg »
+  // Diagnostic : NOMS des réglages reçus (jamais les valeurs)
+  const received = Object.keys(process.env).filter((k) => /^(NODE_ENV|TIKORA_|SMTP_|MAIL_|ALLOWED_ORIGIN|APP_SECRET|PUBLIC_SITE_URL|DB_PATH|ATTENDEE_FORM_URL)/.test(k))
+  logger.info(`config.received : ${received.length ? received.sort().join(', ') : 'AUCUN réglage reçu (secrets non transmis à l’application)'}`)
   warnings.forEach((w) => logger.warn(`config.warning : ${w}`))
   if (errors.length) {
     errors.forEach((e) => logger.error(`config.error : ${e}`))
@@ -43,6 +47,7 @@ export async function start() {
   if (CONFIG.payment.reconcileIntervalMs > 0) {
     timer = setInterval(() => {
       reconcilePending().catch((error) => logger.warn('reconcile.error', { error }))
+      reconcileRegistrations().catch((error) => logger.warn('reconcile.registrations_error', { error }))
     }, CONFIG.payment.reconcileIntervalMs)
     timer.unref()
   }

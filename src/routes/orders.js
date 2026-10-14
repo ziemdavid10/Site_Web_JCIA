@@ -7,6 +7,7 @@ import { ORDER_ID_RE } from '../utils/validation.js'
 import { sendError } from './payments.js'
 import { logger } from '../utils/logger.js'
 import { claimWebOrder, linkRegistrationByNumber, refreshRegistration } from '../services/webOrders.js'
+import { startCardCheckout } from '../services/cardCheckout.js'
 
 /**
  *   POST /orders/free   inscription au tarif gratuit (hors TIKORA)
@@ -77,6 +78,24 @@ router.post('/:id/tikora-link', limiters.claim, async (req, res) => {
       return res.status(502).json({ error: 'TIKORA ne répond pas, réessayez dans un instant', code: 'PROVIDER_ERROR' })
     }
     return sendError(res, error, 'POST /orders/:id/tikora-link')
+  }
+})
+
+/**
+ * POST /orders/:id/checkout  { method: 'card' | 'paypal' }  (X-Order-Token)
+ * Billet payant : page de paiement carte / PayPal (Stripe, via TIKORA) du billet
+ * choisi → 200 { checkoutUrl } ; le navigateur y est redirigé.
+ */
+router.post('/:id/checkout', limiters.createPayment, async (req, res) => {
+  const orderId = String(req.params.id || '')
+  if (!ORDER_ID_RE.test(orderId) || !verifyOrderAccessToken(orderId, req.get('x-order-token') || '')) {
+    return res.status(404).json({ error: 'Commande introuvable', code: 'ORDER_NOT_FOUND' })
+  }
+  try {
+    const { method, lang } = req.body ?? {}
+    return res.json(await startCardCheckout(orderId, { method, lang, origin: req.get('origin') }))
+  } catch (error) {
+    return sendError(res, error, 'POST /orders/:id/checkout')
   }
 })
 

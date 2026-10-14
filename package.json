@@ -4,7 +4,9 @@
   "main": "src/server.js",
   "scripts": {
     "start": "node src/server.js",
-    "dev": "node --watch src/server.js",
+    "dev": "node src/server.js",
+    "dev:watch": "node --watch src/server.js",
+    "build": "node -e \"console.log('Backend JCIA : aucune compilation nécessaire (JavaScript natif).')\"",
     "test": "npm run test:unit",
     "test:unit": "node scripts/run-tests.js tests/unit",
     "test:integration": "node scripts/run-tests.js tests/integration --test-concurrency=1",

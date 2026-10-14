@@ -175,4 +175,7 @@ export const tikora = {
   },
   payOrder: (orderId, phoneNumber, idempotencyKey) =>
     tikoraRequest('POST', `/orders/${encodeURIComponent(orderId)}/payments`, { body: { phoneNumber }, idempotencyKey }),
+  /** Carte bancaire ou PayPal : page de paiement hébergée (Stripe Checkout) → { checkoutUrl, … } */
+  checkoutOrder: (orderId, body, idempotencyKey) =>
+    tikoraRequest('POST', `/orders/${encodeURIComponent(orderId)}/checkout`, { body, idempotencyKey }),
 }
