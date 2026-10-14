@@ -143,6 +143,12 @@ const PATHS = {
       <path d="M5 19c3-4 6-7 10-9" />
     </>
   ),
+  card: (
+    <>
+      <rect x="2.5" y="5.5" width="19" height="13" rx="2.5" />
+      <path d="M2.5 9.5h19M6.5 15h4" />
+    </>
+  ),
   lock: (
     <>
       <rect x="4.5" y="10.5" width="15" height="10" rx="2.5" />

@@ -589,3 +589,128 @@
     color: $flag-red;
   }
 }
+
+// --- Choix du moyen de paiement : carte / PayPal (Stripe) ou Mobile Money (TIKORA) ---
+.th-methods {
+  display: grid;
+  gap: $space-2;
+  margin: $space-3 0 0;
+  padding: 0;
+  border: 0;
+
+  @include mq('sm') {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.th-method {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: $space-3;
+  min-height: 64px;
+  padding: $space-3;
+  cursor: pointer;
+  background: $bg-elevated;
+  border: 1.5px solid $border-strong;
+  border-radius: $radius-md;
+  transition:
+    border-color $duration-fast $ease-out,
+    background-color $duration-fast $ease-out;
+
+  input {
+    @include visually-hidden;
+  }
+
+  &:hover {
+    border-color: var(--cat);
+  }
+
+  &:has(input:focus-visible) {
+    outline: 2px solid $teal;
+    outline-offset: 2px;
+  }
+
+  &.is-selected {
+    background: rgba($orange, 0.08);
+    border-color: var(--cat);
+    box-shadow: inset 0 0 0 1px var(--cat);
+  }
+
+  &__icon {
+    flex-shrink: 0;
+    display: grid;
+    place-items: center;
+    width: 38px;
+    height: 38px;
+    color: $text;
+    background: $surface-muted;
+    border-radius: $radius-sm;
+
+    .is-selected & {
+      color: $white;
+      background: var(--cat);
+    }
+  }
+
+  &__body {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+
+    strong {
+      font-size: 0.95rem;
+      line-height: 1.25;
+    }
+
+    small {
+      font-size: 0.75rem;
+      line-height: 1.4;
+      color: $text-muted;
+    }
+  }
+}
+
+.th-pay {
+  margin-top: $space-3;
+
+  &__actions {
+    display: grid;
+    gap: $space-2;
+    margin-top: $space-4;
+
+    @include mq('sm') {
+      grid-template-columns: 1fr 1fr;
+    }
+
+    .btn {
+      width: 100%;
+    }
+  }
+
+  &__paypal {
+    margin-top: $space-1;
+    font-size: 0.75rem;
+    line-height: 1.45;
+    color: $text-muted;
+    text-align: center;
+  }
+}
+
+.th-notice {
+  display: flex;
+  gap: $space-2;
+  margin-top: $space-2;
+  padding: $space-2 $space-3;
+  font-size: 0.85rem;
+  line-height: 1.45;
+  background: $surface-muted;
+  border-left: 3px solid $teal;
+  border-radius: $radius-sm;
+
+  .icon {
+    flex-shrink: 0;
+    margin-top: 2px;
+    color: $teal-text;
+  }
+}

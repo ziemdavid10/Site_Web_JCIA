@@ -7,23 +7,25 @@ import { CONFIG } from '@/data/config'
 import { formatXAF } from '@/utils/money'
 import { estimateFees, isPromotionActive } from '@/utils/tickets'
 import { isValidEmail } from '@/security/sanitize'
-import { linkTikoraPayment } from '@/services/payment'
+import { linkTikoraPayment, startCardCheckout } from '@/services/payment'
 import './AwaitingPayment.scss'
 
 /**
- * <AwaitingPayment /> — billet PAYANT, inscription enregistrée : il reste à payer
- * sur la page TIKORA de l'événement.
+ * <AwaitingPayment /> — billet PAYANT, inscription enregistrée : il reste à payer.
  *
  *   ✓ inscription (fiche + photo) enregistrée ;
- *   2. payer sur TIKORA AVEC LA MÊME ADRESSE E-MAIL (copiable) ;
- *   3. revenir ici : le paiement est détecté automatiquement (la page interroge
- *      le serveur, qui relit les commandes TIKORA) et le billet se confirme.
+ *   2. choix du moyen de paiement :
+ *      • CARTE BANCAIRE ou PAYPAL : page Stripe sécurisée du billet choisi (via
+ *        TIKORA), retour automatique ici, confirmation sans action ;
+ *      • MOBILE MONEY : page TIKORA de l'événement, AVEC LA MÊME ADRESSE E-MAIL ;
+ *   3. confirmation : automatique (la page interroge le serveur, qui relit TIKORA) ;
+ *      Mobile Money : on peut aussi coller le code du billet (ORD-…).
  *
  * Paiement fait avec une autre adresse : rattachement par numéro de commande TIKORA.
  * Le même contenu est envoyé par e-mail : la personne peut fermer la page et revenir.
  */
-export default function AwaitingPayment({ order, tier, buyerFee, checking, lastCheck, onCheck, onLinked }) {
-  const { t, locale } = useI18n()
+export default function AwaitingPayment({ order, tier, buyerFee, checking, lastCheck, onCheck, onLinked, notice }) {
+  const { t, locale, lang } = useI18n()
   const a = t.tickets.awaiting
   const uid = useId()
   const tt = t.tickets.tiers[order.tierId]
@@ -35,6 +37,24 @@ export default function AwaitingPayment({ order, tier, buyerFee, checking, lastC
   const [email, setEmail] = useState(order.customer.email)
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
+  // Moyen de paiement : carte / PayPal (Stripe) ou Mobile Money (page TIKORA)
+  const [method, setMethod] = useState('card')
+  const [paying, setPaying] = useState('') // 'card' | 'paypal' pendant l'ouverture de la page
+  const [payError, setPayError] = useState('')
+
+  const payOnline = async (kind) => {
+    if (paying) return
+    setPaying(kind)
+    setPayError('')
+    const res = await startCardCheckout(order, kind, lang)
+    if (res.ok) {
+      window.location.assign(res.checkoutUrl) // même onglet : Stripe ramène ici après le paiement
+      return
+    }
+    setPaying('')
+    setPayError(a.cardErrors[res.reason] ?? a.cardErrors.server)
+    if (res.reason === 'paid') onCheck()
+  }
 
   const copy = async () => {
     try {
@@ -96,86 +116,155 @@ export default function AwaitingPayment({ order, tier, buyerFee, checking, lastC
           <li className="is-current">
             <span aria-hidden="true">2</span>
             <div>
-              <strong>{a.step2Title}</strong>
-              <p>{fill(direct ? a.step2TextDirect : a.step2Text, { category: tikoraName })}</p>
-              <div className="th-email">
-                <span className="th-email__label">{a.emailLabel}</span>
-                <span className="th-email__value">
-                  <strong>{order.customer.email}</strong>
-                  <button type="button" onClick={copy} aria-label={`${a.copy} — ${order.customer.email}`}>
-                    <Icon name={copied ? 'check' : 'copy'} size={15} /> {copied ? a.copied : a.copy}
-                  </button>
-                </span>
-                <small>{a.emailWhy}</small>
-              </div>
-              <Button href={checkoutUrl} external size="lg" icon="arrow-up-right" className="th-card__cta">
-                {a.cta}
-              </Button>
-              <p className="th-card__note">
-                <Icon name="lock" size={14} /> {a.ctaNote}
-              </p>
+              <strong>{a.payTitle}</strong>
+              {notice === 'annule' && (
+                <p className="th-notice" role="status">
+                  <Icon name="info" size={15} /> {t.tickets.confirmation.returnCancel}
+                </p>
+              )}
+              <fieldset className="th-methods">
+                <legend className="visually-hidden">{a.payLegend}</legend>
+                {['card', 'momo'].map((m) => (
+                  <label key={m} className={`th-method ${method === m ? 'is-selected' : ''}`}>
+                    <input type="radio" name={`${uid}-method`} value={m} checked={method === m} onChange={() => setMethod(m)} />
+                    <span className="th-method__icon" aria-hidden="true">
+                      <Icon name={m === 'card' ? 'card' : 'smartphone'} size={20} />
+                    </span>
+                    <span className="th-method__body">
+                      <strong>{a.methods[m].title}</strong>
+                      <small>{a.methods[m].text}</small>
+                    </span>
+                  </label>
+                ))}
+              </fieldset>
+
+              {method === 'card' ? (
+                <div className="th-pay">
+                  <p>{fill(a.cardText, { category: tt.name })}</p>
+                  <div className="th-pay__actions">
+                    <Button
+                      type="button"
+                      size="lg"
+                      iconLeft={paying === 'card' ? 'clock' : 'card'}
+                      disabled={Boolean(paying)}
+                      onClick={() => payOnline('card')}
+                    >
+                      {paying === 'card' ? a.cardRedirecting : a.cardCta}
+                    </Button>
+                    <Button
+                      type="button"
+                      size="lg"
+                      variant="outline"
+                      iconLeft={paying === 'paypal' ? 'clock' : 'arrow-up-right'}
+                      disabled={Boolean(paying)}
+                      onClick={() => payOnline('paypal')}
+                    >
+                      {paying === 'paypal' ? a.cardRedirecting : a.paypalCta}
+                    </Button>
+                  </div>
+                  {payError && (
+                    <p className="th-code__error" role="alert">
+                      <Icon name="alert" size={15} /> {payError}
+                    </p>
+                  )}
+                  <p className="th-card__note">
+                    <Icon name="lock" size={14} /> {a.cardNote}
+                  </p>
+                  <p className="th-pay__paypal">{a.paypalNote}</p>
+                </div>
+              ) : (
+                <>
+                  <p>
+                    {fill(direct ? a.step2TextDirect : a.step2Text, {
+                      category: tikoraName,
+                    })}
+                  </p>
+                  <div className="th-email">
+                    <span className="th-email__label">{a.emailLabel}</span>
+                    <span className="th-email__value">
+                      <strong>{order.customer.email}</strong>
+                      <button type="button" onClick={copy} aria-label={`${a.copy} — ${order.customer.email}`}>
+                        <Icon name={copied ? 'check' : 'copy'} size={15} /> {copied ? a.copied : a.copy}
+                      </button>
+                    </span>
+                    <small>{a.emailWhy}</small>
+                  </div>
+                  <Button href={checkoutUrl} external size="lg" icon="arrow-up-right" className="th-card__cta">
+                    {a.cta}
+                  </Button>
+                  <p className="th-card__note">
+                    <Icon name="lock" size={14} /> {a.ctaNote}
+                  </p>
+                </>
+              )}
             </div>
           </li>
           <li>
             <span aria-hidden="true">3</span>
-            <div>
-              <strong>{a.step3Title}</strong>
-              <p>{a.step3Text}</p>
-              {/* Code du billet (ORD-…) reçu par e-mail de TIKORA : vérifié auprès de TIKORA */}
-              <form className="th-code" onSubmit={link} noValidate>
-                <label htmlFor={`${uid}-number`}>{a.link.number}</label>
-                <div className="th-code__row">
-                  <input
-                    id={`${uid}-number`}
-                    type="text"
-                    autoCapitalize="characters"
-                    autoComplete="off"
-                    spellCheck="false"
-                    maxLength={40}
-                    placeholder="ORD-XXXXXXXX"
-                    value={number}
-                    aria-describedby={`${uid}-number-hint`}
-                    aria-invalid={error ? true : undefined}
-                    onChange={(e) => {
-                      setNumber(e.target.value)
-                      setError('')
-                    }}
-                  />
-                  <Button type="submit" iconLeft={busy ? 'clock' : 'check'} disabled={busy}>
-                    {busy ? a.link.checking : a.link.cta}
-                  </Button>
-                </div>
-                <small id={`${uid}-number-hint`}>{a.link.hint}</small>
-                <button type="button" className="th-code__other" aria-expanded={open} aria-controls={`${uid}-email`} onClick={() => setOpen((o) => !o)}>
-                  {a.link.toggle}
-                  <Icon name="chevron-down" size={15} className={open ? 'is-open' : ''} />
-                </button>
-                {open && (
-                  <div className="th-code__email">
-                    <label htmlFor={`${uid}-email`}>{a.link.email}</label>
+            {method === 'card' ? (
+              <div>
+                <strong>{a.cardStep3Title}</strong>
+                <p>{a.cardStep3Text}</p>
+              </div>
+            ) : (
+              <div>
+                <strong>{a.step3Title}</strong>
+                <p>{a.step3Text}</p>
+                {/* Code du billet (ORD-…) reçu par e-mail de TIKORA : vérifié auprès de TIKORA */}
+                <form className="th-code" onSubmit={link} noValidate>
+                  <label htmlFor={`${uid}-number`}>{a.link.number}</label>
+                  <div className="th-code__row">
                     <input
-                      id={`${uid}-email`}
-                      type="email"
-                      autoComplete="email"
-                      maxLength={254}
-                      value={email}
+                      id={`${uid}-number`}
+                      type="text"
+                      autoCapitalize="characters"
+                      autoComplete="off"
+                      spellCheck="false"
+                      maxLength={40}
+                      placeholder="ORD-XXXXXXXX"
+                      value={number}
+                      aria-describedby={`${uid}-number-hint`}
+                      aria-invalid={error ? true : undefined}
                       onChange={(e) => {
-                        setEmail(e.target.value)
+                        setNumber(e.target.value)
                         setError('')
                       }}
                     />
+                    <Button type="submit" iconLeft={busy ? 'clock' : 'check'} disabled={busy}>
+                      {busy ? a.link.checking : a.link.cta}
+                    </Button>
                   </div>
-                )}
-                {error && (
-                  <p className="th-code__error" role="alert">
-                    <Icon name="alert" size={15} /> {error}
-                  </p>
-                )}
-              </form>
-            </div>
+                  <small id={`${uid}-number-hint`}>{a.link.hint}</small>
+                  <button type="button" className="th-code__other" aria-expanded={open} aria-controls={`${uid}-email`} onClick={() => setOpen((o) => !o)}>
+                    {a.link.toggle}
+                    <Icon name="chevron-down" size={15} className={open ? 'is-open' : ''} />
+                  </button>
+                  {open && (
+                    <div className="th-code__email">
+                      <label htmlFor={`${uid}-email`}>{a.link.email}</label>
+                      <input
+                        id={`${uid}-email`}
+                        type="email"
+                        autoComplete="email"
+                        maxLength={254}
+                        value={email}
+                        onChange={(e) => {
+                          setEmail(e.target.value)
+                          setError('')
+                        }}
+                      />
+                    </div>
+                  )}
+                  {error && (
+                    <p className="th-code__error" role="alert">
+                      <Icon name="alert" size={15} /> {error}
+                    </p>
+                  )}
+                </form>
+              </div>
+            )}
           </li>
         </ol>
-
 
         {/* Détection automatique du paiement */}
         <div className="th-watch" role="status" aria-live="polite">
@@ -208,7 +297,6 @@ export default function AwaitingPayment({ order, tier, buyerFee, checking, lastC
           </li>
         </ul>
         <p className="th-mail__spam">{a.mailSpam}</p>
-
       </aside>
     </div>
   )

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link, useParams } from 'react-router'
+import { Link, useParams, useSearchParams } from 'react-router'
 import QRCode from 'qrcode'
 import { Button, Frise, Icon, PatternBg, Reveal } from '@/components/ui'
 import OperatorBadge from '@/components/tickets/OperatorBadge'
@@ -106,7 +106,7 @@ function useOrderReceipt(order) {
  */
 const hashToken = () => new URLSearchParams(window.location.hash.slice(1)).get('t') || ''
 
-function useServerOrder(orderId) {
+function useServerOrder(orderId, { fast = false } = {}) {
   const [order, setOrder] = useState(() => getOrder(orderId))
   // Jeton du lien e-mail lu UNE fois (le fragment est ensuite effacé de l'URL)
   const [linkToken] = useState(hashToken)
@@ -140,7 +140,8 @@ function useServerOrder(orderId) {
       const status = saved?.payment.status ?? getOrder(orderId)?.payment.status
       const needsTickets = saved && isConfirmed(saved) && !saved.tickets.length && saved.payment.via !== 'tikora'
       // Paiement Mobile Money en cours : 15 min ; paiement TIKORA attendu : 2 h (toutes les 8 s)
-      if (status === 'registered' && Date.now() - started < 2 * 60 * 60 * 1000) timer = setTimeout(tick, 8000)
+      // Retour de la page carte / PayPal (?paiement=ok) : vérification rapprochée les 3 premières minutes
+      if (status === 'registered' && Date.now() - started < 2 * 60 * 60 * 1000) timer = setTimeout(tick, fast && Date.now() - started < 3 * 60 * 1000 ? 3000 : 8000)
       else if ((status === 'pending' || needsTickets) && Date.now() - started < 15 * 60 * 1000) timer = setTimeout(tick, 5000)
     }
     // Retour sur l'onglet (après le paiement sur TIKORA) : vérification immédiate
@@ -154,7 +155,7 @@ function useServerOrder(orderId) {
       document.removeEventListener('visibilitychange', onVisible)
       window.removeEventListener('focus', onVisible)
     }
-  }, [orderId, linkToken, nonce])
+  }, [orderId, linkToken, nonce, fast])
 
   return { order, loading, checking, lastCheck, refresh: () => setNonce((n) => n + 1), setOrder }
 }
@@ -168,7 +169,11 @@ export default function ConfirmationPage() {
   const { t, locale } = useI18n()
   const c = t.tickets.confirmation
   const { orderId } = useParams()
-  const { order, loading, checking, lastCheck, refresh, setOrder } = useServerOrder(orderId)
+  // Retour depuis la page de paiement carte / PayPal : ?paiement=ok | annule (information
+  // seulement : le statut « payé » vient toujours du serveur)
+  const [params] = useSearchParams()
+  const notice = ['ok', 'annule'].includes(params.get('paiement')) ? params.get('paiement') : ''
+  const { order, loading, checking, lastCheck, refresh, setOrder } = useServerOrder(orderId, { fast: notice === 'ok' })
   const catalog = useTicketCatalog()
   const codes = useTicketQrCodes(isConfirmed(order) ? order : null)
   const [receipt, retryReceipt] = useOrderReceipt(isConfirmed(order) ? order : null)
@@ -199,10 +204,19 @@ export default function ConfirmationPage() {
           <PatternBg variant="ndop" color="currentColor" opacity={0.05} fade="radial" />
           <div className="container confirmation__hero-inner">
             <span className="confirmation__check confirmation__check--step" aria-hidden="true">
-              <Icon name="smartphone" size={36} />
+              <Icon name={notice === 'ok' ? 'clock' : 'smartphone'} size={36} />
             </span>
-            <h1>{rich(fill(c.awaitingHeading, { name: firstName }))}</h1>
-            <p>{fill(c.awaitingLead, { tier: t.tickets.tiers[order.tierId].name })}</p>
+            {notice === 'ok' ? (
+              <div role="status" aria-live="polite">
+                <h1>{c.returnOkTitle}</h1>
+                <p>{c.returnOkText}</p>
+              </div>
+            ) : (
+              <>
+                <h1>{rich(fill(c.awaitingHeading, { name: firstName }))}</h1>
+                <p>{fill(c.awaitingLead, { tier: t.tickets.tiers[order.tierId].name })}</p>
+              </>
+            )}
           </div>
           <Frise height={12} />
         </header>
@@ -213,6 +227,7 @@ export default function ConfirmationPage() {
           checking={checking}
           lastCheck={lastCheck}
           onCheck={refresh}
+          notice={notice}
           onLinked={(server) => {
             const saved = saveServerOrder(server, order.accessToken)
             if (saved) setOrder(saved)

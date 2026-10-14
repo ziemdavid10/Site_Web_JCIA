@@ -228,6 +228,43 @@ export async function linkTikoraPayment(order, { orderNumber, email }) {
 }
 
 /**
+ * Billet payant réglé par CARTE BANCAIRE ou PAYPAL : le serveur réserve le billet
+ * choisi chez TIKORA et renvoie l'adresse de la page de paiement sécurisée (Stripe).
+ * Aucune donnée de carte ne transite par le site. Le statut « payé » vient
+ * ensuite uniquement du serveur (TIKORA), jamais du retour du navigateur.
+ * @param {object} order   commande locale (id, accessToken)
+ * @param {'card'|'paypal'} method
+ * @returns {Promise<{ ok: true, checkoutUrl: string, chargedAmount?: number, chargedCurrency?: string } | { ok: false, reason: string }>}
+ */
+export async function startCardCheckout(order, method, lang) {
+  if (!API) return { ok: false, reason: 'unavailable' }
+  if (!['card', 'paypal'].includes(method)) return { ok: false, reason: 'server' }
+  const res = await apiRequest(`/orders/${encodeURIComponent(order.id)}/checkout`, {
+    method: 'POST',
+    token: order.accessToken,
+    body: { method, lang },
+    timeoutMs: 30_000,
+  })
+  // Page de paiement hébergée (Stripe / PayPal) : HTTPS obligatoire
+  const url = (() => {
+    try {
+      const u = new URL(String(res.data?.checkoutUrl ?? ''))
+      return u.protocol === 'https:' ? u.href : ''
+    } catch {
+      return ''
+    }
+  })()
+  if (res.ok && url) return { ok: true, checkoutUrl: url, chargedAmount: res.data.chargedAmount, chargedCurrency: res.data.chargedCurrency }
+  const reason =
+    res.status === 0
+      ? 'network'
+      : res.status === 429
+        ? 'rate'
+        : { ORDER_ALREADY_PAID: 'paid', METHOD_UNAVAILABLE: 'method', TICKETS_UNAVAILABLE: 'soldOut', PROVIDER_ERROR: 'provider' }[res.data?.code] ?? 'server'
+  return { ok: false, reason }
+}
+
+/**
  * Lance un paiement Mobile Money via le serveur (TIKORA) et suit son avancement.
  * @param {object}   params  { orderId, amount, currency, operator, phone, tierId, quantity, customer, attendees, publicListing, lang, description }
  * @param {function} onStep  (step, info) — step : 'initiating' | 'awaiting' | 'confirming' ;

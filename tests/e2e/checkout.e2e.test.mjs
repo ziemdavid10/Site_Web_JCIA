@@ -100,6 +100,12 @@ async function fillRegistration(page, { firstName, lastName, email, whatsapp, or
   assert.equal(await terms.isDisabled(), true)
 }
 
+/** Étape 2 : choix « Mobile Money » (par défaut : carte bancaire / PayPal). */
+async function chooseMobileMoney(page) {
+  await page.locator('.th-method', { hasText: 'Mobile Money' }).click()
+  assert.equal(await page.getByRole('radio', { name: /Mobile Money/ }).isChecked(), true)
+}
+
 test.before(async () => {
   mock = await createMockTikora({ payDelayMs: 300 }).listen()
   backend = startProcess(process.execPath, ['src/server.js'], {
@@ -177,11 +183,11 @@ test('E2E - billet payant : inscription avec photo, paiement TIKORA détecté au
     await page.waitForURL(/\/billetterie\/confirmation\/JCIA27-[A-Z0-9]{6}$/, { timeout: 15_000 })
     const orderId = page.url().split('/').pop()
     await page.getByRole('heading', { name: /Plus qu’une étape/ }).waitFor()
-    // « Payer sur TIKORA » mène directement à la réservation du billet choisi
-    const { MOCK_CATEGORIES } = await import(path.join(BACK, 'tests/helpers/mock-tikora-server.js'))
+    // Moyen de paiement : Mobile Money (page TIKORA)
+    await chooseMobileMoney(page)
+    // « Payer sur TIKORA » ouvre la page TIKORA de l'événement (nouvel onglet)
     const pay = page.getByRole('link', { name: 'Payer sur TIKORA' })
-    assert.equal(await pay.getAttribute('href'), `${TIKORA}/reserver?categorie=${MOCK_CATEGORIES.standard}`)
-    await page.getByText('ouvre directement la réservation du billet').waitFor()
+    assert.ok((await pay.getAttribute('href')).startsWith(TIKORA))
     assert.equal(await pay.getAttribute('target'), '_blank')
     await page.locator('.th-email__value', { hasText: 'serge.e2e@example.com' }).waitFor()
     await shot(page, '03-attente-paiement')
@@ -220,6 +226,47 @@ test('E2E - billet payant : inscription avec photo, paiement TIKORA détecté au
   }
 })
 
+test('E2E - billet payant réglé par carte bancaire : page Stripe du billet, retour et confirmation automatique', async () => {
+  const { context, page } = await newPage()
+  try {
+    await page.goto(`${WEB}/billetterie/commande/vip`)
+    await fillRegistration(page, {
+      firstName: 'Carine', lastName: 'Fotso', email: 'carine.e2e@example.com', whatsapp: '699 88 77 66', org: 'Banque Atlantique', role: 'Directrice SI',
+    })
+    await page.getByRole('button', { name: 'Continuer vers le paiement' }).click()
+    await page.waitForURL(/\/billetterie\/confirmation\/JCIA27-[A-Z0-9]{6}$/, { timeout: 15_000 })
+    const orderId = page.url().split('/').pop()
+    await page.getByRole('heading', { name: /Plus qu’une étape/ }).waitFor()
+
+    // Carte bancaire / PayPal proposé en premier
+    assert.equal(await page.getByRole('radio', { name: /Carte bancaire ou PayPal/ }).isChecked(), true)
+    await page.getByRole('button', { name: 'Payer avec PayPal' }).waitFor()
+    await page.getByText('PayPal est débité en euros').waitFor()
+    await shot(page, '03b-choix-carte')
+
+    // La page Stripe (hors ligne en test) est simulée
+    await page.route('https://checkout.stripe.example/**', (route) => route.fulfill({ contentType: 'text/html', body: '<h1>Stripe Checkout (test)</h1>' }))
+    await page.getByRole('button', { name: 'Payer par carte bancaire' }).click()
+    await page.waitForURL(/^https:\/\/checkout\.stripe\.example\//, { timeout: 15_000 })
+    const tik = [...mock.state.orders.values()].find((o) => o.reference === orderId)
+    assert.equal(tik.tier, 'vip', 'commande TIKORA du billet choisi')
+    assert.equal(tik.checkout.method, 'card')
+
+    // Paiement abandonné : retour sur le site, rien n'est perdu
+    await page.goto(`${WEB}/billetterie/confirmation/${orderId}?paiement=annule`)
+    await page.getByText('Paiement annulé : aucun montant n’a été débité.').waitFor()
+
+    // Paiement accepté chez Stripe, puis retour sur le site
+    await fetch(`${mock.base}/__mock/orders/${tik.id}/card-paid?webhook=0`, { method: 'POST' })
+    await page.goto(`${WEB}/billetterie/confirmation/${orderId}?paiement=ok`)
+    await page.getByRole('heading', { name: /C’est confirmé/ }).waitFor({ timeout: 20_000 })
+    const list = await (await fetch(`${API}/attendees`)).json()
+    assert.ok(list.some((a) => a.id === `cmd-${orderId}-1`), 'dans la liste après le paiement par carte')
+  } finally {
+    await context.close()
+  }
+})
+
 test('E2E - billet payant réglé avec une autre adresse : rattachement par numéro de commande TIKORA', async () => {
   const { MOCK_EVENT_ID } = await import(path.join(BACK, 'tests/helpers/mock-tikora-server.js'))
   const { context, page } = await newPage()
@@ -231,6 +278,7 @@ test('E2E - billet payant réglé avec une autre adresse : rattachement par num�
     })
     await page.getByRole('button', { name: 'Continuer vers le paiement' }).click()
     await page.getByRole('heading', { name: /Plus qu’une étape/ }).waitFor({ timeout: 15_000 })
+    await chooseMobileMoney(page)
 
     const web = await (
       await fetch(`${mock.base}/__mock/web-order`, {
