@@ -1,11 +1,14 @@
 # Serveur de billetterie JCIA — image de production
-FROM node:22-bookworm-slim AS deps
+FROM node:22-trixie-slim AS deps
 WORKDIR /app
 COPY package.json package-lock.json ./
-# Dépendances de production seulement ; sqlite3 utilise un binaire précompilé (glibc)
-RUN npm ci --omit=dev --ignore-scripts=false && npm cache clean --force
+# Dépendances de production seulement ; sqlite3 utilise un binaire précompilé (glibc >= 2.38 → Debian trixie)
+# Réessais réseau : un ECONNRESET passager du registre npm ne doit pas faire échouer le build
+RUN npm ci --omit=dev --ignore-scripts=false \
+      --fetch-retries=5 --fetch-retry-mintimeout=20000 --fetch-retry-maxtimeout=120000 \
+  && npm cache clean --force
 
-FROM node:22-bookworm-slim
+FROM node:22-trixie-slim
 ENV NODE_ENV=production \
     HOST=0.0.0.0 \
     PORT=5000 \

@@ -1,0 +1,334 @@
+
+> serveur_backend_jcia@1.0.0 test:integration
+> node scripts/run-tests.js tests/integration --test-concurrency=1
+
+TAP version 13
+# Subtest: CARTE - crée la commande TIKORA du bon billet et renvoie la page Stripe (HTTPS, retour vers le site)
+ok 1 - CARTE - crée la commande TIKORA du bon billet et renvoie la page Stripe (HTTPS, retour vers le site)
+  ---
+  duration_ms: 715.1902
+  ...
+# Subtest: CARTE - paiement confirmé : la page de confirmation relit TIKORA et finalise l’inscription
+ok 2 - CARTE - paiement confirmé : la page de confirmation relit TIKORA et finalise l’inscription
+  ---
+  duration_ms: 138.2182
+  ...
+# Subtest: CARTE - webhook order.paid : confirmation sans que le participant revienne sur le site
+ok 3 - CARTE - webhook order.paid : confirmation sans que le participant revienne sur le site
+  ---
+  duration_ms: 60.4703
+  ...
+# Subtest: CARTE - rattrapage périodique si ni webhook ni retour sur le site
+ok 4 - CARTE - rattrapage périodique si ni webhook ni retour sur le site
+  ---
+  duration_ms: 46.962
+  ...
+# Subtest: CARTE - sécurité et erreurs : jeton, moyen invalide, PayPal indisponible
+ok 5 - CARTE - sécurité et erreurs : jeton, moyen invalide, PayPal indisponible
+  ---
+  duration_ms: 1117.6318
+  ...
+# Subtest: CARTE - origine non HTTPS (développement local) : page Stripe sans adresse de retour
+ok 6 - CARTE - origine non HTTPS (développement local) : page Stripe sans adresse de retour
+  ---
+  duration_ms: 158.0259
+  ...
+# Subtest: MONTANTS "3500.00" : catalogue, contrôle de prix, achat complet et reçu
+ok 7 - MONTANTS "3500.00" : catalogue, contrôle de prix, achat complet et reçu
+  ---
+  duration_ms: 1053.7533
+  ...
+# Subtest: LIVE - parcours nominal : réservation, paiement, billets TIKORA, reçu
+ok 8 - LIVE - parcours nominal : réservation, paiement, billets TIKORA, reçu
+  ---
+  duration_ms: 940.3621
+  ...
+# Subtest: LIVE - double clic / onglets multiples : un seul ordre TIKORA, un seul débit
+ok 9 - LIVE - double clic / onglets multiples : un seul ordre TIKORA, un seul débit
+  ---
+  duration_ms: 56.7509
+  ...
+# Subtest: LIVE - refus (solde insuffisant) puis nouvel essai réussi sur la même réservation
+ok 10 - LIVE - refus (solde insuffisant) puis nouvel essai réussi sur la même réservation
+  ---
+  duration_ms: 519.3671
+  ...
+# Subtest: LIVE - refus immédiat du fournisseur (REJECTED)
+ok 11 - LIVE - refus immédiat du fournisseur (REJECTED)
+  ---
+  duration_ms: 16.2321
+  ...
+# Subtest: LIVE - réservation expirée : une nouvelle commande TIKORA est créée
+ok 12 - LIVE - réservation expirée : une nouvelle commande TIKORA est créée
+  ---
+  duration_ms: 495.8994
+  ...
+# Subtest: LIVE - erreur 500 passagère : nouvelle tentative automatique transparente
+ok 13 - LIVE - erreur 500 passagère : nouvelle tentative automatique transparente
+  ---
+  duration_ms: 324.8147
+  ...
+# Subtest: LIVE - clé TIKORA refusée (401) : 502 sans fuite de détail
+ok 14 - LIVE - clé TIKORA refusée (401) : 502 sans fuite de détail
+  ---
+  duration_ms: 9.0228
+  ...
+# Subtest: LIVE - TIKORA saturé (429 répétés) : 503 « réessayez »
+ok 15 - LIVE - TIKORA saturé (429 répétés) : 503 « réessayez »
+  ---
+  duration_ms: 1095.1959
+  ...
+# Subtest: LIVE - réponse non JSON du fournisseur : 502
+ok 16 - LIVE - réponse non JSON du fournisseur : 502
+  ---
+  duration_ms: 1031.2063
+  ...
+# Subtest: LIVE - délai dépassé côté fournisseur : 502 en temps borné
+ok 17 - LIVE - délai dépassé côté fournisseur : 502 en temps borné
+  ---
+  duration_ms: 7116.8109
+  ...
+# Subtest: LIVE - en-têtes reçus mais corps bloqué : délai appliqué, nouvelle tentative, 502 borné
+ok 18 - LIVE - en-têtes reçus mais corps bloqué : délai appliqué, nouvelle tentative, 502 borné
+  ---
+  duration_ms: 6961.4279
+  ...
+# Subtest: LIVE - dérive de prix entre TIKORA et la grille JCIA : vente bloquée (409)
+ok 19 - LIVE - dérive de prix entre TIKORA et la grille JCIA : vente bloquée (409)
+  ---
+  duration_ms: 18.8358
+  ...
+# Subtest: LIVE - stock épuisé chez TIKORA : 409
+ok 20 - LIVE - stock épuisé chez TIKORA : 409
+  ---
+  duration_ms: 24.1295
+  ...
+# Subtest: SÉCURITÉ - montant falsifié, carte, commande d’autrui
+ok 21 - SÉCURITÉ - montant falsifié, carte, commande d’autrui
+  ---
+  duration_ms: 43.6044
+  ...
+# Subtest: CATALOGUE - GET /tickets expose prix, frais et stock TIKORA
+ok 22 - CATALOGUE - GET /tickets expose prix, frais et stock TIKORA
+  ---
+  duration_ms: 10.4001
+  ...
+# Subtest: RATTRAPAGE - un paiement abandonné par le navigateur est confirmé par la tâche périodique
+ok 23 - RATTRAPAGE - un paiement abandonné par le navigateur est confirmé par la tâche périodique
+  ---
+  duration_ms: 459.9572
+  ...
+# Subtest: TARIFS - achat complet pour chacun des 4 tarifs payants (catégorie TIKORA, prix, frais)
+ok 24 - TARIFS - achat complet pour chacun des 4 tarifs payants (catégorie TIKORA, prix, frais)
+  ---
+  duration_ms: 1025.8379
+  ...
+# Subtest: TARIFS - le tarif gratuit ne passe jamais par le paiement TIKORA
+ok 25 - TARIFS - le tarif gratuit ne passe jamais par le paiement TIKORA
+  ---
+  duration_ms: 6.4787
+  ...
+# Subtest: PHOTO - envoi par le titulaire, publication dans la liste, image servie sans métadonnées
+ok 26 - PHOTO - envoi par le titulaire, publication dans la liste, image servie sans métadonnées
+  ---
+  duration_ms: 750.4066
+  ...
+# Subtest: PHOTO - accès refusé sans le bon jeton, participant inexistant, mauvais format
+ok 27 - PHOTO - accès refusé sans le bon jeton, participant inexistant, mauvais format
+  ---
+  duration_ms: 553.8931
+  ...
+# Subtest: PHOTO - commande non confirmée : refus ; billet gratuit : accepté
+ok 28 - PHOTO - commande non confirmée : refus ; billet gratuit : accepté
+  ---
+  duration_ms: 21.9398
+  ...
+# Subtest: PHOTO - sans consentement à la liste publique : photo privée (visuel uniquement)
+ok 29 - PHOTO - sans consentement à la liste publique : photo privée (visuel uniquement)
+  ---
+  duration_ms: 258.2321
+  ...
+# Subtest: PHOTO - retrait : immédiat dans la liste et la commande
+ok 30 - PHOTO - retrait : immédiat dans la liste et la commande
+  ---
+  duration_ms: 277.1434
+  ...
+# Subtest: PHOTO - CORS : envoi autorisé depuis le site, refusé depuis une autre origine
+ok 31 - PHOTO - CORS : envoi autorisé depuis le site, refusé depuis une autre origine
+  ---
+  duration_ms: 5.2977
+  ...
+# Subtest: ANTI-ABUS - création de paiements : 10 par IP et par 10 min, puis 429
+ok 32 - ANTI-ABUS - création de paiements : 10 par IP et par 10 min, puis 429
+  ---
+  duration_ms: 585.3431
+  ...
+# Subtest: ANTI-ABUS - énumération des commandes freinée (GET /orders/:id)
+ok 33 - ANTI-ABUS - énumération des commandes freinée (GET /orders/:id)
+  ---
+  duration_ms: 247.5622
+  ...
+# Subtest: ANTI-ABUS - un même numéro ne reçoit pas plus de 5 demandes de paiement en 10 min
+ok 34 - ANTI-ABUS - un même numéro ne reçoit pas plus de 5 demandes de paiement en 10 min
+  ---
+  duration_ms: 17.2355
+  ...
+# Subtest: INSCRIPTION - billet payant : fiche complète obligatoire, un participant par inscription
+ok 35 - INSCRIPTION - billet payant : fiche complète obligatoire, un participant par inscription
+  ---
+  duration_ms: 455.2432
+  ...
+# Subtest: INSCRIPTION - enregistrée, e-mail « payez sur TIKORA », absente de la liste tant que non payée
+ok 36 - INSCRIPTION - enregistrée, e-mail « payez sur TIKORA », absente de la liste tant que non payée
+  ---
+  duration_ms: 78.5212
+  ...
+# Subtest: PAIEMENT TIKORA - même adresse e-mail : inscription confirmée automatiquement, au tarif réellement acheté
+ok 37 - PAIEMENT TIKORA - même adresse e-mail : inscription confirmée automatiquement, au tarif réellement acheté
+  ---
+  duration_ms: 94.9314
+  ...
+# Subtest: PAIEMENT TIKORA - autre adresse e-mail : rattachement manuel par numéro de commande, vérifié
+ok 38 - PAIEMENT TIKORA - autre adresse e-mail : rattachement manuel par numéro de commande, vérifié
+  ---
+  duration_ms: 73.6708
+  ...
+# Subtest: PAIEMENT TIKORA - achat de groupe : autant d’inscriptions confirmées que de billets
+ok 39 - PAIEMENT TIKORA - achat de groupe : autant d’inscriptions confirmées que de billets
+  ---
+  duration_ms: 68.0219
+  ...
+# Subtest: PAIEMENT TIKORA - commande non payée : l’inscription reste en attente
+ok 40 - PAIEMENT TIKORA - commande non payée : l’inscription reste en attente
+  ---
+  duration_ms: 22.4549
+  ...
+# Subtest: GRATUIT - même fiche (prénom, nom, WhatsApp, organisation, rôle) : liste et récapitulatif
+ok 41 - GRATUIT - même fiche (prénom, nom, WhatsApp, organisation, rôle) : liste et récapitulatif
+  ---
+  duration_ms: 75.9379
+  ...
+# Subtest: E-MAILS - lien du formulaire participant pour tous les billets, retour sur le site, contenu échappé
+ok 42 - E-MAILS - lien du formulaire participant pour tous les billets, retour sur le site, contenu échappé
+  ---
+  duration_ms: 49.3285
+  ...
+# Subtest: VENTE - événement en attente de validation TIKORA : « ouverture prochaine », pas « complet »
+ok 43 - VENTE - événement en attente de validation TIKORA : « ouverture prochaine », pas « complet »
+  ---
+  duration_ms: 661.4254
+  ...
+# Subtest: VENTE - dès que TIKORA publie l’événement, la vente s’ouvre sans redémarrage
+ok 44 - VENTE - dès que TIKORA publie l’événement, la vente s’ouvre sans redémarrage
+  ---
+  duration_ms: 276.3751
+  ...
+# Subtest: DÉMARRAGE - aucun paiement simulé : PAYMENT_PROVIDER_MODE=demo refusé, même en développement
+ok 45 - DÉMARRAGE - aucun paiement simulé : PAYMENT_PROVIDER_MODE=demo refusé, même en développement
+  ---
+  duration_ms: 517.5788
+  ...
+# Subtest: DÉMARRAGE - sans configuration TIKORA, le serveur refuse de démarrer (pas de repli simulé)
+ok 46 - DÉMARRAGE - sans configuration TIKORA, le serveur refuse de démarrer (pas de repli simulé)
+  ---
+  duration_ms: 209.3943
+  ...
+# Subtest: DÉMARRAGE - la production refuse une clé TIKORA mal saisie et un CORS ouvert
+ok 47 - DÉMARRAGE - la production refuse une clé TIKORA mal saisie et un CORS ouvert
+  ---
+  duration_ms: 205.4055
+  ...
+# Subtest: DÉMARRAGE - configuration live valide : le serveur répond et vérifie TIKORA
+ok 48 - DÉMARRAGE - configuration live valide : le serveur répond et vérifie TIKORA
+  ---
+  duration_ms: 842.0286
+  ...
+# Subtest: CONTRAT - grille tarifaire identique au frontend (src/data/config.js)
+ok 49 - CONTRAT - grille tarifaire identique au frontend (src/data/config.js)
+  ---
+  duration_ms: 1.5921
+  ...
+# Subtest: PAGE TIKORA - un achat payé reçoit le formulaire une seule fois
+ok 50 - PAGE TIKORA - un achat payé reçoit le formulaire une seule fois
+  ---
+  duration_ms: 435.8248
+  ...
+# Subtest: PAGE TIKORA - ignorés : non payé, autre événement, commande de test, achat passé par notre site
+ok 51 - PAGE TIKORA - ignorés : non payé, autre événement, commande de test, achat passé par notre site
+  ---
+  duration_ms: 319.7029
+  ...
+# Subtest: PAGE TIKORA - échec SMTP : nouvelle tentative au passage suivant
+ok 52 - PAGE TIKORA - échec SMTP : nouvelle tentative au passage suivant
+  ---
+  duration_ms: 26.4554
+  ...
+# Subtest: PAGE TIKORA - webhook order.paid d’une commande inconnue : formulaire envoyé aussitôt
+ok 53 - PAGE TIKORA - webhook order.paid d’une commande inconnue : formulaire envoyé aussitôt
+  ---
+  duration_ms: 23.6651
+  ...
+# Subtest: PAGE TIKORA - l’e-mail contient le lien du formulaire et échappe le nom
+ok 54 - PAGE TIKORA - l’e-mail contient le lien du formulaire et échappe le nom
+  ---
+  duration_ms: 23.031
+  ...
+# Subtest: RATTACHEMENT - billet payé sur TIKORA vérifié : visuel, photo et liste des participants
+ok 55 - RATTACHEMENT - billet payé sur TIKORA vérifié : visuel, photo et liste des participants
+  ---
+  duration_ms: 34.7506
+  ...
+# Subtest: RATTACHEMENT - commande non payée refusée
+ok 56 - RATTACHEMENT - commande non payée refusée
+  ---
+  duration_ms: 5.9781
+  ...
+# Subtest: WEBHOOK - un faux « order.paid » ne valide PAS une commande impayée
+ok 57 - WEBHOOK - un faux « order.paid » ne valide PAS une commande impayée
+  ---
+  duration_ms: 615.1196
+  ...
+# Subtest: WEBHOOK - signature invalide : 401
+ok 58 - WEBHOOK - signature invalide : 401
+  ---
+  duration_ms: 6.0916
+  ...
+# Subtest: WEBHOOK - webhook signé de TIKORA : commande payée sans sondage, doublon ignoré
+ok 59 - WEBHOOK - webhook signé de TIKORA : commande payée sans sondage, doublon ignoré
+  ---
+  duration_ms: 231.3808
+  ...
+# Subtest: WEBHOOK - commande inconnue : même réponse (pas d’énumération)
+ok 60 - WEBHOOK - commande inconnue : même réponse (pas d’énumération)
+  ---
+  duration_ms: 9.2648
+  ...
+# Subtest: GRATUIT - inscription, billets signés, consentement, plafond par e-mail
+ok 61 - GRATUIT - inscription, billets signés, consentement, plafond par e-mail
+  ---
+  duration_ms: 28.45
+  ...
+# Subtest: LISTE PUBLIQUE - consentement explicite obligatoire, profils du frontend
+ok 62 - LISTE PUBLIQUE - consentement explicite obligatoire, profils du frontend
+  ---
+  duration_ms: 538.6855
+  ...
+# Subtest: REÇU - renvoi manuel : vérifications et délai anti-spam
+ok 63 - REÇU - renvoi manuel : vérifications et délai anti-spam
+  ---
+  duration_ms: 371.6839
+  ...
+# Subtest: HTTP - en-têtes de sécurité, JSON obligatoire, corps limité
+ok 64 - HTTP - en-têtes de sécurité, JSON obligatoire, corps limité
+  ---
+  duration_ms: 17.3025
+  ...
+1..64
+# tests 64
+# suites 0
+# pass 64
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 34286.2619

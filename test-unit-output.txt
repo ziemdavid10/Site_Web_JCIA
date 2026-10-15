@@ -1,0 +1,429 @@
+
+> serveur_backend_jcia@1.0.0 test:unit
+> node scripts/run-tests.js tests/unit
+
+TAP version 13
+# Subtest: APPLICATION - health check
+ok 1 - APPLICATION - health check
+  ---
+  duration_ms: 269.5896
+  ...
+# Subtest: APPLICATION - route racine
+ok 2 - APPLICATION - route racine
+  ---
+  duration_ms: 16.2548
+  ...
+# Subtest: APPLICATION - route inexistante
+ok 3 - APPLICATION - route inexistante
+  ---
+  duration_ms: 9.9469
+  ...
+# Subtest: APPLICATION - CORS autorise une origine déclarée
+ok 4 - APPLICATION - CORS autorise une origine déclarée
+  ---
+  duration_ms: 13.1395
+  ...
+# Subtest: APPLICATION - CORS refuse une origine non déclarée
+ok 5 - APPLICATION - CORS refuse une origine non déclarée
+  ---
+  duration_ms: 17.0481
+  ...
+# Subtest: APPLICATION - requête sans Origin autorisée
+ok 6 - APPLICATION - requête sans Origin autorisée
+  ---
+  duration_ms: 9.6541
+  ...
+# Subtest: APPLICATION - JSON mal formé renvoie 400
+ok 7 - APPLICATION - JSON mal formé renvoie 400
+  ---
+  duration_ms: 50.7602
+  ...
+# Subtest: APPLICATION - pré-vol CORS OPTIONS
+ok 8 - APPLICATION - pré-vol CORS OPTIONS
+  ---
+  duration_ms: 6.2128
+  ...
+# Subtest: PARTICIPANTS - renvoie HTTP 200 et un tableau
+ok 9 - PARTICIPANTS - renvoie HTTP 200 et un tableau
+  ---
+  duration_ms: 198.5662
+  ...
+# Subtest: PARTICIPANTS - exclut les commandes sans consentement
+ok 10 - PARTICIPANTS - exclut les commandes sans consentement
+  ---
+  duration_ms: 12.4908
+  ...
+# Subtest: PARTICIPANTS - exclut les commandes non confirmées
+ok 11 - PARTICIPANTS - exclut les commandes non confirmées
+  ---
+  duration_ms: 14.5361
+  ...
+# Subtest: PARTICIPANTS - accepte les commandes gratuites consenties
+ok 12 - PARTICIPANTS - accepte les commandes gratuites consenties
+  ---
+  duration_ms: 19.5969
+  ...
+# Subtest: PARTICIPANTS - retourne tous les participants déclarés
+ok 13 - PARTICIPANTS - retourne tous les participants déclarés
+  ---
+  duration_ms: 36.5247
+  ...
+# Subtest: PARTICIPANTS - ne casse pas sur un JSON corrompu
+ok 14 - PARTICIPANTS - ne casse pas sur un JSON corrompu
+  ---
+  duration_ms: 19.8887
+  ...
+# Subtest: PARTICIPANTS - expose les champs attendus par le frontend
+ok 15 - PARTICIPANTS - expose les champs attendus par le frontend
+  ---
+  duration_ms: 12.4408
+  ...
+# Subtest: PARTICIPANTS - les commandes de l’ancien mode démonstration ne sont jamais publiées
+ok 16 - PARTICIPANTS - les commandes de l’ancien mode démonstration ne sont jamais publiées
+  ---
+  duration_ms: 33.6321
+  ...
+# Subtest: BASE - initialise les tables nécessaires
+ok 17 - BASE - initialise les tables nécessaires
+  ---
+  duration_ms: 87.7639
+  ...
+# Subtest: BASE - insertion et lecture d’une commande
+ok 18 - BASE - insertion et lecture d’une commande
+  ---
+  duration_ms: 4.2272
+  ...
+# Subtest: BASE - insertion et lecture d’un paiement
+ok 19 - BASE - insertion et lecture d’un paiement
+  ---
+  duration_ms: 5.3614
+  ...
+# Subtest: E-MAIL - « Bienvenue aux JCIA » : bilingue, TIKORA, code du billet, retour sur le site, formulaire
+ok 20 - E-MAIL - « Bienvenue aux JCIA » : bilingue, TIKORA, code du billet, retour sur le site, formulaire
+  ---
+  duration_ms: 93.9293
+  ...
+# Subtest: E-MAIL - confirmations (billet payé sur TIKORA, billet gratuit) : formulaire et lien du site
+ok 21 - E-MAIL - confirmations (billet payé sur TIKORA, billet gratuit) : formulaire et lien du site
+  ---
+  duration_ms: 11.7545
+  ...
+# Subtest: SMTP - chiffrement d’après le port (465 SSL, 587 STARTTLS) et expéditeur = compte SMTP
+ok 22 - SMTP - chiffrement d’après le port (465 SSL, 587 STARTTLS) et expéditeur = compte SMTP
+  ---
+  duration_ms: 0.9007
+  ...
+# Subtest: SMTP - adresse de webmail GoDaddy refusée comme serveur d’envoi
+ok 23 - SMTP - adresse de webmail GoDaddy refusée comme serveur d’envoi
+  ---
+  duration_ms: 3.7408
+  ...
+# Subtest: MAILER - service expose sendReceiptEmail
+ok 24 - MAILER - service expose sendReceiptEmail
+  ---
+  duration_ms: 3.066
+  ...
+# Subtest: POST /payments - rejette un corps vide
+ok 25 - POST /payments - rejette un corps vide
+  ---
+  duration_ms: 317.9297
+  ...
+# Subtest: POST /payments - rejette un identifiant absent ou mal formé
+ok 26 - POST /payments - rejette un identifiant absent ou mal formé
+  ---
+  duration_ms: 67.2743
+  ...
+# Subtest: POST /payments - accepte les identifiants valides
+ok 27 - POST /payments - accepte les identifiants valides
+  ---
+  duration_ms: 116.6466
+  ...
+# Subtest: POST /payments - rejette montant absent, NaN et négatif
+ok 28 - POST /payments - rejette montant absent, NaN et négatif
+  ---
+  duration_ms: 21.617
+  ...
+# Subtest: POST /payments - refuse un montant nul ou différent du tarif
+ok 29 - POST /payments - refuse un montant nul ou différent du tarif
+  ---
+  duration_ms: 14.5314
+  ...
+# Subtest: POST /payments - rejette une devise inconnue
+ok 30 - POST /payments - rejette une devise inconnue
+  ---
+  duration_ms: 4.036
+  ...
+# Subtest: POST /payments - accepte XAF quelle que soit la casse
+ok 31 - POST /payments - accepte XAF quelle que soit la casse
+  ---
+  duration_ms: 17.1486
+  ...
+# Subtest: POST /payments - rejette une méthode inconnue
+ok 32 - POST /payments - rejette une méthode inconnue
+  ---
+  duration_ms: 12.9207
+  ...
+# Subtest: POST /payments - Mobile Money exige un opérateur valide
+ok 33 - POST /payments - Mobile Money exige un opérateur valide
+  ---
+  duration_ms: 10.5129
+  ...
+# Subtest: POST /payments - Orange Money est accepté
+ok 34 - POST /payments - Orange Money est accepté
+  ---
+  duration_ms: 13.7593
+  ...
+# Subtest: POST /payments - refuse la carte bancaire et ne conserve aucune donnée de carte
+ok 35 - POST /payments - refuse la carte bancaire et ne conserve aucune donnée de carte
+  ---
+  duration_ms: 3.3084
+  ...
+# Subtest: POST /payments - rejette un e-mail invalide
+ok 36 - POST /payments - rejette un e-mail invalide
+  ---
+  duration_ms: 14.817
+  ...
+# Subtest: POST /payments - valide le tarif si tierId et quantity sont fournis
+ok 37 - POST /payments - valide le tarif si tierId et quantity sont fournis
+  ---
+  duration_ms: 21.7102
+  ...
+# Subtest: POST /payments - rejette quantité invalide lorsqu’un tier est fourni
+ok 38 - POST /payments - rejette quantité invalide lorsqu’un tier est fourni
+  ---
+  duration_ms: 11.1158
+  ...
+# Subtest: POST /payments - persiste commande et participants
+ok 39 - POST /payments - persiste commande et participants
+  ---
+  duration_ms: 9.3396
+  ...
+# Subtest: POST /payments - rejoue une requête sans créer un second paiement
+ok 40 - POST /payments - rejoue une requête sans créer un second paiement
+  ---
+  duration_ms: 13.5798
+  ...
+# Subtest: GET /payments/:id - renvoie 404 pour un paiement inconnu
+ok 41 - GET /payments/:id - renvoie 404 pour un paiement inconnu
+  ---
+  duration_ms: 2.2247
+  ...
+# Subtest: GET /payments/:id - renvoie SUCCESSFUL avec transactionId
+ok 42 - GET /payments/:id - renvoie SUCCESSFUL avec transactionId
+  ---
+  duration_ms: 9.037
+  ...
+# Subtest: GET /payments/:id - renvoie FAILED avec raison
+ok 43 - GET /payments/:id - renvoie FAILED avec raison
+  ---
+  duration_ms: 3.6823
+  ...
+# Subtest: GET /payments/:id - un paiement PENDING passe à SUCCESSFUL une fois confirmé par TIKORA
+ok 44 - GET /payments/:id - un paiement PENDING passe à SUCCESSFUL une fois confirmé par TIKORA
+  ---
+  duration_ms: 48.588
+  ...
+# Subtest: GET /payments/:id - paiement refusé par l’opérateur : FAILED avec le motif TIKORA
+ok 45 - GET /payments/:id - paiement refusé par l’opérateur : FAILED avec le motif TIKORA
+  ---
+  duration_ms: 17.6215
+  ...
+# Subtest: POST /payments - rejette explicitement un montant absent ou nul
+ok 46 - POST /payments - rejette explicitement un montant absent ou nul
+  ---
+  duration_ms: 9.6242
+  ...
+# Subtest: PHOTO - JPEG valide : dimensions lues, EXIF et commentaires retirés
+ok 47 - PHOTO - JPEG valide : dimensions lues, EXIF et commentaires retirés
+  ---
+  duration_ms: 13.4908
+  ...
+# Subtest: PHOTO - JPEG progressif accepté (plusieurs balayages)
+ok 48 - PHOTO - JPEG progressif accepté (plusieurs balayages)
+  ---
+  duration_ms: 1.0182
+  ...
+# Subtest: PHOTO - contenu caché après la fin de l’image (fichier « polyglotte ») supprimé
+ok 49 - PHOTO - contenu caché après la fin de l’image (fichier « polyglotte ») supprimé
+  ---
+  duration_ms: 0.7732
+  ...
+# Subtest: PHOTO - refus : PNG, JPEG tronqué, octets au hasard, vide, trop petite
+ok 50 - PHOTO - refus : PNG, JPEG tronqué, octets au hasard, vide, trop petite
+  ---
+  duration_ms: 19.737
+  ...
+# Subtest: PHOTO - identifiants publics
+ok 51 - PHOTO - identifiants publics
+  ---
+  duration_ms: 2.539
+  ...
+# Subtest: TARIFS - chaque catégorie officielle possède un tarif
+ok 52 - TARIFS - chaque catégorie officielle possède un tarif
+  ---
+  duration_ms: 4.3155
+  ...
+# Subtest: TARIFS - aucune catégorie non officielle n’est acceptée
+ok 53 - TARIFS - aucune catégorie non officielle n’est acceptée
+  ---
+  duration_ms: 0.3711
+  ...
+# Subtest: TARIFS - montant exact accepté et montant altéré refusé
+ok 54 - TARIFS - montant exact accepté et montant altéré refusé
+  ---
+  duration_ms: 0.4174
+  ...
+# Subtest: TARIFS - quantité minimale et maximale
+ok 55 - TARIFS - quantité minimale et maximale
+  ---
+  duration_ms: 0.4384
+  ...
+# Subtest: TARIFS - catégories et quantités invalides
+ok 56 - TARIFS - catégories et quantités invalides
+  ---
+  duration_ms: 0.294
+  ...
+# Subtest: TARIFS - promotion appliquée uniquement dans la période prévue
+ok 57 - TARIFS - promotion appliquée uniquement dans la période prévue
+  ---
+  duration_ms: 0.7183
+  ...
+# Subtest: TARIFS - inférence d’un tarif à partir du montant
+ok 58 - TARIFS - inférence d’un tarif à partir du montant
+  ---
+  duration_ms: 0.6392
+  ...
+# Subtest: TARIFS - date de promotion invalide est rejetée sans calcul incohérent
+ok 59 - TARIFS - date de promotion invalide est rejetée sans calcul incohérent
+  ---
+  duration_ms: 0.4261
+  ...
+# Subtest: TARIFS - bornes de promotion inclusives
+ok 60 - TARIFS - bornes de promotion inclusives
+  ---
+  duration_ms: 0.689
+  ...
+# Subtest: TARIFS - l’ancien identifiant « enligne » reste accepté (alias)
+ok 61 - TARIFS - l’ancien identifiant « enligne » reste accepté (alias)
+  ---
+  duration_ms: 1.2955
+  ...
+# Subtest: TARIFS - tarif gratuit : prix nul, jamais remisé
+ok 62 - TARIFS - tarif gratuit : prix nul, jamais remisé
+  ---
+  duration_ms: 0.3475
+  ...
+# Subtest: TARIFS - estimation des frais TIKORA (2 %, plancher 100 FCFA)
+ok 63 - TARIFS - estimation des frais TIKORA (2 %, plancher 100 FCFA)
+  ---
+  duration_ms: 0.421
+  ...
+# Subtest: REÇU - rejette identifiant invalide
+ok 64 - REÇU - rejette identifiant invalide
+  ---
+  duration_ms: 140.0736
+  ...
+# Subtest: REÇU - rejette commande inconnue
+ok 65 - REÇU - rejette commande inconnue
+  ---
+  duration_ms: 9.2669
+  ...
+# Subtest: REÇU - rejette e-mail absent ou invalide
+ok 66 - REÇU - rejette e-mail absent ou invalide
+  ---
+  duration_ms: 23.092
+  ...
+# Subtest: REÇU - rejette commande non confirmée
+ok 67 - REÇU - rejette commande non confirmée
+  ---
+  duration_ms: 4.9169
+  ...
+# Subtest: REÇU - rejette une adresse différente de celle de la commande
+ok 68 - REÇU - rejette une adresse différente de celle de la commande
+  ---
+  duration_ms: 3.2532
+  ...
+# Subtest: REÇU - accepte une adresse avec différence de casse
+ok 69 - REÇU - accepte une adresse avec différence de casse
+  ---
+  duration_ms: 14.7151
+  ...
+# Subtest: REÇU - accepte une commande gratuite
+ok 70 - REÇU - accepte une commande gratuite
+  ---
+  duration_ms: 7.4607
+  ...
+# Subtest: REÇU - choisit la langue demandée quand elle est valide
+ok 71 - REÇU - choisit la langue demandée quand elle est valide
+  ---
+  duration_ms: 7.2745
+  ...
+# Subtest: REÇU - ignore une langue inconnue et utilise fr
+ok 72 - REÇU - ignore une langue inconnue et utilise fr
+  ---
+  duration_ms: 4.8196
+  ...
+# Subtest: REÇU - transforme une panne SMTP en erreur 502
+ok 73 - REÇU - transforme une panne SMTP en erreur 502
+  ---
+  duration_ms: 5.4745
+  ...
+# Subtest: CONFIG - une configuration de production complète est acceptée
+ok 74 - CONFIG - une configuration de production complète est acceptée
+  ---
+  duration_ms: 4.8927
+  ...
+# Subtest: CONFIG - erreurs bloquantes en production
+ok 75 - CONFIG - erreurs bloquantes en production
+  ---
+  duration_ms: 3.9204
+  ...
+# Subtest: CONFIG - aucun mode démo : TIKORA est obligatoire, même en développement
+ok 76 - CONFIG - aucun mode démo : TIKORA est obligatoire, même en développement
+  ---
+  duration_ms: 1.4755
+  ...
+# Subtest: JETON - accès commande déterministe, lié à l’identifiant, comparaison sûre
+ok 77 - JETON - accès commande déterministe, lié à l’identifiant, comparaison sûre
+  ---
+  duration_ms: 2.1807
+  ...
+# Subtest: WEBHOOK - signature HMAC : formats acceptés, falsifications refusées
+ok 78 - WEBHOOK - signature HMAC : formats acceptés, falsifications refusées
+  ---
+  duration_ms: 2.0868
+  ...
+# Subtest: LOGS - aucune donnée sensible ne fuit
+ok 79 - LOGS - aucune donnée sensible ne fuit
+  ---
+  duration_ms: 1.9922
+  ...
+# Subtest: TIKORA - normalisation des statuts de commande
+ok 80 - TIKORA - normalisation des statuts de commande
+  ---
+  duration_ms: 1.8991
+  ...
+# Subtest: VALIDATION - requête de commande : données minimales et refus
+ok 81 - VALIDATION - requête de commande : données minimales et refus
+  ---
+  duration_ms: 20.6338
+  ...
+# Subtest: E-MAIL - le gabarit échappe tout contenu injecté
+ok 82 - E-MAIL - le gabarit échappe tout contenu injecté
+  ---
+  duration_ms: 50.998
+  ...
+# Subtest: TIKORA - corps bloqué : erreur TIMEOUT en temps borné, même après un passage du ramasse-miettes
+ok 83 - TIKORA - corps bloqué : erreur TIMEOUT en temps borné, même après un passage du ramasse-miettes
+  ---
+  duration_ms: 1240.4971
+  ...
+1..83
+# tests 83
+# suites 0
+# pass 83
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 4750.9995
